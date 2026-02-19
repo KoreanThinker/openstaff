@@ -125,6 +125,17 @@ compatibility: Requires TEST_API_KEY
     expect(res.status).toBe(404)
   })
 
+  it('POST /api/skills/import returns 500 for invalid path', async () => {
+    const res = await fetch(`http://localhost:${port}/api/skills/import`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: '/nonexistent/path/to/skill' })
+    })
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toBeTruthy()
+  })
+
   it('DELETE /api/skills/:name deletes skill', async () => {
     const res = await fetch(`http://localhost:${port}/api/skills/test-skill`, {
       method: 'DELETE'

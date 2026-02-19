@@ -532,6 +532,109 @@ describe('staffs API routes', () => {
     await apiDelete(`/api/staffs/${created.id}`)
   })
 
+  it('GET /api/staffs list includes kpi_summary with trend from usage/kpi data', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'KPI List Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const { appendJsonl } = await import('../../data/jsonl-reader')
+    const { getStaffDir } = await import('../../data/staff-data')
+    const staffDir = getStaffDir(created.id)
+    const { join } = await import('path')
+
+    // Add KPI data with only 1 entry (no prevKpi → trend should be null)
+    appendJsonl(join(staffDir, 'kpi.jsonl'), {
+      date: '2024-01-01',
+      metrics: { accuracy: 0.95 }
+    })
+
+    // Add usage data for today
+    const today = new Date().toISOString().slice(0, 10)
+    appendJsonl(join(staffDir, 'usage.jsonl'), {
+      date: today,
+      input_tokens: 1000,
+      output_tokens: 500,
+      cost_usd: 0.05
+    })
+    appendJsonl(join(staffDir, 'usage.jsonl'), {
+      date: today,
+      input_tokens: 2000,
+      output_tokens: 1000,
+      cost_usd: 0.10
+    })
+    // Add usage entry for a different date (should not be counted)
+    appendJsonl(join(staffDir, 'usage.jsonl'), {
+      date: '2023-01-01',
+      input_tokens: 9999,
+      output_tokens: 9999,
+      cost_usd: 99.99
+    })
+
+    const { data: list } = await apiGet('/api/staffs')
+    const staff = list.find((s: { id: string }) => s.id === created.id)
+    expect(staff).toBeTruthy()
+    expect(staff.kpi_summary.length).toBe(1)
+    expect(staff.kpi_summary[0].name).toBe('accuracy')
+    expect(staff.kpi_summary[0].trend).toBeNull() // Only 1 KPI entry, no prevKpi
+    expect(staff.tokens_today).toBe(4500) // 1000+500+2000+1000
+    expect(staff.cost_today).toBe(0.15) // 0.05+0.10
+
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('GET /api/staffs/:id detail with single KPI entry has null trend', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Single KPI Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const { appendJsonl } = await import('../../data/jsonl-reader')
+    const { getStaffDir } = await import('../../data/staff-data')
+    const staffDir = getStaffDir(created.id)
+    const { join } = await import('path')
+
+    appendJsonl(join(staffDir, 'kpi.jsonl'), {
+      date: '2024-01-01',
+      metrics: { score: 42 }
+    })
+
+    const { data } = await apiGet(`/api/staffs/${created.id}`)
+    expect(data.kpi_summary.length).toBe(1)
+    expect(data.kpi_summary[0].name).toBe('score')
+    expect(data.kpi_summary[0].value).toBe(42)
+    expect(data.kpi_summary[0].trend).toBeNull()
+
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('POST /api/staffs with explicit id uses provided id', async () => {
+    const { status, data } = await apiPost('/api/staffs', {
+      id: 'custom-id-123',
+      name: 'Custom ID Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV',
+      kpi: 'My KPI',
+      agent: 'claude-code',
+      model: 'claude-sonnet-4-5',
+      skills: ['openstaff']
+    })
+    expect(status).toBe(201)
+    expect(data.id).toBe('custom-id-123')
+    expect(data.kpi).toBe('My KPI')
+    expect(data.skills).toEqual(['openstaff'])
+
+    await apiDelete(`/api/staffs/${data.id}`)
+  })
+
   it('GET /api/staffs list shows uptime for running staffs', async () => {
     const { data: created } = await apiPost('/api/staffs', {
       name: 'Running List Staff',
