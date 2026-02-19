@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Mode */
+    --background: 240 5% 96%; /* #f4f4f5 - 아주 옅은 쿨그레이 배경 */
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%; /* 순백색 카드 */
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    
+    --primary: 240 5.9% 10%; /* 블랙 버튼 */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%; /* 회색 텍스트 */
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    
+    /* Semantic Colors from Image */
+    --destructive: 0 84.2% 60.2%; /* 하락/경고 빨간색 */
+    --destructive-foreground: 0 0% 98%;
+    --success: 142 71% 45%; /* 상승/성공 초록색 (이미지의 메인 포인트 컬러) */
+    --success-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 10% 3.9%;
+    
+    /* Status Colors */
+    --warning: 38 92% 50%; /* #f59e0b - Backoff/Warning용 Amber */
+    --warning-foreground: 48 96% 89%;
+    /* Stopped 상태는 기존 --muted-foreground 사용 */
+
+    /* Chart 색상 팔레트 (Tremor 다중 지표용) */
+    --chart-1: 142 71% 45%; /* 메인 네온 그린 */
+    --chart-2: 230 100% 67%; /* 비비드 블루 */
+    --chart-3: 30 100% 61%; /* 오렌지 */
+    --chart-4: 280 80% 65%; /* 퍼플 */
+    --chart-5: 0 84% 60%; /* 레드 */
+
+    /* 핵심: 모서리 곡률. 이미지는 카드가 매우 둥급니다. */
+    --radius: 1.5rem;
+  }
+
+  .dark {
+    /* Dark Mode */
+    --background: 0 0% 4%; /* #0a0a0a - 깊은 블랙 */
+    --foreground: 0 0% 98%;
+    --card: 0 0% 9%; /* #171717 - 약간 밝은 차콜색 카드 */
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 98%;
+    
+    --primary: 0 0% 98%; /* 화이트 버튼 */
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 98%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 98%;
+
+    --warning: 48 96% 89%;
+    --warning-foreground: 38 92% 50%;
+
+    /* Chart 색상 팔레트 */
+    --chart-1: 142 71% 45%;
+    --chart-2: 220 80% 60%;
+    --chart-3: 30 90% 60%;
+    --chart-4: 280 70% 65%;
+    --chart-5: 0 80% 60%;
+
+    --border: 0 0% 15%; /* 어두운 테두리 */
+    --input: 0 0% 15%;
+    --ring: 0 0% 83.1%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    /* 폰트 렌더링 최적화 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}

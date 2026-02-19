@@ -1,0 +1,443 @@
+import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
+import {
+  Users,
+  DollarSign,
+  Calendar,
+  RotateCcw,
+  Plus,
+  MoreHorizontal,
+  Play,
+  Square,
+  RefreshCw,
+  Eye,
+  Trash2
+} from 'lucide-react'
+import { api } from '@/lib/api'
+import { cn, formatUptime, formatCost, formatTokens, formatTrend } from '@/lib/utils'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Progress } from '@/components/ui/progress'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu'
+import { toast } from '@/hooks/use-toast'
+import type { StaffSummary, DashboardStats, SystemResources, StaffStatus } from '@shared/types'
+
+function StatusDot({ status }: { status: StaffStatus }): React.ReactElement {
+  return (
+    <div
+      className={cn(
+        'h-2 w-2 rounded-full',
+        status === 'running' && 'bg-success animate-status-pulse',
+        status === 'stopped' && 'bg-muted-foreground',
+        status === 'error' && 'bg-destructive',
+        status === 'warning' && 'bg-warning'
+      )}
+    />
+  )
+}
+
+function TrendBadge({ trend }: { trend: number | null }): React.ReactElement {
+  if (trend === null) return <span className="text-xs text-muted-foreground">--</span>
+  const isPositive = trend >= 0
+  return (
+    <span
+      className={cn(
+        'text-xs font-medium',
+        isPositive ? 'text-success' : 'text-destructive'
+      )}
+    >
+      {formatTrend(trend)}
+    </span>
+  )
+}
+
+function SummaryCard({
+  title,
+  value,
+  trend,
+  icon: Icon
+}: {
+  title: string
+  value: string | number
+  trend: number | null
+  icon: React.ElementType
+}): React.ReactElement {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-baseline gap-2">
+          <div className="text-2xl font-bold">{value}</div>
+          <TrendBadge trend={trend} />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ResourceBar({ label, percent }: { label: string; percent: number }): React.ReactElement {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="font-medium">{percent.toFixed(0)}%</span>
+      </div>
+      <Progress value={percent} className="h-2" />
+    </div>
+  )
+}
+
+function StaffActions({
+  staff,
+  onAction
+}: {
+  staff: StaffSummary
+  onAction: (action: string, id: string) => void
+}): React.ReactElement {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8">
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {staff.status === 'running' ? (
+          <DropdownMenuItem onClick={() => onAction('stop', staff.id)}>
+            <Square className="mr-2 h-4 w-4" />
+            Stop
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem onClick={() => onAction('start', staff.id)}>
+            <Play className="mr-2 h-4 w-4" />
+            Start
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onClick={() => onAction('restart', staff.id)}>
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Restart
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => onAction('view', staff.id)}>
+          <Eye className="mr-2 h-4 w-4" />
+          View Details
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="text-destructive"
+          onClick={() => onAction('delete', staff.id)}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function EmptyState(): React.ReactElement {
+  const navigate = useNavigate()
+  return (
+    <Card>
+      <CardContent className="flex flex-col items-center justify-center py-16">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+          <Users className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="mb-1 text-lg font-semibold">No Staff yet</h3>
+        <p className="mb-6 text-sm text-muted-foreground">
+          Create your first Staff to get started with autonomous AI agents.
+        </p>
+        <Button className="rounded-full" onClick={() => navigate('/staffs/new')}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Staff
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+function DashboardSkeleton(): React.ReactElement {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="pb-2">
+              <Skeleton className="h-4 w-24" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-16" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <CardContent className="p-6">
+          <Skeleton className="h-64 w-full" />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export function Dashboard(): React.ReactElement {
+  const navigate = useNavigate()
+
+  const statsQuery = useQuery<DashboardStats>({
+    queryKey: ['dashboard-stats'],
+    queryFn: () => api.getDashboardStats(),
+    refetchInterval: 5000
+  })
+
+  const staffsQuery = useQuery<StaffSummary[]>({
+    queryKey: ['staffs'],
+    queryFn: () => api.getStaffs(),
+    refetchInterval: 5000
+  })
+
+  const resourcesQuery = useQuery<SystemResources>({
+    queryKey: ['system-resources'],
+    queryFn: () => api.getSystemResources(),
+    refetchInterval: 10000
+  })
+
+  const handleAction = async (action: string, staffId: string): Promise<void> => {
+    try {
+      switch (action) {
+        case 'start':
+          await api.startStaff(staffId)
+          toast({ title: 'Staff started' })
+          break
+        case 'stop':
+          await api.stopStaff(staffId)
+          toast({ title: 'Staff stopped' })
+          break
+        case 'restart':
+          await api.restartStaff(staffId)
+          toast({ title: 'Staff restarted' })
+          break
+        case 'view':
+          navigate(`/staffs/${staffId}`)
+          return
+        case 'delete':
+          await api.deleteStaff(staffId)
+          toast({ title: 'Staff deleted' })
+          break
+      }
+      await staffsQuery.refetch()
+      await statsQuery.refetch()
+    } catch (err) {
+      toast({
+        title: 'Action failed',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive'
+      })
+    }
+  }
+
+  if (statsQuery.isLoading || staffsQuery.isLoading) {
+    return <DashboardSkeleton />
+  }
+
+  const stats = statsQuery.data
+  const staffs = staffsQuery.data ?? []
+  const resources = resourcesQuery.data
+
+  return (
+    <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <SummaryCard
+          title="Active Staff"
+          value={`${stats?.active_staffs ?? 0} / ${stats?.total_staffs ?? 0}`}
+          trend={null}
+          icon={Users}
+        />
+        <SummaryCard
+          title="Cost Today"
+          value={formatCost(stats?.cost_today ?? 0)}
+          trend={stats?.cost_today_trend ?? null}
+          icon={DollarSign}
+        />
+        <SummaryCard
+          title="Cost This Month"
+          value={formatCost(stats?.cost_month ?? 0)}
+          trend={stats?.cost_month_trend ?? null}
+          icon={Calendar}
+        />
+        <SummaryCard
+          title="Total Cycles"
+          value={stats?.total_cycles ?? 0}
+          trend={stats?.cycles_trend ?? null}
+          icon={RotateCcw}
+        />
+      </div>
+
+      {/* System Resources */}
+      {resources && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              System Resources
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <ResourceBar label="CPU" percent={resources.cpu_percent} />
+            <ResourceBar
+              label={`Memory (${(resources.memory_used_mb / 1024).toFixed(1)} / ${(resources.memory_total_mb / 1024).toFixed(1)} GB)`}
+              percent={resources.memory_percent}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Staff List */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Staff</h2>
+        <Button
+          className="rounded-full"
+          size="sm"
+          onClick={() => navigate('/staffs/new')}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          New Staff
+        </Button>
+      </div>
+
+      {staffs.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <>
+          {/* Desktop Table */}
+          <Card className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">Status</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Agent</TableHead>
+                  <TableHead>Model</TableHead>
+                  <TableHead>Uptime</TableHead>
+                  <TableHead className="text-right">Restarts</TableHead>
+                  <TableHead className="text-right">Tokens</TableHead>
+                  <TableHead className="text-right">Cost</TableHead>
+                  <TableHead className="text-right">Cycles</TableHead>
+                  <TableHead>KPI</TableHead>
+                  <TableHead className="w-10" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {staffs.map((staff) => (
+                  <TableRow
+                    key={staff.id}
+                    className="cursor-pointer"
+                    onClick={() => navigate(`/staffs/${staff.id}`)}
+                  >
+                    <TableCell>
+                      <StatusDot status={staff.status} />
+                    </TableCell>
+                    <TableCell className="font-medium">{staff.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{staff.role}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">
+                        {staff.agent}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{staff.model}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatUptime(staff.uptime)}
+                    </TableCell>
+                    <TableCell className="text-right">{staff.restarts}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {formatTokens(staff.tokens_today)}
+                    </TableCell>
+                    <TableCell className="text-right">{formatCost(staff.cost_today)}</TableCell>
+                    <TableCell className="text-right">{staff.cycles}</TableCell>
+                    <TableCell>
+                      {staff.kpi_summary.length > 0 ? (
+                        <div className="flex flex-col gap-0.5">
+                          {staff.kpi_summary.slice(0, 2).map((kpi) => (
+                            <div key={kpi.name} className="flex items-center gap-1 text-xs">
+                              <span className="text-muted-foreground">{kpi.name}:</span>
+                              <span className="font-medium">{kpi.value}</span>
+                              <TrendBadge trend={kpi.trend} />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">--</span>
+                      )}
+                    </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <StaffActions staff={staff} onAction={handleAction} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+
+          {/* Mobile Cards */}
+          <div className="space-y-3 md:hidden">
+            {staffs.map((staff) => (
+              <Card
+                key={staff.id}
+                className="cursor-pointer"
+                onClick={() => navigate(`/staffs/${staff.id}`)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <StatusDot status={staff.status} />
+                      <div>
+                        <div className="font-medium">{staff.name}</div>
+                        <div className="text-xs text-muted-foreground">{staff.role}</div>
+                      </div>
+                    </div>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <StaffActions staff={staff} onAction={handleAction} />
+                    </div>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <div className="text-xs text-muted-foreground">Cycles</div>
+                      <div className="text-sm font-medium">{staff.cycles}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Cost</div>
+                      <div className="text-sm font-medium">{formatCost(staff.cost_today)}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Uptime</div>
+                      <div className="text-sm font-medium">{formatUptime(staff.uptime)}</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}

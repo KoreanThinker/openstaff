@@ -1,0 +1,129 @@
+{
+  "version": "1.0.0",
+  "updated_at": "2026-02-20T00:00:00Z",
+  "templates": [
+    {
+      "id": "meta-ads-creative",
+      "name": "Meta Ads Creative Designer",
+      "role": "Meta ads creative designer",
+      "category": "Marketing",
+      "gather": "Collect trending posts from Instagram and X (Twitter) for the last 3 days in our product category. Analyze visual styles, copy patterns, and hashtags of top 100 posts.",
+      "execute": "Create 3 ad creatives (image + copy) per day tailored to our product. Include A/B test variants.",
+      "evaluate": "Check each creative's CPI, CPM, CTR from Meta Ads dashboard API. Analyze which patterns perform best and apply learnings to next batch.",
+      "kpi": "CPI < $2.00, CTR > 3%, daily creatives >= 3",
+      "required_skills": ["instagram", "meta-ads-api"],
+      "recommended_agent": "claude-code",
+      "recommended_model": "claude-sonnet-4-5"
+    },
+    {
+      "id": "pseo-writer",
+      "name": "pSEO Content Writer",
+      "role": "SEO content strategist and writer",
+      "category": "SEO",
+      "gather": "Analyze current keyword performance from Google Search Console. Discover new keyword opportunities from competitor blogs and industry trends.",
+      "execute": "Create SEO-optimized content based on discovered keywords and publish to blog.",
+      "evaluate": "Track impressions, clicks, and average ranking for published content in Google Search Console. Learn which keywords and content patterns are effective.",
+      "kpi": "Monthly organic impressions > 50K, average position < 10, new content pieces >= 5/week",
+      "required_skills": ["google-search-console"],
+      "recommended_agent": "claude-code",
+      "recommended_model": "claude-sonnet-4-5"
+    },
+    {
+      "id": "community-marketer",
+      "name": "Community Infiltration Marketer",
+      "role": "Online community marketer",
+      "category": "Marketing",
+      "gather": "Browse target online communities and collect popular posts and trending topics in our niche.",
+      "execute": "Write natural, community-appropriate posts that subtly mention our product. Match the community's tone and culture.",
+      "evaluate": "Collect comments, view counts, and reactions on posts. Analyze which tone and topics are most effective.",
+      "kpi": "Average views > 500, positive reaction rate > 70%, posts/week >= 5",
+      "required_skills": ["web-scraping"],
+      "recommended_agent": "claude-code",
+      "recommended_model": "claude-sonnet-4-5"
+    },
+    {
+      "id": "feature-developer",
+      "name": "Feature Developer",
+      "role": "Product feature developer",
+      "category": "Dev",
+      "gather": "Collect feature ideas from Slack user feedback channel, app reviews, and competitor updates.",
+      "execute": "Design, prototype, and implement the highest-priority feature. Deploy to 1% of users first.",
+      "evaluate": "Analyze event logs and QA results for the deployed feature. If quality is sufficient, gradually increase rollout percentage.",
+      "kpi": "Feature completion rate >= 1/week, bug reports < 3/feature, rollout success rate > 90%",
+      "required_skills": [],
+      "recommended_agent": "claude-code",
+      "recommended_model": "claude-sonnet-4-5"
+    },
+    {
+      "id": "aso-optimizer",
+      "name": "Play Store ASO Optimizer",
+      "role": "Play Store ASO specialist",
+      "category": "Marketing",
+      "gather": "Research trending keywords on Play Store and track ranking trends for existing keywords.",
+      "execute": "Optimize keyword combinations and update app description and screenshot captions.",
+      "evaluate": "Track impressions and install count changes per keyword. Learn effective keyword patterns.",
+      "kpi": "Organic installs +20% MoM, target keyword top 10 count >= 5",
+      "required_skills": [],
+      "recommended_agent": "claude-code",
+      "recommended_model": "claude-sonnet-4-5"
+    },
+    {
+      "id": "content-creator",
+      "name": "Social Media Content Creator",
+      "role": "Social media content manager",
+      "category": "Content",
+      "gather": "Monitor trending topics on social media platforms. Analyze competitor content strategies and engagement patterns.",
+      "execute": "Create engaging social media posts, stories, and thread content. Schedule posts for optimal engagement times.",
+      "evaluate": "Track engagement rates, follower growth, and reach metrics. Identify top-performing content formats.",
+      "kpi": "Engagement rate > 5%, follower growth > 2%/week, posts/day >= 3",
+      "required_skills": [],
+      "recommended_agent": "claude-code",
+      "recommended_model": "claude-sonnet-4-5"
+    },
+    {
+      "id": "bug-hunter",
+      "name": "Automated Bug Hunter",
+      "role": "QA engineer and bug hunter",
+      "category": "Dev",
+      "gather": "Scan codebase for potential bugs, security vulnerabilities, and code smells. Check error logs and user-reported issues.",
+      "execute": "Write test cases for discovered issues. Fix bugs and submit patches. Update test coverage.",
+      "evaluate": "Verify bug fixes pass all tests. Track bug fix rate and test coverage improvement.",
+      "kpi": "Bugs fixed >= 5/week, test coverage > 90%, zero regressions",
+      "required_skills": [],
+      "recommended_agent": "claude-code",
+      "recommended_model": "claude-sonnet-4-5"
+    }
+  ],
+  "skills": [
+    {
+      "name": "openstaff",
+      "description": "OpenStaff platform integration for cycle tracking, KPI recording, and help signals.",
+      "category": "Platform",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": false,
+      "required_env_vars": [],
+      "github_path": "registry/skills/openstaff"
+    },
+    {
+      "name": "web-scraping",
+      "description": "Web scraping utilities for gathering data from websites.",
+      "category": "Data",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": false,
+      "required_env_vars": [],
+      "github_path": "registry/skills/web-scraping"
+    },
+    {
+      "name": "github-api",
+      "description": "GitHub API integration for repository management and code operations.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": ["GITHUB_TOKEN"],
+      "github_path": "registry/skills/github-api"
+    }
+  ]
+}

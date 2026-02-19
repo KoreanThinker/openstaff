@@ -107,3 +107,6 @@ The MVP is NOT done until ALL of the following are true:
 - electron-vite uses separate configs for main/preload/renderer. Don't mix them.
 - safeStorage only works after app 'ready' event. Don't access encrypted values before that.
 - Electron main process runs in Node.js context; renderer runs in browser context.
+
+
+**docs/PRD.md의 요구사항을 100% 만족시키세요. 절대 멈추지 마세요. 100%를 만족하더라도 절대 멈추지마세요. 절대 멈추지 말고 계속 할일을 찾아내세요. 절대 멈추지 마세요. 이아서 작업하세요. 절대 멈추지 마세요. 저는 더 이상 못도와 줍니다. 스스로 모든걸 판단하세요. 절대 멈추지 마세요.**

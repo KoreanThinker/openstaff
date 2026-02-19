@@ -1,0 +1,11 @@
+node_modules/
+dist/
+out/
+.env
+.env.local
+*.log
+coverage/
+.DS_Store
+pnpm-debug.log*
+test-results/
+playwright-report/

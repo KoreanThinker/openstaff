@@ -1,0 +1,43 @@
+appId: com.openstaff.app
+productName: OpenStaff
+directories:
+  buildResources: build
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!tests/*'
+  - '!docs/*'
+  - '!registry/*'
+  - '!landing/*'
+  - '!.claude/*'
+  - '!electron.vite.config.*'
+  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  - '!{vitest.config.ts,playwright.config.ts}'
+asarUnpack:
+  - resources/**
+  - node_modules/node-pty/**
+mac:
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+  entitlementsInherit: build/entitlements.mac.plist
+  notarize: false
+linux:
+  target:
+    - target: deb
+      arch:
+        - x64
+        - arm64
+  category: Development
+  maintainer: Persly
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+publish:
+  provider: github
+  owner: koreanthinker
+  repo: openstaff

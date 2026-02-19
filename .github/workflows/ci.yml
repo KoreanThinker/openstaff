@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install
+
+      - name: Type Check
+        run: pnpm type-check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit + Integration Tests
+        run: pnpm test:coverage
+
+      - name: Build
+        run: pnpm build
+
+      - name: E2E Tests (CI subset)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get install -y xvfb
+          xvfb-run --auto-servernum pnpm test:e2e
+        env:
+          CI: true
+
+      - name: E2E Tests (macOS)
+        if: matrix.os == 'macos-latest'
+        run: pnpm test:e2e
+        env:
+          CI: true
