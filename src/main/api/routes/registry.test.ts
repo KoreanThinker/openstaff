@@ -115,6 +115,50 @@ describe('registry API routes', () => {
   })
 })
 
+describe('registry skill install', () => {
+  const realFetch = globalThis.fetch
+
+  beforeAll(() => {
+    // Mock fetch to return a SKILL.md for GitHub and pass through localhost
+    globalThis.fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.href : url.url
+      if (urlStr.includes('localhost')) {
+        return realFetch(url, init)
+      }
+      // Return SKILL.md content for skill install
+      if (urlStr.includes('SKILL.md')) {
+        return {
+          ok: true,
+          text: async () => '---\nname: test-skill\ndescription: A test skill\n---\n# Test Skill'
+        } as Response
+      }
+      // Return registry index for other GitHub calls
+      return { ok: false, status: 404 } as Response
+    }) as typeof fetch
+  })
+
+  afterAll(() => {
+    globalThis.fetch = realFetch
+  })
+
+  it('POST /api/registry/skills/:name/install installs skill from registry', async () => {
+    const res = await realFetch(`http://localhost:${port}/api/registry/skills/test-skill/install`, {
+      method: 'POST'
+    })
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.status).toBe('installed')
+    expect(data.name).toBe('test-skill')
+  })
+
+  it('POST /api/registry/skills/:name/install returns 404 for unknown skill', async () => {
+    const res = await realFetch(`http://localhost:${port}/api/registry/skills/nonexistent-skill/install`, {
+      method: 'POST'
+    })
+    expect(res.status).toBe(404)
+  })
+})
+
 describe('registry routes with expired cache', () => {
   const realFetch = globalThis.fetch
 

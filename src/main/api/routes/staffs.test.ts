@@ -406,6 +406,54 @@ describe('staffs API routes', () => {
     mockManager.isRunning = originalIsRunning
   })
 
+  it('GET /api/staffs/:id/export returns exportable config', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Export Staff',
+      role: 'Exporter',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV',
+      kpi: 'KPI target'
+    })
+
+    const { status, data } = await apiGet(`/api/staffs/${created.id}/export`)
+    expect(status).toBe(200)
+    expect(data.openstaff_version).toBe('1.0.0')
+    expect(data.type).toBe('staff')
+    expect(data.name).toBe('Export Staff')
+    expect(data.role).toBe('Exporter')
+    expect(data.recommended_agent).toBe('claude-code')
+
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('GET /api/staffs/:id/export returns 404 for nonexistent', async () => {
+    const { status } = await apiGet('/api/staffs/nonexistent/export')
+    expect(status).toBe(404)
+  })
+
+  it('POST /api/staffs/import creates staff from exported config', async () => {
+    const importData = {
+      name: 'Imported Staff',
+      role: 'Imported Role',
+      gather: 'Import G',
+      execute: 'Import E',
+      evaluate: 'Import EV',
+      kpi: 'Import KPI',
+      required_skills: [],
+      recommended_agent: 'claude-code',
+      recommended_model: 'claude-sonnet-4-5'
+    }
+
+    const { status, data } = await apiPost('/api/staffs/import', importData)
+    expect(status).toBe(201)
+    expect(data.name).toBe('Imported Staff')
+    expect(data.agent).toBe('claude-code')
+    expect(data.id).toBeTruthy()
+
+    await apiDelete(`/api/staffs/${data.id}`)
+  })
+
   it('GET /api/staffs list shows uptime for running staffs', async () => {
     const { data: created } = await apiPost('/api/staffs', {
       name: 'Running List Staff',

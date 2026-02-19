@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenStaff - AI Staff Manager</title>
+  <meta name="description" content="Run and manage multiple AI coding agents 24/7. Like PM2 for AI agents.">
+  <style>
+    :root {
+      --bg: #09090b;
+      --fg: #fafafa;
+      --muted: #a1a1aa;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --card-bg: #18181b;
+      --border: #27272a;
+      --radius: 1.5rem;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* Header */
+    header {
+      padding: 1.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .logo span {
+      color: var(--accent);
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      margin-left: 2rem;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+    }
+
+    nav a:hover {
+      color: var(--fg);
+    }
+
+    /* Hero */
+    .hero {
+      padding: 8rem 0 6rem;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 4rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 3rem;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.875rem 2rem;
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--card-bg);
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--muted);
+    }
+
+    /* Loop visualization */
+    .loop-section {
+      padding: 6rem 0;
+    }
+
+    .loop-section h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 1rem;
+      letter-spacing: -0.03em;
+    }
+
+    .loop-section p {
+      text-align: center;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 4rem;
+      font-size: 1.125rem;
+    }
+
+    .loop-diagram {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-bottom: 4rem;
+    }
+
+    .loop-step {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      width: 200px;
+    }
+
+    .loop-step h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .loop-step p {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .loop-arrow {
+      font-size: 2rem;
+      color: var(--accent);
+    }
+
+    /* Features */
+    .features {
+      padding: 6rem 0;
+    }
+
+    .features h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 4rem;
+      letter-spacing: -0.03em;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1.125rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .feature-card p {
+      color: var(--muted);
+      font-size: 0.9375rem;
+    }
+
+    /* CTA */
+    .cta {
+      padding: 6rem 0;
+      text-align: center;
+    }
+
+    .cta h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.03em;
+    }
+
+    .cta p {
+      color: var(--muted);
+      margin-bottom: 2rem;
+      font-size: 1.125rem;
+    }
+
+    /* Footer */
+    footer {
+      padding: 2rem 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .loop-diagram {
+        flex-direction: column;
+      }
+
+      .loop-arrow {
+        transform: rotate(90deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">Open<span>Staff</span></div>
+      <nav>
+        <a href="https://github.com/koreanthinker/openstaff">GitHub</a>
+        <a href="https://github.com/koreanthinker/openstaff/releases">Download</a>
+        <a href="https://github.com/koreanthinker/openstaff#readme">Docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <h1>Run <span>AI Staff</span><br>24/7 on your machine</h1>
+      <p>Open-source desktop app that manages multiple AI coding agents running continuously. Like PM2 for AI agents.</p>
+      <div class="hero-buttons">
+        <a href="https://github.com/koreanthinker/openstaff/releases" class="btn btn-primary">
+          Download for macOS
+        </a>
+        <a href="https://github.com/koreanthinker/openstaff" class="btn btn-secondary">
+          View on GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="loop-section">
+    <div class="container">
+      <h2>The Infinite Feedback Loop</h2>
+      <p>Every Staff operates in an infinite loop of Gather, Execute, Evaluate. They autonomously collect feedback, accumulate learnings, and improve over time.</p>
+      <div class="loop-diagram">
+        <div class="loop-step">
+          <h3>Gather</h3>
+          <p>Collect information, trends, and tasks from data sources</p>
+        </div>
+        <div class="loop-arrow">&rarr;</div>
+        <div class="loop-step">
+          <h3>Execute</h3>
+          <p>Perform specific work based on gathered information</p>
+        </div>
+        <div class="loop-arrow">&rarr;</div>
+        <div class="loop-step">
+          <h3>Evaluate</h3>
+          <p>Measure performance, check metrics, and learn</p>
+        </div>
+        <div class="loop-arrow">&circlearrowleft;</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="container">
+      <h2>Everything you need</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>Process Management</h3>
+          <p>Start, stop, restart AI agents with health checks and auto-recovery. Like PM2 for your AI workforce.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Real-time Monitoring</h3>
+          <p>Track token usage, costs, KPIs, and system resources. Live log streaming via WebSocket.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Skills System</h3>
+          <p>Extend Staff capabilities with modular skills. Connect to APIs, data sources, and tools.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Remote Access</h3>
+          <p>Monitor and control your Staff from anywhere via Ngrok tunnel. Mobile-friendly web UI.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Template Registry</h3>
+          <p>Browse and download pre-built Staff templates for marketing, SEO, development, and more.</p>
+        </div>
+        <div class="feature-card">
+          <h3>No Code Required</h3>
+          <p>Create and manage Staff using natural language only. Designed for non-developers.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <div class="container">
+      <h2>Get started in 5 minutes</h2>
+      <p>Download OpenStaff, install an agent, and create your first AI Staff.</p>
+      <a href="https://github.com/koreanthinker/openstaff/releases" class="btn btn-primary">Download Now</a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>OpenStaff is open source under the <a href="https://github.com/koreanthinker/openstaff/blob/main/LICENSE">MIT License</a>.</p>
+    </div>
+  </footer>
+</body>
+</html>

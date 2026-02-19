@@ -241,6 +241,67 @@ export function staffRoutes(ctx: ApiContext): Router {
     }
   })
 
+  // Export staff config
+  router.get('/:id/export', (req, res) => {
+    try {
+      const config = readStaffConfig(req.params.id!)
+      if (!config) return res.status(404).json({ error: 'Staff not found' })
+
+      const exportData = {
+        openstaff_version: '1.0.0',
+        type: 'staff',
+        name: config.name,
+        role: config.role,
+        gather: config.gather,
+        execute: config.execute,
+        evaluate: config.evaluate,
+        kpi: config.kpi,
+        required_skills: config.skills,
+        recommended_agent: config.agent,
+        recommended_model: config.model
+      }
+      res.json(exportData)
+    } catch (err) {
+      res.status(500).json({ error: String(err) })
+    }
+  })
+
+  // Import staff from exported config
+  router.post('/import', (req, res) => {
+    try {
+      const body = req.body as {
+        name?: string
+        role?: string
+        gather?: string
+        execute?: string
+        evaluate?: string
+        kpi?: string
+        required_skills?: string[]
+        recommended_agent?: string
+        recommended_model?: string
+      }
+
+      const config: StaffConfig = {
+        id: uuidv4(),
+        name: body.name || '',
+        role: body.role || '',
+        gather: body.gather || '',
+        execute: body.execute || '',
+        evaluate: body.evaluate || '',
+        kpi: body.kpi || '',
+        agent: body.recommended_agent || ctx.configStore.get('default_agent'),
+        model: body.recommended_model || ctx.configStore.get('default_model'),
+        skills: body.required_skills || [],
+        created_at: new Date().toISOString()
+      }
+
+      ctx.staffManager.createStaff(config)
+      res.status(201).json(config)
+    } catch (err) {
+      res.status(500).json({ error: String(err) })
+    }
+  })
+
   // Get logs
   router.get('/:id/logs', (req, res) => {
     try {
