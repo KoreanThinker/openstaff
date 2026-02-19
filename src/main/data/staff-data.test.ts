@@ -195,6 +195,19 @@ describe('staff-data', () => {
       expect(existsSync(join(staffSkillsDir, 'skill-1'))).toBe(false)
       expect(existsSync(join(staffSkillsDir, 'skill-2'))).toBe(true)
     })
+
+    it('cleans up regular directories in skills folder', () => {
+      ensureStaffDir('staff-dir-cleanup')
+      const staffSkillsDir = join(tempDir, 'staffs', 'staff-dir-cleanup', '.claude', 'skills')
+      mkdirSync(staffSkillsDir, { recursive: true })
+      // Create a regular directory (not a symlink) in the skills folder
+      mkdirSync(join(staffSkillsDir, 'stale-dir'), { recursive: true })
+      writeFileSync(join(staffSkillsDir, 'stale-dir', 'file.txt'), 'data')
+
+      // symlinkSkills should clean up the regular directory
+      symlinkSkills('staff-dir-cleanup', [])
+      expect(existsSync(join(staffSkillsDir, 'stale-dir'))).toBe(false)
+    })
   })
 
   describe('createClaudeSettings', () => {
