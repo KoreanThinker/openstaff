@@ -243,3 +243,62 @@ describe('system API routes with staff data', () => {
     expect(data.cost_month).toBeCloseTo(0.15, 2)
   })
 })
+
+describe('system API routes: error handling', () => {
+  let errServer: Server
+  let errPort: number
+
+  beforeAll(async () => {
+    const errTempDir = mkdtempSync(join(tmpdir(), 'openstaff-sys-err-'))
+    tempDir = errTempDir
+
+    const app = express()
+    app.use(express.json())
+
+    const brokenMonitoring = {
+      getSystemResources: async () => { throw new Error('Monitoring failure') }
+    }
+
+    const brokenNgrok = {
+      isActive: () => { throw new Error('Ngrok failure') },
+      getUrl: () => null
+    }
+
+    app.use('/api/system', systemRoutes({
+      staffManager: Object.assign(new EventEmitter(), {
+        getRunningStaffIds: () => [],
+        getStatus: () => 'stopped' as const
+      }) as never,
+      configStore: {} as never,
+      monitoringEngine: brokenMonitoring as never,
+      io: { emit: vi.fn() } as never,
+      ngrokManager: brokenNgrok as never
+    }))
+
+    errServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      errServer.listen(0, () => {
+        const addr = errServer.address()
+        errPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => errServer.close())
+
+  it('GET /api/system/resources returns 500 when monitoring throws', async () => {
+    const res = await fetch(`http://localhost:${errPort}/api/system/resources`)
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('Monitoring failure')
+  })
+
+  it('GET /api/system/ngrok returns 500 when ngrok throws', async () => {
+    const res = await fetch(`http://localhost:${errPort}/api/system/ngrok`)
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('Ngrok failure')
+  })
+
+})

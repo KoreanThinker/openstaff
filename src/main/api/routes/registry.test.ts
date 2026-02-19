@@ -252,6 +252,38 @@ describe('registry fresh fetch from GitHub', () => {
   })
 })
 
+describe('registry routes with no cache and fetch failure', () => {
+  const realFetch = globalThis.fetch
+
+  beforeAll(() => {
+    // Delete cache so there's nothing to fall back to
+    const { unlinkSync } = require('fs')
+    try { unlinkSync(join(tempDir, 'registry', 'cache.json')) } catch {}
+
+    // Mock fetch to always fail
+    globalThis.fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.href : url.url
+      if (urlStr.includes('localhost')) {
+        return realFetch(url, init)
+      }
+      return { ok: false, status: 503 } as Response
+    }) as typeof fetch
+  })
+
+  afterAll(() => {
+    globalThis.fetch = realFetch
+  })
+
+  it('GET /api/registry returns empty registry when fetch fails and no cache', async () => {
+    const res = await realFetch(`http://localhost:${port}/api/registry`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.version).toBe('1.0.0')
+    expect(data.templates).toEqual([])
+    expect(data.skills).toEqual([])
+  })
+})
+
 describe('registry routes with expired cache', () => {
   const realFetch = globalThis.fetch
 

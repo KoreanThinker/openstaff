@@ -453,6 +453,85 @@ describe('staffs API routes', () => {
     await apiDelete(`/api/staffs/${data.id}`)
   })
 
+  it('POST /api/staffs/import uses defaults when no recommended_agent/model', async () => {
+    const importData = {
+      name: 'Defaults Import',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    }
+
+    const { status, data } = await apiPost('/api/staffs/import', importData)
+    expect(status).toBe(201)
+    expect(data.name).toBe('Defaults Import')
+    expect(data.agent).toBe('claude-code')
+    expect(data.model).toBe('claude-sonnet-4-5')
+    expect(data.skills).toEqual([])
+
+    await apiDelete(`/api/staffs/${data.id}`)
+  })
+
+  it('POST /api/staffs/:id/start returns 500 when startStaff throws', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const originalStart = mockManager.startStaff
+    mockManager.startStaff = vi.fn().mockRejectedValue(new Error('Start failed'))
+
+    const { status, data } = await apiPost(`/api/staffs/${created.id}/start`)
+    expect(status).toBe(500)
+    expect(data.error).toContain('Start failed')
+
+    mockManager.startStaff = originalStart
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('POST /api/staffs/:id/stop returns 500 when stopStaff throws', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Stop Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const originalStop = mockManager.stopStaff
+    mockManager.stopStaff = vi.fn().mockRejectedValue(new Error('Stop failed'))
+
+    const { status, data } = await apiPost(`/api/staffs/${created.id}/stop`)
+    expect(status).toBe(500)
+    expect(data.error).toContain('Stop failed')
+
+    mockManager.stopStaff = originalStop
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('POST /api/staffs/:id/restart returns 500 when restartStaff throws', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Restart Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const originalRestart = mockManager.restartStaff
+    mockManager.restartStaff = vi.fn().mockRejectedValue(new Error('Restart failed'))
+
+    const { status, data } = await apiPost(`/api/staffs/${created.id}/restart`)
+    expect(status).toBe(500)
+    expect(data.error).toContain('Restart failed')
+
+    mockManager.restartStaff = originalRestart
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
   it('GET /api/staffs list shows uptime for running staffs', async () => {
     const { data: created } = await apiPost('/api/staffs', {
       name: 'Running List Staff',

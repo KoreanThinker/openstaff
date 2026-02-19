@@ -100,3 +100,56 @@ describe('settings API routes', () => {
     expect(mockConfigStore.get('start_on_login')).toBe(false)
   })
 })
+
+describe('settings API routes: error handling', () => {
+  let errorServer: Server
+  let errorPort: number
+
+  beforeAll(async () => {
+    const app = express()
+    app.use(express.json())
+
+    const brokenStore = {
+      get: () => { throw new Error('Storage read failure') },
+      set: () => { throw new Error('Storage write failure') },
+      getAll: () => { throw new Error('Storage getAll failure') },
+      delete: () => { throw new Error('Storage delete failure') }
+    }
+
+    app.use('/api/settings', settingsRoutes({
+      staffManager: {} as never,
+      configStore: brokenStore as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    errorServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      errorServer.listen(0, () => {
+        const addr = errorServer.address()
+        errorPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => errorServer.close())
+
+  it('GET /api/settings returns 500 when configStore throws', async () => {
+    const res = await fetch(`http://localhost:${errorPort}/api/settings`)
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('Storage getAll failure')
+  })
+
+  it('PATCH /api/settings returns 500 when configStore throws', async () => {
+    const res = await fetch(`http://localhost:${errorPort}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ theme: 'dark' })
+    })
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('Storage write failure')
+  })
+})

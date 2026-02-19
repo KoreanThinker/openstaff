@@ -188,3 +188,56 @@ describe('agents API routes', () => {
     expect(res.status).toBe(404)
   })
 })
+
+describe('agents API routes: disconnected state', () => {
+  let dcServer: Server
+  let dcPort: number
+
+  beforeAll(async () => {
+    const app = express()
+    app.use(express.json())
+
+    // Config store with no API key set
+    const emptyConfigStore = {
+      get: () => '',
+      set: vi.fn()
+    }
+
+    app.use('/api/agents', agentRoutes({
+      staffManager: {} as never,
+      configStore: emptyConfigStore as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    dcServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      dcServer.listen(0, () => {
+        const addr = dcServer.address()
+        dcPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => dcServer.close())
+
+  it('GET /api/agents shows disconnected when installed but no API key', async () => {
+    const res = await fetch(`http://localhost:${dcPort}/api/agents`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    const claude = data.find((a: { id: string }) => a.id === 'claude-code')
+    expect(claude.status).toBe('disconnected')
+    expect(claude.api_key_configured).toBe(false)
+    expect(claude.installed).toBe(true)
+  })
+
+  it('GET /api/agents/:id shows disconnected when no API key', async () => {
+    const res = await fetch(`http://localhost:${dcPort}/api/agents/claude-code`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.status).toBe('disconnected')
+    expect(data.connected).toBe(false)
+  })
+})
+
