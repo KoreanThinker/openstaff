@@ -98,6 +98,14 @@ export class ClaudeCodeDriver implements AgentDriver {
     })
   }
 
+  private cleanEnv(extra: Record<string, string> = {}): Record<string, string> {
+    const env = { ...process.env, ...extra } as Record<string, string>
+    // Remove vars that prevent nested Claude Code sessions
+    delete env['CLAUDECODE']
+    delete env['CLAUDE_CODE_SESSION']
+    return env
+  }
+
   spawn(opts: SpawnOptions): AgentProcess {
     const binPath = this.getBinaryPath()
     const args = [
@@ -115,7 +123,7 @@ export class ClaudeCodeDriver implements AgentDriver {
       cols: 200,
       rows: 50,
       cwd: opts.workingDir,
-      env: { ...process.env, ...opts.env }
+      env: this.cleanEnv(opts.env)
     })
 
     return this.wrapPty(pty)
@@ -139,7 +147,7 @@ export class ClaudeCodeDriver implements AgentDriver {
       cols: 200,
       rows: 50,
       cwd: opts.workingDir,
-      env: { ...process.env, ...opts.env }
+      env: this.cleanEnv(opts.env)
     })
 
     return this.wrapPty(pty)
