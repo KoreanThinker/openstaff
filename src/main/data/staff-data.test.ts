@@ -19,6 +19,8 @@ vi.mock('@shared/constants', async () => {
 
 // Import after mock
 const {
+  getStaffsDir,
+  getStaffDir,
   ensureStaffDir,
   listStaffIds,
   readStaffConfig,
@@ -53,6 +55,16 @@ describe('staff-data', () => {
 
   afterEach(() => {
     rmSync(tempDir, { recursive: true, force: true })
+  })
+
+  describe('getStaffsDir / getStaffDir', () => {
+    it('returns the staffs directory', () => {
+      expect(getStaffsDir()).toBe(join(tempDir, 'staffs'))
+    })
+
+    it('returns staff directory path', () => {
+      expect(getStaffDir('my-staff')).toBe(join(tempDir, 'staffs', 'my-staff'))
+    })
   })
 
   describe('ensureStaffDir', () => {
@@ -160,6 +172,27 @@ describe('staff-data', () => {
     it('handles non-existent skill gracefully', () => {
       ensureStaffDir('staff-no-skill')
       expect(() => symlinkSkills('staff-no-skill', ['nonexistent'])).not.toThrow()
+    })
+
+    it('replaces existing symlinks when called again', () => {
+      // Create two skills
+      const skill1Dir = join(tempDir, 'skills', 'skill-1')
+      const skill2Dir = join(tempDir, 'skills', 'skill-2')
+      mkdirSync(skill1Dir, { recursive: true })
+      mkdirSync(skill2Dir, { recursive: true })
+      writeFileSync(join(skill1Dir, 'SKILL.md'), '---\nname: skill-1\n---')
+      writeFileSync(join(skill2Dir, 'SKILL.md'), '---\nname: skill-2\n---')
+
+      ensureStaffDir('staff-replace')
+      // First symlink skill-1
+      symlinkSkills('staff-replace', ['skill-1'])
+      const staffSkillsDir = join(tempDir, 'staffs', 'staff-replace', '.claude', 'skills')
+      expect(existsSync(join(staffSkillsDir, 'skill-1'))).toBe(true)
+
+      // Replace with skill-2
+      symlinkSkills('staff-replace', ['skill-2'])
+      expect(existsSync(join(staffSkillsDir, 'skill-1'))).toBe(false)
+      expect(existsSync(join(staffSkillsDir, 'skill-2'))).toBe(true)
     })
   })
 

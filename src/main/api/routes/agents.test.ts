@@ -125,6 +125,30 @@ describe('agents API routes', () => {
     expect(typeof data.connected).toBe('boolean')
   })
 
+  it('POST /api/agents/:id/test-connection returns not connected when no API key', async () => {
+    // Clear the API key first
+    await fetch(`http://localhost:${port}/api/agents/claude-code/api-key`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: '' })
+    })
+
+    const res = await fetch(`http://localhost:${port}/api/agents/claude-code/test-connection`, {
+      method: 'POST'
+    })
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.connected).toBe(false)
+    expect(data.error).toBe('No API key configured')
+
+    // Restore key
+    await fetch(`http://localhost:${port}/api/agents/claude-code/api-key`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: 'valid-key' })
+    })
+  })
+
   it('POST /api/agents/:id/install triggers installation', async () => {
     const res = await fetch(`http://localhost:${port}/api/agents/claude-code/install`, {
       method: 'POST'

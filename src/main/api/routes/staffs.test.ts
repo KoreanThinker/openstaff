@@ -8,6 +8,8 @@ import { tmpdir } from 'os'
 let tempDir: string
 let server: Server
 let port: number
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let mockManager: any
 
 vi.mock('@shared/constants', async () => {
   const actual = await vi.importActual('@shared/constants')
@@ -62,7 +64,7 @@ describe('staffs API routes', () => {
     const app = express()
     app.use(express.json())
 
-    const mockManager = createMockStaffManager()
+    mockManager = createMockStaffManager()
     const mockConfig = createMockConfigStore()
 
     // Make createStaff actually write config
@@ -355,6 +357,78 @@ describe('staffs API routes', () => {
     expect(data.lines.length).toBeGreaterThan(0)
     expect(data.lines).toContain('Line 1')
 
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('GET /api/staffs/:id shows uptime when running', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Uptime Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    // Write state with last_started_at and change mock to return 'running'
+    const { writeStaffState } = await import('../../data/staff-data')
+    writeStaffState(created.id, {
+      session_id: 'test-session',
+      last_started_at: new Date(Date.now() - 60_000).toISOString()
+    })
+    const originalGetStatus = mockManager.getStatus
+    mockManager.getStatus = (id: string) => id === created.id ? 'running' : 'stopped'
+
+    const { status, data } = await apiGet(`/api/staffs/${created.id}`)
+    expect(status).toBe(200)
+    expect(data.uptime).toBeGreaterThan(0)
+
+    // Restore and clean up
+    mockManager.getStatus = originalGetStatus
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('DELETE /api/staffs/:id stops running staff before deleting', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Running Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const originalIsRunning = mockManager.isRunning
+    mockManager.isRunning = (id: string) => id === created.id
+
+    const { status } = await apiDelete(`/api/staffs/${created.id}`)
+    expect(status).toBe(204)
+    expect(mockManager.stopStaff).toHaveBeenCalledWith(created.id)
+
+    mockManager.isRunning = originalIsRunning
+  })
+
+  it('GET /api/staffs list shows uptime for running staffs', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Running List Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const { writeStaffState } = await import('../../data/staff-data')
+    writeStaffState(created.id, {
+      session_id: 'test-session',
+      last_started_at: new Date(Date.now() - 120_000).toISOString()
+    })
+    const originalGetStatus = mockManager.getStatus
+    mockManager.getStatus = (id: string) => id === created.id ? 'running' : 'stopped'
+
+    const { data: list } = await apiGet('/api/staffs')
+    const staff = list.find((s: { id: string }) => s.id === created.id)
+    expect(staff).toBeTruthy()
+    expect(staff.uptime).toBeGreaterThan(0)
+
+    mockManager.getStatus = originalGetStatus
     await apiDelete(`/api/staffs/${created.id}`)
   })
 })

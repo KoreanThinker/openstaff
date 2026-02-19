@@ -223,3 +223,80 @@ description: A skill to delete
     expect(updatedConfig?.skills).not.toContain('del-skill')
   })
 })
+
+describe('skills API routes: delete restarts running staff', () => {
+  let tempDir3: string
+  let server3: Server
+  let port3: number
+  let restartFn: ReturnType<typeof vi.fn>
+
+  beforeAll(async () => {
+    tempDir3 = mkdtempSync(join(tmpdir(), 'openstaff-skills-restart-'))
+    tempDir = tempDir3
+    mkdirSync(join(tempDir3, 'skills'), { recursive: true })
+    mkdirSync(join(tempDir3, 'staffs'), { recursive: true })
+
+    // Create a skill
+    const skillDir = join(tempDir3, 'skills', 'running-skill')
+    mkdirSync(skillDir, { recursive: true })
+    writeFileSync(join(skillDir, 'SKILL.md'), `---
+name: running-skill
+description: A skill used by running staff
+---
+# Running Skill`)
+
+    // Create a staff that uses this skill
+    const { writeStaffConfig, ensureStaffDir } = await import('../../data/staff-data')
+    ensureStaffDir('running-staff')
+    writeStaffConfig({
+      id: 'running-staff',
+      name: 'Running Staff',
+      role: 'Tester',
+      gather: 'g',
+      execute: 'e',
+      evaluate: 'ev',
+      kpi: '',
+      agent: 'claude-code',
+      model: 'claude-sonnet-4-5',
+      skills: ['running-skill'],
+      created_at: new Date().toISOString()
+    })
+
+    restartFn = vi.fn()
+    const mockManager = Object.assign(new EventEmitter(), {
+      isRunning: () => true, // Staff is running
+      restartStaff: restartFn
+    })
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api/skills', skillRoutes({
+      staffManager: mockManager as never,
+      configStore: createMockConfigStore() as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    server3 = createServer(app)
+    await new Promise<void>((resolve) => {
+      server3.listen(0, () => {
+        const addr = server3.address()
+        port3 = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => {
+    server3.close()
+    rmSync(tempDir3, { recursive: true, force: true })
+  })
+
+  it('DELETE /api/skills/:name restarts running staff after removing skill', async () => {
+    const res = await fetch(`http://localhost:${port3}/api/skills/running-skill`, {
+      method: 'DELETE'
+    })
+    expect(res.status).toBe(204)
+    expect(restartFn).toHaveBeenCalledWith('running-staff')
+  })
+})
