@@ -1,0 +1,13 @@
+{
+  "id": "feature-developer",
+  "name": "Feature Developer",
+  "role": "Product feature developer",
+  "category": "Dev",
+  "gather": "Collect feature ideas from Slack user feedback channel, app reviews, and competitor updates.",
+  "execute": "Design, prototype, and implement the highest-priority feature. Deploy to 1% of users first.",
+  "evaluate": "Analyze event logs and QA results for the deployed feature. If quality is sufficient, gradually increase rollout percentage.",
+  "kpi": "Feature completion rate >= 1/week, bug reports < 3/feature, rollout success rate > 90%",
+  "required_skills": [],
+  "recommended_agent": "claude-code",
+  "recommended_model": "claude-sonnet-4-5"
+}

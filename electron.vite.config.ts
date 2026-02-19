@@ -12,7 +12,7 @@ export default defineConfig({
     },
     build: {
       rollupOptions: {
-        external: ['node-pty', 'electron-store', 'tree-kill', 'pidusage']
+        external: ['node-pty', 'electron-store', 'tree-kill', 'pidusage', '@ngrok/ngrok']
       }
     }
   },

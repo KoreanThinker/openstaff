@@ -1,0 +1,13 @@
+{
+  "id": "meta-ads-creative",
+  "name": "Meta Ads Creative Designer",
+  "role": "Meta ads creative designer",
+  "category": "Marketing",
+  "gather": "Collect trending posts from Instagram and X (Twitter) for the last 3 days in our product category. Analyze visual styles, copy patterns, and hashtags of top 100 posts.",
+  "execute": "Create 3 ad creatives (image + copy) per day tailored to our product. Include A/B test variants.",
+  "evaluate": "Check each creative's CPI, CPM, CTR from Meta Ads dashboard API. Analyze which patterns perform best and apply learnings to next batch.",
+  "kpi": "CPI < $2.00, CTR > 3%, daily creatives >= 3",
+  "required_skills": ["instagram", "meta-ads-api"],
+  "recommended_agent": "claude-code",
+  "recommended_model": "claude-sonnet-4-5"
+}

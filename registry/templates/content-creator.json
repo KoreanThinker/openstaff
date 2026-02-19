@@ -1,0 +1,13 @@
+{
+  "id": "content-creator",
+  "name": "Social Media Content Creator",
+  "role": "Social media content manager",
+  "category": "Content",
+  "gather": "Monitor trending topics on social media platforms. Analyze competitor content strategies and engagement patterns.",
+  "execute": "Create engaging social media posts, stories, and thread content. Schedule posts for optimal engagement times.",
+  "evaluate": "Track engagement rates, follower growth, and reach metrics. Identify top-performing content formats.",
+  "kpi": "Engagement rate > 5%, follower growth > 2%/week, posts/day >= 3",
+  "required_skills": [],
+  "recommended_agent": "claude-code",
+  "recommended_model": "claude-sonnet-4-5"
+}

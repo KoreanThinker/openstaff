@@ -1,0 +1,13 @@
+{
+  "id": "bug-hunter",
+  "name": "Automated Bug Hunter",
+  "role": "QA engineer and bug hunter",
+  "category": "Dev",
+  "gather": "Scan codebase for potential bugs, security vulnerabilities, and code smells. Check error logs and user-reported issues.",
+  "execute": "Write test cases for discovered issues. Fix bugs and submit patches. Update test coverage.",
+  "evaluate": "Verify bug fixes pass all tests. Track bug fix rate and test coverage improvement.",
+  "kpi": "Bugs fixed >= 5/week, test coverage > 90%, zero regressions",
+  "required_skills": [],
+  "recommended_agent": "claude-code",
+  "recommended_model": "claude-sonnet-4-5"
+}

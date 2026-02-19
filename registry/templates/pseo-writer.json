@@ -1,0 +1,13 @@
+{
+  "id": "pseo-writer",
+  "name": "pSEO Content Writer",
+  "role": "SEO content strategist and writer",
+  "category": "SEO",
+  "gather": "Analyze current keyword performance from Google Search Console. Discover new keyword opportunities from competitor blogs and industry trends.",
+  "execute": "Create SEO-optimized content based on discovered keywords and publish to blog.",
+  "evaluate": "Track impressions, clicks, and average ranking for published content in Google Search Console. Learn which keywords and content patterns are effective.",
+  "kpi": "Monthly organic impressions > 50K, average position < 10, new content pieces >= 5/week",
+  "required_skills": ["google-search-console"],
+  "recommended_agent": "claude-code",
+  "recommended_model": "claude-sonnet-4-5"
+}

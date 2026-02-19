@@ -1,0 +1,13 @@
+{
+  "id": "aso-optimizer",
+  "name": "Play Store ASO Optimizer",
+  "role": "Play Store ASO specialist",
+  "category": "Marketing",
+  "gather": "Research trending keywords on Play Store and track ranking trends for existing keywords.",
+  "execute": "Optimize keyword combinations and update app description and screenshot captions.",
+  "evaluate": "Track impressions and install count changes per keyword. Learn effective keyword patterns.",
+  "kpi": "Organic installs +20% MoM, target keyword top 10 count >= 5",
+  "required_skills": [],
+  "recommended_agent": "claude-code",
+  "recommended_model": "claude-sonnet-4-5"
+}
