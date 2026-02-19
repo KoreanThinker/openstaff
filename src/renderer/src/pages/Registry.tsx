@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import {
   Search,
@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
+import { toast } from '@/hooks/use-toast'
 import type { RegistryTemplate, RegistrySkill, RegistryIndex } from '@shared/types'
 
 type TabType = 'templates' | 'skills'
@@ -225,6 +226,7 @@ function CardSkeleton(): React.ReactElement {
 
 export function Registry(): React.ReactElement {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [tab, setTab] = useState<TabType>('templates')
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -307,6 +309,20 @@ export function Registry(): React.ReactElement {
     setSelectedTemplate(null)
     setDetailOpen(true)
   }, [])
+
+  const handleSkillInstall = useCallback(async (skillName: string) => {
+    try {
+      await api.installRegistrySkill(skillName)
+      await queryClient.invalidateQueries({ queryKey: ['skills'] })
+      toast({ title: `Skill "${skillName}" installed` })
+    } catch (err) {
+      toast({
+        title: 'Install failed',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive'
+      })
+    }
+  }, [queryClient])
 
   return (
     <div className="flex flex-1 flex-col">
@@ -470,7 +486,7 @@ export function Registry(): React.ReactElement {
                     skill={skill}
                     isInstalled={installedSkillNames.has(skill.name)}
                     onClick={() => handleOpenSkillDetail(skill)}
-                    onInstall={() => {}}
+                    onInstall={() => handleSkillInstall(skill.name)}
                   />
                 ))}
               </div>
@@ -650,6 +666,7 @@ export function Registry(): React.ReactElement {
                     : 'default'
                 }
                 disabled={installedSkillNames.has(selectedSkill.name)}
+                onClick={() => handleSkillInstall(selectedSkill.name)}
               >
                 {installedSkillNames.has(selectedSkill.name) ? (
                   <>

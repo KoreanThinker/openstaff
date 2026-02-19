@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Search, Zap, BarChart3, X, Plus, Loader2, Check } from 'lucide-react'
 import { api } from '@/lib/api'
@@ -187,6 +187,7 @@ export function StaffCreate(): React.ReactElement {
   const { id } = useParams<{ id: string }>()
   const isEditMode = Boolean(id)
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
 
   const [form, setForm] = useState<FormData>(INITIAL_FORM)
@@ -196,6 +197,7 @@ export function StaffCreate(): React.ReactElement {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [showDiscardDialog, setShowDiscardDialog] = useState(false)
   const [skillsPopoverOpen, setSkillsPopoverOpen] = useState(false)
+  const [registryDialogOpen, setRegistryDialogOpen] = useState(false)
   const isDirty = useRef(false)
   const firstErrorRef = useRef<HTMLElement | null>(null)
 
@@ -239,6 +241,17 @@ export function StaffCreate(): React.ReactElement {
       })
     }
   }, [isEditMode, staff])
+
+  // ─── Apply template from location state (Registry → Create) ──────
+
+  useEffect(() => {
+    const state = location.state as { template?: { role: string; gather: string; execute: string; evaluate: string; kpi: string; required_skills: string[]; recommended_agent: string; recommended_model: string } } | null
+    if (!isEditMode && state?.template) {
+      applyTemplate(state.template)
+      // Clear location state to prevent re-apply on re-renders
+      window.history.replaceState({}, '')
+    }
+  }, [location.state, isEditMode, applyTemplate])
 
   // ─── Set defaults from settings ───────────────────────────────────
 
@@ -448,10 +461,36 @@ export function StaffCreate(): React.ReactElement {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => {
                 queryClient.fetchQuery({ queryKey: ['registry-templates'], queryFn: () => api.getRegistryTemplates() })
+                setRegistryDialogOpen(true)
               }}>
                 Browse Registry
               </DropdownMenuItem>
-              <DropdownMenuItem>Import File</DropdownMenuItem>
+              <DropdownMenuItem onClick={async () => {
+                try {
+                  const filePath = await window.api?.selectFile?.({
+                    filters: [{ name: 'JSON', extensions: ['json'] }]
+                  })
+                  if (!filePath) return
+                  const res = await fetch(filePath)
+                  const data = await res.json()
+                  if (data.role) applyTemplate(data)
+                } catch {
+                  // If Electron API not available, use native file input fallback
+                  const input = document.createElement('input')
+                  input.type = 'file'
+                  input.accept = '.json'
+                  input.onchange = async () => {
+                    const file = input.files?.[0]
+                    if (!file) return
+                    const text = await file.text()
+                    try {
+                      const data = JSON.parse(text)
+                      if (data.role) applyTemplate(data)
+                    } catch { /* ignore parse errors */ }
+                  }
+                  input.click()
+                }
+              }}>Import File</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -789,6 +828,38 @@ export function StaffCreate(): React.ReactElement {
           </div>
         </div>
       </div>
+
+      {/* Browse Registry Dialog */}
+      <Dialog open={registryDialogOpen} onOpenChange={setRegistryDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[70vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Choose a Template</DialogTitle>
+            <DialogDescription>
+              Select a template to pre-fill the Staff form.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {templates?.map((t) => (
+              <Card
+                key={t.id}
+                className="cursor-pointer transition-colors hover:border-foreground/20"
+                onClick={() => {
+                  applyTemplate(t)
+                  setRegistryDialogOpen(false)
+                }}
+              >
+                <CardContent className="p-4">
+                  <h4 className="font-semibold text-foreground">{t.name}</h4>
+                  <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{t.role}</p>
+                  <Badge variant="outline" className="mt-2 rounded-full text-xs">{t.category}</Badge>
+                </CardContent>
+              </Card>
+            )) ?? (
+              <p className="col-span-2 text-center text-sm text-muted-foreground py-8">Loading templates...</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Discard Changes Dialog */}
       <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>

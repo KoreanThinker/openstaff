@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { useState, useMemo } from 'react'
 import {
   Users,
   DollarSign,
@@ -11,15 +12,25 @@ import {
   Square,
   RefreshCw,
   Eye,
-  Trash2
+  Trash2,
+  Search,
+  ArrowUpDown
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { cn, formatUptime, formatCost, formatTokens, formatTrend } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Progress } from '@/components/ui/progress'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -58,8 +69,8 @@ function TrendBadge({ trend }: { trend: number | null }): React.ReactElement {
   return (
     <span
       className={cn(
-        'text-xs font-medium',
-        isPositive ? 'text-success' : 'text-destructive'
+        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+        isPositive ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'
       )}
     >
       {formatTrend(trend)}
@@ -199,8 +210,13 @@ function DashboardSkeleton(): React.ReactElement {
   )
 }
 
+type SortField = 'name' | 'status' | 'cycles' | 'cost'
+
 export function Dashboard(): React.ReactElement {
   const navigate = useNavigate()
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [sortField, setSortField] = useState<SortField>('name')
 
   const statsQuery = useQuery<DashboardStats>({
     queryKey: ['dashboard-stats'],
@@ -262,6 +278,34 @@ export function Dashboard(): React.ReactElement {
   const staffs = staffsQuery.data ?? []
   const resources = resourcesQuery.data
 
+  const filteredStaffs = useMemo(() => {
+    let result = staffs
+    if (search) {
+      const q = search.toLowerCase()
+      result = result.filter(
+        (s) =>
+          s.name.toLowerCase().includes(q) ||
+          s.role.toLowerCase().includes(q)
+      )
+    }
+    if (statusFilter !== 'all') {
+      result = result.filter((s) => s.status === statusFilter)
+    }
+    result = [...result].sort((a, b) => {
+      switch (sortField) {
+        case 'status':
+          return a.status.localeCompare(b.status)
+        case 'cycles':
+          return b.cycles - a.cycles
+        case 'cost':
+          return b.cost_today - a.cost_today
+        default:
+          return a.name.localeCompare(b.name)
+      }
+    })
+    return result
+  }, [staffs, search, statusFilter, sortField])
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
@@ -319,9 +363,48 @@ export function Dashboard(): React.ReactElement {
           onClick={() => navigate('/staffs/new')}
         >
           <Plus className="mr-2 h-4 w-4" />
-          New Staff
+          Create Staff
         </Button>
       </div>
+
+      {/* Search, Filter, Sort */}
+      {staffs.length > 0 && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search staff..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="rounded-full pl-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px] rounded-full">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="running">Running</SelectItem>
+              <SelectItem value="stopped">Stopped</SelectItem>
+              <SelectItem value="error">Error</SelectItem>
+              <SelectItem value="warning">Warning</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortField} onValueChange={(v) => setSortField(v as SortField)}>
+            <SelectTrigger className="w-[140px] rounded-full">
+              <ArrowUpDown className="mr-2 h-3.5 w-3.5" />
+              <SelectValue placeholder="Sort" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
+              <SelectItem value="cycles">Cycles</SelectItem>
+              <SelectItem value="cost">Cost</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {staffs.length === 0 ? (
         <EmptyState />
@@ -347,7 +430,7 @@ export function Dashboard(): React.ReactElement {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {staffs.map((staff) => (
+                {filteredStaffs.map((staff) => (
                   <TableRow
                     key={staff.id}
                     className="cursor-pointer"
@@ -399,7 +482,7 @@ export function Dashboard(): React.ReactElement {
 
           {/* Mobile Cards */}
           <div className="space-y-3 md:hidden">
-            {staffs.map((staff) => (
+            {filteredStaffs.map((staff) => (
               <Card
                 key={staff.id}
                 className="cursor-pointer"

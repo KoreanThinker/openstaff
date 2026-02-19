@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, ArrowLeft, Globe, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Globe, Sparkles, Search, Zap, BarChart3, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -27,7 +27,7 @@ function StepIndicator({ current }: { current: number }): React.ReactElement {
                     : 'bg-muted text-muted-foreground'
               )}
             >
-              {i < current ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+              {i < current ? <Check className="h-4 w-4" /> : i + 1}
             </div>
             <span
               className={cn(
@@ -53,21 +53,43 @@ function StepIndicator({ current }: { current: number }): React.ReactElement {
 }
 
 function LoopVisualization(): React.ReactElement {
-  const steps = ['Gather', 'Execute', 'Evaluate']
   return (
-    <div className="flex items-center justify-center gap-2 py-6">
-      {steps.map((step, i) => (
-        <React.Fragment key={step}>
-          <div className="rounded-full bg-muted px-4 py-2 text-sm font-medium text-foreground">
-            {step}
+    <div className="flex items-center justify-center py-6">
+      <svg
+        viewBox="0 0 500 180"
+        className="w-full max-w-sm h-auto"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <line x1="140" y1="60" x2="185" y2="60" className="stroke-border" strokeWidth="2" markerEnd="url(#wiz-arrow)" />
+        <line x1="315" y1="60" x2="360" y2="60" className="stroke-border" strokeWidth="2" markerEnd="url(#wiz-arrow)" />
+        <path d="M 425 85 C 425 150, 75 150, 75 85" fill="none" className="stroke-border" strokeWidth="2" markerEnd="url(#wiz-arrow)" />
+        <circle r="4" className="fill-primary">
+          <animateMotion dur="9s" repeatCount="indefinite" path="M 90 60 L 250 60 L 410 60 C 425 60, 425 85, 425 85 C 425 150, 75 150, 75 85 C 75 85, 75 60, 90 60" />
+        </circle>
+        <defs>
+          <marker id="wiz-arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" className="fill-border" />
+          </marker>
+        </defs>
+        <foreignObject x="20" y="30" width="120" height="60">
+          <div className="flex items-center justify-center gap-2 rounded-full px-4 py-2 bg-chart-1/10 text-chart-1">
+            <Search className="h-4 w-4" />
+            <span className="text-sm font-medium">Gather</span>
           </div>
-          {i < steps.length - 1 && (
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-          )}
-        </React.Fragment>
-      ))}
-      <ArrowRight className="h-4 w-4 text-muted-foreground" />
-      <span className="text-sm text-muted-foreground">repeat</span>
+        </foreignObject>
+        <foreignObject x="190" y="30" width="120" height="60">
+          <div className="flex items-center justify-center gap-2 rounded-full px-4 py-2 bg-chart-2/10 text-chart-2">
+            <Zap className="h-4 w-4" />
+            <span className="text-sm font-medium">Execute</span>
+          </div>
+        </foreignObject>
+        <foreignObject x="360" y="30" width="120" height="60">
+          <div className="flex items-center justify-center gap-2 rounded-full px-4 py-2 bg-chart-3/10 text-chart-3">
+            <BarChart3 className="h-4 w-4" />
+            <span className="text-sm font-medium">Evaluate</span>
+          </div>
+        </foreignObject>
+      </svg>
     </div>
   )
 }
@@ -78,6 +100,9 @@ export function SetupWizard(): React.ReactElement {
   const [step, setStep] = React.useState(0)
   const [ngrokKey, setNgrokKey] = React.useState('')
   const [dashPassword, setDashPassword] = React.useState('')
+
+  const isPartialFill = (ngrokKey && !dashPassword) || (!ngrokKey && dashPassword)
+  const canAdvanceStep2 = !isPartialFill
 
   const handleComplete = async (): Promise<void> => {
     try {
@@ -159,6 +184,9 @@ export function SetupWizard(): React.ReactElement {
                   onChange={(e) => setDashPassword(e.target.value)}
                 />
               </div>
+              {isPartialFill && (
+                <p className="text-sm text-warning">Both fields are needed for remote access.</p>
+              )}
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1 rounded-full" onClick={() => setStep(0)}>
                   <ArrowLeft className="mr-2 h-4 w-4" />
@@ -171,7 +199,11 @@ export function SetupWizard(): React.ReactElement {
                 >
                   Skip
                 </Button>
-                <Button className="flex-1 rounded-full" onClick={() => setStep(2)}>
+                <Button
+                  className="flex-1 rounded-full"
+                  onClick={() => setStep(2)}
+                  disabled={!canAdvanceStep2}
+                >
                   Next
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -185,7 +217,7 @@ export function SetupWizard(): React.ReactElement {
           <Card>
             <CardHeader className="text-center">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-success/20">
-                <CheckCircle2 className="h-6 w-6 text-success" />
+                <Sparkles className="h-6 w-6 text-success" />
               </div>
               <CardTitle>You&apos;re all set!</CardTitle>
               <CardDescription>
@@ -210,20 +242,10 @@ export function SetupWizard(): React.ReactElement {
                   </li>
                 </ul>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="rounded-full"
-                  onClick={() => setStep(1)}
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back
-                </Button>
-                <Button className="flex-1 rounded-full" onClick={handleComplete}>
-                  Go to Dashboard
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
+              <Button className="w-full rounded-full" onClick={handleComplete}>
+                Go to Dashboard
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
             </CardContent>
           </Card>
         )}

@@ -92,5 +92,10 @@ export const api = {
   // Registry
   getRegistry: () => request<import('@shared/types').RegistryIndex>('/api/registry'),
   getRegistryTemplates: () => request<import('@shared/types').RegistryTemplate[]>('/api/registry/templates'),
-  getRegistrySkills: () => request<import('@shared/types').RegistrySkill[]>('/api/registry/skills')
+  getRegistrySkills: () => request<import('@shared/types').RegistrySkill[]>('/api/registry/skills'),
+  installRegistrySkill: (name: string) =>
+    request<{ status: string; name: string }>(`/api/registry/skills/${name}/install`, { method: 'POST' }),
+
+  // Staff export
+  exportStaff: (id: string) => request<import('@shared/types').StaffConfig>(`/api/staffs/${id}/export`)
 }
