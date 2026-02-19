@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo, type CSSProperties } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { parseAnsi, stripAnsi } from '@shared/ansi-parser'
 import {
   ArrowLeft,
   Play,
@@ -543,10 +544,10 @@ function LogsTab({ staffId }: { staffId: string }): React.ReactElement {
     let result = lines
     if (logFilter !== 'all') {
       const keyword = logFilter === 'errors' ? 'error' : logFilter
-      result = result.filter((line) => line.toLowerCase().includes(keyword))
+      result = result.filter((line) => stripAnsi(line).toLowerCase().includes(keyword))
     }
     if (searchQuery) {
-      result = result.filter((line) => line.toLowerCase().includes(searchQuery.toLowerCase()))
+      result = result.filter((line) => stripAnsi(line).toLowerCase().includes(searchQuery.toLowerCase()))
     }
     return result
   }, [lines, logFilter, searchQuery])
@@ -604,7 +605,9 @@ function LogsTab({ staffId }: { staffId: string }): React.ReactElement {
         <div className="space-y-0.5">
           {filteredLines.map((line, i) => (
             <div key={i} className="font-mono text-xs leading-5 text-foreground whitespace-pre-wrap">
-              {line}
+              {parseAnsi(line).map((seg, j) => (
+                <span key={j} style={seg.style as CSSProperties}>{seg.text}</span>
+              ))}
             </div>
           ))}
         </div>
