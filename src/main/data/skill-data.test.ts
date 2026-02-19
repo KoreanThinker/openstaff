@@ -22,7 +22,9 @@ const {
   importSkill,
   deleteSkill,
   ensureBuiltinSkill,
-  getSkillsDir
+  getSkillsDir,
+  getSkillAuthStatus,
+  getSkillInfo
 } = await import('./skill-data')
 
 describe('skill-data', () => {
@@ -90,6 +92,57 @@ Use this skill for testing.`)
       createSkill('no-frontmatter', '# Just markdown')
       expect(parseSkillMd('no-frontmatter')).toBeNull()
     })
+
+    it('skips frontmatter lines without a colon', () => {
+      createSkill('colon-skip', `---
+name: colon-skill
+this line has no colon
+description: good desc
+---
+# Content`)
+      const result = parseSkillMd('colon-skip')
+      expect(result).not.toBeNull()
+      expect(result!.name).toBe('colon-skill')
+      expect(result!.description).toBe('good desc')
+    })
+  })
+
+  describe('getSkillAuthStatus', () => {
+    it('returns not_configured when no required vars', () => {
+      const mockStore = { get: () => '' } as never
+      expect(getSkillAuthStatus([], mockStore)).toBe('not_configured')
+    })
+
+    it('returns active when all vars are configured', () => {
+      const mockStore = { get: () => 'some-value' } as never
+      expect(getSkillAuthStatus(['MY_API_KEY'], mockStore)).toBe('active')
+    })
+
+    it('returns needs_auth when vars are not configured', () => {
+      const mockStore = { get: () => '' } as never
+      expect(getSkillAuthStatus(['MY_API_KEY'], mockStore)).toBe('needs_auth')
+    })
+  })
+
+  describe('getSkillInfo', () => {
+    it('returns skill info with defaults for missing metadata', () => {
+      createSkill('info-skill', `---
+name: info-skill
+description: Info skill description
+---
+# Content`)
+      const mockStore = { get: () => '' } as never
+      const info = getSkillInfo('info-skill', mockStore)
+      expect(info).not.toBeNull()
+      expect(info!.author).toBe('unknown')
+      expect(info!.version).toBe('1.0')
+      expect(info!.source).toBe('local')
+    })
+
+    it('returns null for nonexistent skill', () => {
+      const mockStore = { get: () => '' } as never
+      expect(getSkillInfo('nonexistent', mockStore)).toBeNull()
+    })
   })
 
   describe('extractRequiredEnvVars', () => {
@@ -128,6 +181,13 @@ Use this skill for testing.`)
       const sourceDir = join(tempDir, 'no-skill')
       mkdirSync(sourceDir, { recursive: true })
       expect(() => importSkill(sourceDir)).toThrow('SKILL.md not found')
+    })
+
+    it('throws for SKILL.md without name field', () => {
+      const sourceDir = join(tempDir, 'no-name-skill')
+      mkdirSync(sourceDir, { recursive: true })
+      writeFileSync(join(sourceDir, 'SKILL.md'), '# Just markdown with no frontmatter name')
+      expect(() => importSkill(sourceDir)).toThrow('SKILL.md missing name field')
     })
   })
 

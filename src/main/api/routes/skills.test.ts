@@ -109,6 +109,30 @@ compatibility: Requires TEST_API_KEY
     expect(data.description).toBe('A test skill')
   })
 
+  it('GET /api/skills/:name shows connected_staffs when staff uses the skill', async () => {
+    // Create a staff that uses test-skill
+    const { writeStaffConfig, ensureStaffDir } = await import('../../data/staff-data')
+    ensureStaffDir('staff-skill-detail')
+    writeStaffConfig({
+      id: 'staff-skill-detail',
+      name: 'Staff Skill Detail',
+      role: 'Tester',
+      gather: 'g',
+      execute: 'e',
+      evaluate: 'ev',
+      kpi: '',
+      agent: 'claude-code',
+      model: 'claude-sonnet-4-5',
+      skills: ['test-skill'],
+      created_at: new Date().toISOString()
+    })
+
+    const res = await fetch(`http://localhost:${port}/api/skills/test-skill`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.connected_staffs).toContain('staff-skill-detail')
+  })
+
   it('PUT /api/skills/:name/auth saves auth config', async () => {
     const res = await fetch(`http://localhost:${port}/api/skills/test-skill/auth`, {
       method: 'PUT',

@@ -597,3 +597,83 @@ describe('agents API routes: disconnected state', () => {
   })
 })
 
+describe('agents API routes: non-claude-code driver branches', () => {
+  let nccServer: Server
+  let nccPort: number
+  let originalGetAllDrivers: typeof agentRegistry.getAllDrivers
+  let originalGetDriver: typeof agentRegistry.getDriver
+
+  beforeAll(async () => {
+    originalGetAllDrivers = agentRegistry.getAllDrivers
+    originalGetDriver = agentRegistry.getDriver
+
+    const codexDriver = {
+      id: 'codex',
+      name: 'OpenAI Codex',
+      isInstalled: async () => true,
+      getVersion: async () => '2.0.0',
+      getAvailableModels: () => [],
+      install: async (onProgress: (p: number) => void) => { onProgress(50); onProgress(100) },
+      testConnection: async (key: string) => key === 'openai-key'
+    }
+
+    ;(agentRegistry as Record<string, unknown>).getAllDrivers = () => [codexDriver]
+    ;(agentRegistry as Record<string, unknown>).getDriver = (id: string) => {
+      if (id === 'codex') return codexDriver
+      return undefined
+    }
+
+    const store: Record<string, unknown> = { openai_api_key: 'openai-key' }
+    const app = express()
+    app.use(express.json())
+    app.use('/api/agents', agentRoutes({
+      staffManager: {} as never,
+      configStore: { get: (k: string) => store[k] ?? '', set: (k: string, v: unknown) => { store[k] = v } } as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    nccServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      nccServer.listen(0, () => {
+        const addr = nccServer.address()
+        nccPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => {
+    ;(agentRegistry as Record<string, unknown>).getAllDrivers = originalGetAllDrivers
+    ;(agentRegistry as Record<string, unknown>).getDriver = originalGetDriver
+    nccServer.close()
+  })
+
+  it('GET /api/agents reads openai_api_key for non-claude-code driver', async () => {
+    const res = await fetch(`http://localhost:${nccPort}/api/agents`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    const codex = data.find((a: { id: string }) => a.id === 'codex')
+    expect(codex.status).toBe('connected')
+    expect(codex.api_key_configured).toBe(true)
+  })
+
+  it('POST /api/agents/:id/install calls progress callback', async () => {
+    const res = await fetch(`http://localhost:${nccPort}/api/agents/codex/install`, {
+      method: 'POST'
+    })
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.status).toBe('installed')
+  })
+
+  it('POST /api/agents/:id/test-connection reads openai_api_key for codex', async () => {
+    const res = await fetch(`http://localhost:${nccPort}/api/agents/codex/test-connection`, {
+      method: 'POST'
+    })
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.connected).toBe(true)
+  })
+})
+
