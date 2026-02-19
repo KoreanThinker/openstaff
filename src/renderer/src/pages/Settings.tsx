@@ -76,6 +76,7 @@ export function Settings(): React.ReactElement {
   const [showNgrokPassword, setShowNgrokPassword] = useState(false)
   const [copied, setCopied] = useState(false)
   const [checkingUpdates, setCheckingUpdates] = useState(false)
+  const [updateResult, setUpdateResult] = useState<{ available: boolean; version?: string } | null>(null)
   const [defaultAgent, setDefaultAgent] = useState('claude-code')
   const [defaultModel, setDefaultModel] = useState('claude-sonnet-4-5')
   const [startOnLogin, setStartOnLogin] = useState(false)
@@ -116,9 +117,17 @@ export function Settings(): React.ReactElement {
     setTimeout(() => setCopied(false), 2000)
   }, [])
 
-  const handleCheckUpdates = useCallback(() => {
+  const handleCheckUpdates = useCallback(async () => {
     setCheckingUpdates(true)
-    setTimeout(() => setCheckingUpdates(false), 3000)
+    setUpdateResult(null)
+    try {
+      const result = await window.api.checkForUpdates()
+      setUpdateResult({ available: result.updateAvailable, version: result.version })
+    } catch {
+      setUpdateResult({ available: false })
+    } finally {
+      setCheckingUpdates(false)
+    }
   }, [])
 
   // Get available models for the selected agent
@@ -496,6 +505,13 @@ export function Settings(): React.ReactElement {
                 )}
               </Button>
             </div>
+            {updateResult && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                {updateResult.available
+                  ? `Update available: v${updateResult.version}. It will be installed on next restart.`
+                  : 'You are on the latest version.'}
+              </p>
+            )}
             <div className="mt-3 flex items-center gap-4">
               <a
                 href="https://github.com/koreanthinker/openstaff"

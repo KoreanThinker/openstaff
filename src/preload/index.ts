@@ -14,7 +14,14 @@ export const api = {
     ipcRenderer.invoke('set-auto-start', enabled),
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('get-app-version'),
   checkForUpdates: (): Promise<{ updateAvailable: boolean; version?: string }> =>
-    ipcRenderer.invoke('check-for-updates')
+    ipcRenderer.invoke('check-for-updates'),
+  downloadUpdate: (): Promise<{ success: boolean }> =>
+    ipcRenderer.invoke('download-update'),
+  installUpdate: (): Promise<void> =>
+    ipcRenderer.invoke('install-update'),
+  onUpdateDownloaded: (callback: () => void): void => {
+    ipcRenderer.on('update-downloaded', () => callback())
+  }
 }
 
 if (process.contextIsolated) {
