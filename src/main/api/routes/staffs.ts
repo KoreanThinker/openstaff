@@ -143,13 +143,19 @@ export function staffRoutes(ctx: ApiContext): Router {
   })
 
   // Update staff
-  router.put('/:id', (req, res) => {
+  router.put('/:id', async (req, res) => {
     try {
       const existing = readStaffConfig(req.params.id!)
       if (!existing) return res.status(404).json({ error: 'Staff not found' })
 
       const updated: StaffConfig = { ...existing, ...req.body, id: existing.id }
       ctx.staffManager.updateStaff(updated)
+
+      // Restart if running so changes take effect immediately
+      if (ctx.staffManager.isRunning(req.params.id!)) {
+        await ctx.staffManager.restartStaff(req.params.id!)
+      }
+
       res.json(updated)
     } catch (err) {
       res.status(500).json({ error: String(err) })

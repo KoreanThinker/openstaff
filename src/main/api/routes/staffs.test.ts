@@ -614,6 +614,29 @@ describe('staffs API routes', () => {
     await apiDelete(`/api/staffs/${created.id}`)
   })
 
+  it('PUT /api/staffs/:id restarts running staff after update', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Restart On Update Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const originalIsRunning = mockManager.isRunning
+    mockManager.isRunning = (id: string) => id === created.id
+
+    const { status, data } = await apiPut(`/api/staffs/${created.id}`, {
+      name: 'Updated Running Staff'
+    })
+    expect(status).toBe(200)
+    expect(data.name).toBe('Updated Running Staff')
+    expect(mockManager.restartStaff).toHaveBeenCalledWith(created.id)
+
+    mockManager.isRunning = originalIsRunning
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
   it('POST /api/staffs with explicit id uses provided id', async () => {
     const { status, data } = await apiPost('/api/staffs', {
       id: 'custom-id-123',
