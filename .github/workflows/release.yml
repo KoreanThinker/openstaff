@@ -22,6 +22,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install setuptools for node-gyp
+        run: pip install setuptools
+
       - uses: pnpm/action-setup@v4
         with:
           version: 10
@@ -38,13 +45,13 @@ jobs:
 
       - name: Package (macOS)
         if: matrix.target == 'mac'
-        run: pnpm build:mac
+        run: npx electron-builder --mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Package (Linux)
         if: matrix.target == 'linux'
-        run: pnpm build:linux
+        run: npx electron-builder --linux
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
