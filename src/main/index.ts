@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Tray } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { startApiServer } from './api/server'
@@ -11,7 +11,7 @@ import { MonitoringEngine } from './monitoring/monitoring-engine'
 import { NgrokManager } from './ngrok/ngrok-manager'
 
 let mainWindow: BrowserWindow | null = null
-let tray: Tray | null = null
+let _tray: Tray | null = null
 
 const configStore = new ConfigStore()
 const staffManager = new StaffManager(configStore)
@@ -71,7 +71,7 @@ app.whenReady().then(async () => {
   const apiServer = await startApiServer(staffManager, configStore, monitoringEngine, ngrokManager)
 
   setupIpcHandlers(ipcMain, configStore, mainWindow)
-  tray = createTray(staffManager, mainWindow)
+  _tray = createTray(staffManager, mainWindow)
 
   createWindow()
 

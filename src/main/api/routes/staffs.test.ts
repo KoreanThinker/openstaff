@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import express from 'express'
 import { createServer, Server } from 'http'
 import { mkdtempSync, rmSync } from 'fs'
@@ -55,7 +55,6 @@ function createMockConfigStore() {
 }
 
 const { staffRoutes } = await import('./staffs')
-const { writeStaffConfig } = await import('../../data/staff-data')
 
 describe('staffs API routes', () => {
   beforeAll(async () => {

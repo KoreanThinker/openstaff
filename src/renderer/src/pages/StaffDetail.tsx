@@ -14,7 +14,6 @@ import {
   ArrowDown,
   Filter,
   X,
-  MoreHorizontal
 } from 'lucide-react'
 import {
   AreaChart,
@@ -57,7 +56,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 
-import type { StaffStatus, UsageEntry, KpiEntry, ErrorEntry, CycleEntry } from '@shared/types'
+import type { StaffStatus } from '@shared/types'
 
 // ─── Status Dot Component ───────────────────────────────────────────
 
@@ -1024,7 +1023,7 @@ export function StaffDetail(): React.ReactElement {
     )
   }
 
-  const isRunning = staff.status === 'running'
+  const _isRunning = staff.status === 'running'
   const isStopped = staff.status === 'stopped'
   const isActionLoading = startMutation.isPending || stopMutation.isPending || restartMutation.isPending
 

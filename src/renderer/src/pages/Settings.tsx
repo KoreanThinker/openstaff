@@ -27,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import type { AppSettings } from '@shared/types'
 
 function useDebounce<T>(
   callback: (value: T) => void,

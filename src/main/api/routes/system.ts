@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import { join } from 'path'
 import type { ApiContext } from '../server'
-import type { DashboardStats, UsageEntry, ErrorEntry } from '@shared/types'
-import { listStaffIds, getStaffDir, readStaffConfig, readStaffState } from '../../data/staff-data'
+import type { DashboardStats, UsageEntry } from '@shared/types'
+import { listStaffIds, getStaffDir } from '../../data/staff-data'
 import { readJsonl, countJsonlLines } from '../../data/jsonl-reader'
 
 export function systemRoutes(ctx: ApiContext): Router {

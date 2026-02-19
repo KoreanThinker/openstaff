@@ -19,7 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/hooks/use-toast'
-import type { RegistryTemplate, RegistrySkill, RegistryIndex } from '@shared/types'
+import type { RegistryTemplate, RegistrySkill } from '@shared/types'
 
 type TabType = 'templates' | 'skills'
 

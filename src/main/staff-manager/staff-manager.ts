@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events'
 import { join } from 'path'
-import { appendFileSync, existsSync, readFileSync, statSync, unlinkSync } from 'fs'
+import { appendFileSync, existsSync, statSync, unlinkSync } from 'fs'
 import { watch } from 'fs'
-import type { AgentProcess, StaffConfig, StaffState, StaffStatus, ErrorEntry, CycleEntry } from '@shared/types'
+import type { AgentProcess, StaffConfig, StaffStatus, ErrorEntry } from '@shared/types'
 import { getDriver } from '../agent-driver/agent-registry'
 import {
   readStaffConfig,
@@ -17,7 +17,7 @@ import {
   symlinkSkills,
   createClaudeSettings
 } from '../data/staff-data'
-import { readJsonl, appendJsonl, countJsonlLines } from '../data/jsonl-reader'
+import { readJsonl, appendJsonl } from '../data/jsonl-reader'
 import { ensureBuiltinSkill } from '../data/skill-data'
 import { IDLE_TIMEOUT_MS, KEEP_GOING_PROMPT, INITIAL_PROMPT, MAX_CONSECUTIVE_FAILURES, FAILURE_WINDOW_MS, BACKOFF_DELAYS_MS } from '@shared/constants'
 import type { ConfigStore } from '../store/config-store'
@@ -81,7 +81,7 @@ export class StaffManager extends EventEmitter {
     if (apiKey) env['ANTHROPIC_API_KEY'] = apiKey
 
     // Add skill env vars
-    for (const skillName of config.skills) {
+    for (const _skillName of config.skills) {
       // Skill env vars are stored as skill_env_VARNAME
       // TODO: look up actual skill env vars
     }

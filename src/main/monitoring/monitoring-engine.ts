@@ -1,9 +1,5 @@
-import pidusage from 'pidusage'
-import { join } from 'path'
 import type { StaffManager } from '../staff-manager/staff-manager'
-import type { UsageEntry, SystemResources } from '@shared/types'
-import { appendJsonl } from '../data/jsonl-reader'
-import { getStaffDir } from '../data/staff-data'
+import type { SystemResources } from '@shared/types'
 import { PRICING } from '@shared/constants'
 
 export class MonitoringEngine {

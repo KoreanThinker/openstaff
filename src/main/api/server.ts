@@ -1,7 +1,6 @@
 import express from 'express'
 import { createServer } from 'http'
 import { Server as SocketIOServer } from 'socket.io'
-import { join } from 'path'
 import { staffRoutes } from './routes/staffs'
 import { skillRoutes } from './routes/skills'
 import { agentRoutes } from './routes/agents'

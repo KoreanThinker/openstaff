@@ -1,5 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
-import { EventEmitter } from 'events'
+import { describe, it, expect } from 'vitest'
 
 // We can't fully test server.ts because it depends on socket.io and staffManager events
 // But we can verify the module structure

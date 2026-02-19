@@ -6,7 +6,7 @@ import { join } from 'path'
 import { tmpdir } from 'os'
 
 // Initialize tempDir BEFORE mock so getter has a valid path
-let tempDir: string = mkdtempSync(join(tmpdir(), 'openstaff-registry-'))
+const tempDir: string = mkdtempSync(join(tmpdir(), 'openstaff-registry-'))
 let server: Server
 let port: number
 
