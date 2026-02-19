@@ -69,6 +69,10 @@ function createWindow(): void {
 app.whenReady().then(async () => {
   electronApp.setAppUserModelId('com.openstaff.app')
 
+  // Sync auto-start setting with OS login items
+  const startOnLogin = configStore.get('start_on_login', true)
+  app.setLoginItemSettings({ openAtLogin: startOnLogin as boolean })
+
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
