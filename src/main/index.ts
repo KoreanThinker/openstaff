@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, Tray } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Tray, Notification } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { startApiServer } from './api/server'
@@ -86,6 +86,31 @@ app.whenReady().then(async () => {
   })
 
   await staffManager.recoverRunningStaffs()
+
+  // Native notifications for staff events
+  staffManager.on('staff:error', (staffId: string) => {
+    const config = staffManager.getStaffConfig(staffId)
+    new Notification({
+      title: 'Staff Error',
+      body: `${config?.name || staffId} crashed and is restarting.`
+    }).show()
+  })
+
+  staffManager.on('staff:giveup', (staffId: string) => {
+    const config = staffManager.getStaffConfig(staffId)
+    new Notification({
+      title: 'Staff Needs Help',
+      body: `${config?.name || staffId} gave up and stopped. Check the Errors tab.`
+    }).show()
+  })
+
+  staffManager.on('staff:stopped_backoff', (staffId: string) => {
+    const config = staffManager.getStaffConfig(staffId)
+    new Notification({
+      title: 'Staff Stopped',
+      body: `${config?.name || staffId} stopped after repeated failures.`
+    }).show()
+  })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
