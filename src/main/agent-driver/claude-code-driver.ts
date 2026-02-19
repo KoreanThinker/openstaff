@@ -158,7 +158,10 @@ export class ClaudeCodeDriver implements AgentDriver {
       pid: pty.pid,
       sessionId: null,
       write(message: string): void {
-        pty.write(message + '\n')
+        // Send message text first, then Enter after a small delay
+        // Claude Code's ink-based UI needs time to register the text
+        pty.write(message)
+        setTimeout(() => pty.write('\r'), 100)
       },
       onData(cb: (data: string) => void): void {
         pty.onData(cb)
