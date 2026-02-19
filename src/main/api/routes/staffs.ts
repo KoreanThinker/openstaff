@@ -41,6 +41,18 @@ export function staffRoutes(ctx: ApiContext): Router {
           ? Date.now() - new Date(state.last_started_at).getTime()
           : null
 
+        // Calculate today's token and cost from usage.jsonl
+        const usage = readJsonl<UsageEntry>(join(dir, 'usage.jsonl'))
+        const today = new Date().toISOString().slice(0, 10)
+        let tokensToday = 0
+        let costToday = 0
+        for (const entry of usage) {
+          if (entry.date === today) {
+            tokensToday += entry.input_tokens + entry.output_tokens
+            costToday += entry.cost_usd
+          }
+        }
+
         return {
           id,
           name: config.name,
@@ -50,8 +62,8 @@ export function staffRoutes(ctx: ApiContext): Router {
           model: config.model,
           uptime,
           restarts,
-          tokens_today: 0,
-          cost_today: 0,
+          tokens_today: tokensToday,
+          cost_today: Math.round(costToday * 100) / 100,
           cycles,
           kpi_summary: kpiSummary
         } satisfies StaffSummary

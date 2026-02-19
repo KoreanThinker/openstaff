@@ -73,6 +73,14 @@ describe('system API routes', () => {
     expect(data.memory_percent).toBe(60.0)
   })
 
+  it('GET /api/system/ngrok returns not_configured when no ngrok manager', async () => {
+    const res = await fetch(`http://localhost:${port}/api/system/ngrok`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.ngrok_status).toBe('not_configured')
+    expect(data.ngrok_url).toBeNull()
+  })
+
   it('GET /api/system/stats returns dashboard stats', async () => {
     const res = await fetch(`http://localhost:${port}/api/system/stats`)
     const data = await res.json()
@@ -80,6 +88,54 @@ describe('system API routes', () => {
     expect(data.active_staffs).toBe(0)
     expect(data.total_staffs).toBe(0)
     expect(data.total_cycles).toBe(0)
+  })
+})
+
+describe('system API routes with ngrok manager', () => {
+  let tempDir3: string
+  let server3: Server
+  let port3: number
+
+  beforeAll(async () => {
+    tempDir3 = mkdtempSync(join(tmpdir(), 'openstaff-sys-ngrok-'))
+    tempDir = tempDir3
+
+    const mockNgrok = {
+      isActive: () => true,
+      getUrl: () => 'https://abc123.ngrok.io'
+    }
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api/system', systemRoutes({
+      staffManager: {} as never,
+      configStore: {} as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never,
+      ngrokManager: mockNgrok as never
+    }))
+
+    server3 = createServer(app)
+    await new Promise<void>((resolve) => {
+      server3.listen(0, () => {
+        const addr = server3.address()
+        port3 = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => {
+    server3.close()
+    rmSync(tempDir3, { recursive: true, force: true })
+  })
+
+  it('GET /api/system/ngrok returns connected status with URL', async () => {
+    const res = await fetch(`http://localhost:${port3}/api/system/ngrok`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.ngrok_status).toBe('connected')
+    expect(data.ngrok_url).toBe('https://abc123.ngrok.io')
   })
 })
 

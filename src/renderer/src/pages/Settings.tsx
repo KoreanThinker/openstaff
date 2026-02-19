@@ -125,11 +125,14 @@ export function Settings(): React.ReactElement {
   // Get available models for the selected agent
   const availableModels = agents?.find((a) => a.id === defaultAgent)?.models || []
 
-  // Ngrok status derived from settings
-  const ngrokStatus = (settings as AppSettings & {
-    ngrok_status?: string
-    ngrok_url?: string | null
-    ngrok_error?: string | null
+  // Query ngrok status from system API
+  const { data: ngrokStatus } = useQuery({
+    queryKey: ['ngrok-status'],
+    queryFn: () => api.get('/api/system/ngrok') as Promise<{
+      ngrok_status: string
+      ngrok_url: string | null
+    }>,
+    refetchInterval: 10_000
   })
 
   if (isLoading) {

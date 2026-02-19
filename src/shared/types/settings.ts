@@ -9,6 +9,8 @@ export interface AppSettings {
   start_on_login: boolean
   show_window_on_startup: boolean
   theme: 'light' | 'dark' | 'system'
+  monthly_budget_usd: number
+  budget_warning_percent: number
 }
 
 export type SettingsKey = keyof AppSettings

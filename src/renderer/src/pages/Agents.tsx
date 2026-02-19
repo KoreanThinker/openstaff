@@ -368,11 +368,38 @@ function ClaudeCodeCard({
     onError: () => setConnectionStatus('disconnected')
   })
 
-  // Simulated usage/budget data (would come from API in production)
+  // Budget data from settings API
   const [budget, setBudget] = useState<AgentBudget>({
     monthly_limit: null,
     warning_threshold: 80
   })
+
+  // Load budget from settings
+  useEffect(() => {
+    api.get('/api/settings').then((settings) => {
+      if (settings.monthly_budget_usd) {
+        setBudget((prev) => ({
+          ...prev,
+          monthly_limit: settings.monthly_budget_usd > 0 ? settings.monthly_budget_usd : null
+        }))
+      }
+      if (settings.budget_warning_percent) {
+        setBudget((prev) => ({
+          ...prev,
+          warning_threshold: settings.budget_warning_percent
+        }))
+      }
+    }).catch(() => {})
+  }, [])
+
+  // Save budget changes to settings
+  const saveBudget = useCallback((newBudget: AgentBudget) => {
+    setBudget(newBudget)
+    api.patch('/api/settings', {
+      monthly_budget_usd: newBudget.monthly_limit ?? 0,
+      budget_warning_percent: newBudget.warning_threshold
+    }).catch(() => {})
+  }, [])
 
   return (
     <Card>
@@ -547,12 +574,12 @@ function ClaudeCodeCard({
                       className="pl-7"
                       value={budget.monthly_limit ?? ''}
                       onChange={(e) =>
-                        setBudget((prev) => ({
-                          ...prev,
+                        saveBudget({
+                          ...budget,
                           monthly_limit: e.target.value
                             ? Number(e.target.value)
                             : null
-                        }))
+                        })
                       }
                     />
                   </div>
@@ -566,10 +593,10 @@ function ClaudeCodeCard({
                       type="number"
                       value={budget.warning_threshold}
                       onChange={(e) =>
-                        setBudget((prev) => ({
-                          ...prev,
+                        saveBudget({
+                          ...budget,
                           warning_threshold: Number(e.target.value)
-                        }))
+                        })
                       }
                       className="pr-7"
                     />

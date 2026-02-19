@@ -19,7 +19,9 @@ const DEFAULTS: AppSettings = {
   setup_completed: false,
   start_on_login: true,
   show_window_on_startup: true,
-  theme: 'system'
+  theme: 'system',
+  monthly_budget_usd: 0,
+  budget_warning_percent: 80
 }
 
 export class ConfigStore {

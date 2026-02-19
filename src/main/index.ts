@@ -8,6 +8,7 @@ import { createTray } from './tray/tray'
 import { ConfigStore } from './store/config-store'
 import { HealthChecker } from './health-check/health-checker'
 import { MonitoringEngine } from './monitoring/monitoring-engine'
+import { NgrokManager } from './ngrok/ngrok-manager'
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -16,6 +17,7 @@ const configStore = new ConfigStore()
 const staffManager = new StaffManager(configStore)
 const healthChecker = new HealthChecker(staffManager)
 const monitoringEngine = new MonitoringEngine(staffManager)
+const ngrokManager = new NgrokManager(configStore)
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -66,7 +68,7 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  const apiServer = await startApiServer(staffManager, configStore, monitoringEngine)
+  const apiServer = await startApiServer(staffManager, configStore, monitoringEngine, ngrokManager)
 
   setupIpcHandlers(ipcMain, configStore, mainWindow)
   tray = createTray(staffManager, mainWindow)
@@ -75,6 +77,13 @@ app.whenReady().then(async () => {
 
   healthChecker.start()
   monitoringEngine.start()
+
+  // Start Ngrok tunnel if API key is configured
+  ngrokManager.start(apiServer.port).then((url) => {
+    if (url) console.log(`Remote access available at: ${url}`)
+  }).catch((err) => {
+    console.error('Failed to start Ngrok tunnel:', err)
+  })
 
   await staffManager.recoverRunningStaffs()
 

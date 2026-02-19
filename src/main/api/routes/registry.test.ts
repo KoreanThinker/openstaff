@@ -159,6 +159,99 @@ describe('registry skill install', () => {
   })
 })
 
+describe('registry skill install: download failure returns 502', () => {
+  const realFetch = globalThis.fetch
+
+  beforeAll(() => {
+    // Mock fetch: SKILL.md download fails, but cache still valid
+    globalThis.fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.href : url.url
+      if (urlStr.includes('localhost')) {
+        return realFetch(url, init)
+      }
+      if (urlStr.includes('SKILL.md')) {
+        return { ok: false, status: 404 } as Response
+      }
+      return { ok: false, status: 404 } as Response
+    }) as typeof fetch
+  })
+
+  afterAll(() => {
+    globalThis.fetch = realFetch
+  })
+
+  it('POST /api/registry/skills/:name/install returns 502 when download fails', async () => {
+    // Re-seed valid cache so the skill lookup succeeds
+    const cache = {
+      fetched_at: Date.now(),
+      data: {
+        version: '1.0.0',
+        updated_at: new Date().toISOString(),
+        templates: [],
+        skills: [
+          {
+            name: 'fail-skill',
+            description: 'Skill that fails download',
+            category: 'Dev',
+            author: 'test',
+            version: '1.0.0',
+            auth_required: false,
+            required_env_vars: [],
+            github_path: 'registry/skills/fail-skill'
+          }
+        ]
+      }
+    }
+    writeFileSync(join(tempDir, 'registry', 'cache.json'), JSON.stringify(cache))
+
+    const res = await realFetch(`http://localhost:${port}/api/registry/skills/fail-skill/install`, {
+      method: 'POST'
+    })
+    expect(res.status).toBe(502)
+  })
+})
+
+describe('registry fresh fetch from GitHub', () => {
+  const realFetch = globalThis.fetch
+
+  beforeAll(() => {
+    // Delete cache to force a fresh fetch
+    const { unlinkSync } = require('fs')
+    try { unlinkSync(join(tempDir, 'registry', 'cache.json')) } catch {}
+
+    // Mock fetch to return fresh registry data from GitHub
+    globalThis.fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.href : url.url
+      if (urlStr.includes('localhost')) {
+        return realFetch(url, init)
+      }
+      if (urlStr.includes('index.json')) {
+        return {
+          ok: true,
+          json: async () => ({
+            version: '2.0.0',
+            updated_at: '2026-02-20T00:00:00Z',
+            templates: [],
+            skills: []
+          })
+        } as Response
+      }
+      return { ok: false, status: 404 } as Response
+    }) as typeof fetch
+  })
+
+  afterAll(() => {
+    globalThis.fetch = realFetch
+  })
+
+  it('GET /api/registry fetches from GitHub when no cache', async () => {
+    const res = await realFetch(`http://localhost:${port}/api/registry`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.version).toBe('2.0.0')
+  })
+})
+
 describe('registry routes with expired cache', () => {
   const realFetch = globalThis.fetch
 

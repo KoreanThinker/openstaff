@@ -22,6 +22,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  // Generic
+  get: <T>(path: string) => request<T>(path),
+  patch: <T>(path: string, data: unknown) =>
+    request<T>(path, { method: 'PATCH', body: JSON.stringify(data) }),
+
   // Staffs
   getStaffs: () => request<import('@shared/types').StaffSummary[]>('/api/staffs'),
   getStaff: (id: string) => request<import('@shared/types').StaffDetail>(`/api/staffs/${id}`),

@@ -11,12 +11,14 @@ import { registryRoutes } from './routes/registry'
 import type { StaffManager } from '../staff-manager/staff-manager'
 import type { ConfigStore } from '../store/config-store'
 import type { MonitoringEngine } from '../monitoring/monitoring-engine'
+import type { NgrokManager } from '../ngrok/ngrok-manager'
 
 export interface ApiContext {
   staffManager: StaffManager
   configStore: ConfigStore
   monitoringEngine: MonitoringEngine
   io: SocketIOServer
+  ngrokManager?: NgrokManager
 }
 
 let apiPort = 0
@@ -28,7 +30,8 @@ export function getApiPort(): number {
 export async function startApiServer(
   staffManager: StaffManager,
   configStore: ConfigStore,
-  monitoringEngine: MonitoringEngine
+  monitoringEngine: MonitoringEngine,
+  ngrokManager?: NgrokManager
 ): Promise<{ port: number; close: () => void }> {
   const app = express()
   const httpServer = createServer(app)
@@ -38,7 +41,7 @@ export async function startApiServer(
 
   app.use(express.json())
 
-  const ctx: ApiContext = { staffManager, configStore, monitoringEngine, io }
+  const ctx: ApiContext = { staffManager, configStore, monitoringEngine, io, ngrokManager }
 
   // API routes
   app.use('/api/staffs', staffRoutes(ctx))
