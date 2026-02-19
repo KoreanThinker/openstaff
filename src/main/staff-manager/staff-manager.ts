@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 import { join } from 'path'
-import { appendFileSync, existsSync, readFileSync } from 'fs'
+import { appendFileSync, existsSync, readFileSync, statSync, unlinkSync } from 'fs'
 import { watch } from 'fs'
 import type { AgentProcess, StaffConfig, StaffState, StaffStatus, ErrorEntry, CycleEntry } from '@shared/types'
 import { getDriver } from '../agent-driver/agent-registry'
@@ -126,8 +126,20 @@ export class StaffManager extends EventEmitter {
       failures: []
     }
 
-    // Capture output
+    // Rotate output.log if older than 30 days
     const logPath = join(dir, 'output.log')
+    try {
+      if (existsSync(logPath)) {
+        const stat = statSync(logPath)
+        const ageMs = Date.now() - stat.mtimeMs
+        const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000
+        if (ageMs > thirtyDaysMs) {
+          unlinkSync(logPath)
+        }
+      }
+    } catch { /* ignore rotation errors */ }
+
+    // Capture output
     entry.logStream = (data: string) => {
       entry.lastOutputAt = Date.now()
       try { appendFileSync(logPath, data) } catch { /* ignore */ }

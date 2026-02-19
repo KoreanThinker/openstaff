@@ -17,20 +17,16 @@ export class NgrokManager {
     try {
       // Dynamic import to avoid bundling ngrok when not used
       const ngrok = await import('@ngrok/ngrok')
+      const authPassword = this.configStore.get('ngrok_auth_password')
       const listener = await ngrok.forward({
         addr: port,
         authtoken: apiKey,
-        proto: 'http'
+        proto: 'http',
+        ...(authPassword ? { basic_auth: `openstaff:${authPassword}` } : {})
       })
 
       tunnelUrl = listener.url() || null
       tunnelActive = true
-
-      // Set basic auth if configured
-      const authPassword = this.configStore.get('ngrok_auth_password')
-      if (authPassword) {
-        // Basic auth is handled at the Express middleware level
-      }
 
       console.log(`Ngrok tunnel active: ${tunnelUrl}`)
       return tunnelUrl
