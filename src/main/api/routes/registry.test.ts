@@ -345,6 +345,20 @@ describe('registry routes: catch blocks for GET /skills and POST /skills/:name/i
     globalThis.fetch = realFetch
   })
 
+  it('GET /api/registry returns 500 when fetchRegistryIndex throws', async () => {
+    const res = await realFetch(`http://localhost:${port}/api/registry`)
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('Network error')
+  })
+
+  it('GET /api/registry/templates returns 500 when fetchRegistryIndex throws', async () => {
+    const res = await realFetch(`http://localhost:${port}/api/registry/templates`)
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('Network error')
+  })
+
   it('GET /api/registry/skills returns 500 when fetchRegistryIndex throws', async () => {
     const res = await realFetch(`http://localhost:${port}/api/registry/skills`)
     expect(res.status).toBe(500)

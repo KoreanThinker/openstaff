@@ -282,6 +282,269 @@ describe('agents API routes: models catch block', () => {
   })
 })
 
+describe('agents API routes: list catch block', () => {
+  let listErrServer: Server
+  let listErrPort: number
+  let originalGetAllDrivers: typeof agentRegistry.getAllDrivers
+
+  beforeAll(async () => {
+    originalGetAllDrivers = agentRegistry.getAllDrivers
+    ;(agentRegistry as Record<string, unknown>).getAllDrivers = () => {
+      throw new Error('getAllDrivers exploded')
+    }
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api/agents', agentRoutes({
+      staffManager: {} as never,
+      configStore: createMockConfigStore() as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    listErrServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      listErrServer.listen(0, () => {
+        const addr = listErrServer.address()
+        listErrPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => {
+    ;(agentRegistry as Record<string, unknown>).getAllDrivers = originalGetAllDrivers
+    listErrServer.close()
+  })
+
+  it('GET /api/agents returns 500 when getAllDrivers throws', async () => {
+    const res = await fetch(`http://localhost:${listErrPort}/api/agents`)
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('getAllDrivers exploded')
+  })
+})
+
+describe('agents API routes: not_installed state', () => {
+  let niServer: Server
+  let niPort: number
+  let originalGetAllDrivers: typeof agentRegistry.getAllDrivers
+  let originalGetDriver: typeof agentRegistry.getDriver
+
+  beforeAll(async () => {
+    originalGetAllDrivers = agentRegistry.getAllDrivers
+    originalGetDriver = agentRegistry.getDriver
+
+    const notInstalledDriver = {
+      id: 'claude-code',
+      name: 'Claude Code',
+      isInstalled: async () => false,
+      getVersion: async () => null,
+      getAvailableModels: () => [],
+      install: async () => {},
+      testConnection: async () => false
+    }
+
+    ;(agentRegistry as Record<string, unknown>).getAllDrivers = () => [notInstalledDriver]
+    ;(agentRegistry as Record<string, unknown>).getDriver = (id: string) => {
+      if (id === 'claude-code') return notInstalledDriver
+      return undefined
+    }
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api/agents', agentRoutes({
+      staffManager: {} as never,
+      configStore: createMockConfigStore() as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    niServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      niServer.listen(0, () => {
+        const addr = niServer.address()
+        niPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => {
+    ;(agentRegistry as Record<string, unknown>).getAllDrivers = originalGetAllDrivers
+    ;(agentRegistry as Record<string, unknown>).getDriver = originalGetDriver
+    niServer.close()
+  })
+
+  it('GET /api/agents shows not_installed when isInstalled returns false', async () => {
+    const res = await fetch(`http://localhost:${niPort}/api/agents`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    const claude = data.find((a: { id: string }) => a.id === 'claude-code')
+    expect(claude.status).toBe('not_installed')
+    expect(claude.installed).toBe(false)
+    expect(claude.version).toBeNull()
+  })
+
+  it('GET /api/agents/:id shows not_installed status', async () => {
+    const res = await fetch(`http://localhost:${niPort}/api/agents/claude-code`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.status).toBe('not_installed')
+    expect(data.version).toBeNull()
+  })
+})
+
+describe('agents API routes: GET single agent catch block', () => {
+  let getErrServer: Server
+  let getErrPort: number
+  let originalGetDriver: typeof agentRegistry.getDriver
+
+  beforeAll(async () => {
+    originalGetDriver = agentRegistry.getDriver
+    ;(agentRegistry as Record<string, unknown>).getDriver = (id: string) => {
+      if (id !== 'claude-code') return undefined
+      return {
+        id: 'claude-code',
+        name: 'Claude Code',
+        isInstalled: async () => { throw new Error('isInstalled exploded') },
+        getVersion: async () => '1.0.0',
+        getAvailableModels: () => [],
+        install: async () => {},
+        testConnection: async () => true
+      }
+    }
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api/agents', agentRoutes({
+      staffManager: {} as never,
+      configStore: createMockConfigStore() as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    getErrServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      getErrServer.listen(0, () => {
+        const addr = getErrServer.address()
+        getErrPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => {
+    ;(agentRegistry as Record<string, unknown>).getDriver = originalGetDriver
+    getErrServer.close()
+  })
+
+  it('GET /api/agents/:id returns 500 when isInstalled throws', async () => {
+    const res = await fetch(`http://localhost:${getErrPort}/api/agents/claude-code`)
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('isInstalled exploded')
+  })
+})
+
+describe('agents API routes: install catch block', () => {
+  let installErrServer: Server
+  let installErrPort: number
+  let originalGetDriver: typeof agentRegistry.getDriver
+
+  beforeAll(async () => {
+    originalGetDriver = agentRegistry.getDriver
+    ;(agentRegistry as Record<string, unknown>).getDriver = (id: string) => {
+      if (id !== 'claude-code') return undefined
+      return {
+        id: 'claude-code',
+        name: 'Claude Code',
+        install: async () => { throw new Error('install exploded') },
+        isInstalled: async () => true,
+        getVersion: async () => '1.0.0',
+        getAvailableModels: () => [],
+        testConnection: async () => true
+      }
+    }
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api/agents', agentRoutes({
+      staffManager: {} as never,
+      configStore: createMockConfigStore() as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    installErrServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      installErrServer.listen(0, () => {
+        const addr = installErrServer.address()
+        installErrPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => {
+    ;(agentRegistry as Record<string, unknown>).getDriver = originalGetDriver
+    installErrServer.close()
+  })
+
+  it('POST /api/agents/:id/install returns 500 when install throws', async () => {
+    const res = await fetch(`http://localhost:${installErrPort}/api/agents/claude-code/install`, {
+      method: 'POST'
+    })
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('install exploded')
+  })
+})
+
+describe('agents API routes: api-key catch block', () => {
+  let apiKeyErrServer: Server
+  let apiKeyErrPort: number
+
+  beforeAll(async () => {
+    const app = express()
+    app.use(express.json())
+
+    const throwingConfigStore = {
+      get: () => '',
+      set: () => { throw new Error('api key save failed') }
+    }
+
+    app.use('/api/agents', agentRoutes({
+      staffManager: {} as never,
+      configStore: throwingConfigStore as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    apiKeyErrServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      apiKeyErrServer.listen(0, () => {
+        const addr = apiKeyErrServer.address()
+        apiKeyErrPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => apiKeyErrServer.close())
+
+  it('PUT /api/agents/:id/api-key returns 500 when configStore.set throws', async () => {
+    const res = await fetch(`http://localhost:${apiKeyErrPort}/api/agents/claude-code/api-key`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: 'test' })
+    })
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('api key save failed')
+  })
+})
+
 describe('agents API routes: disconnected state', () => {
   let dcServer: Server
   let dcPort: number

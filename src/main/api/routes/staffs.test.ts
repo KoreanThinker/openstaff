@@ -700,6 +700,187 @@ describe('staffs API routes', () => {
     await apiDelete(`/api/staffs/${created.id}`)
   })
 
+  it('PUT /api/staffs/:id returns 500 when updateStaff throws', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Update Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const originalUpdate = mockManager.updateStaff
+    mockManager.updateStaff = vi.fn(() => { throw new Error('update exploded') })
+
+    const { status, data } = await apiPut(`/api/staffs/${created.id}`, { name: 'Boom' })
+    expect(status).toBe(500)
+    expect(data.error).toContain('update exploded')
+
+    mockManager.updateStaff = originalUpdate
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('DELETE /api/staffs/:id returns 500 when deleteStaffData throws', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Delete Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const originalDelete = mockManager.deleteStaffData
+    mockManager.deleteStaffData = vi.fn(() => { throw new Error('delete exploded') })
+
+    const res = await fetch(`http://localhost:${port}/api/staffs/${created.id}`, { method: 'DELETE' })
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('delete exploded')
+
+    mockManager.deleteStaffData = originalDelete
+    // Clean up manually since delete mock was broken
+    const { deleteStaffDir } = await import('../../data/staff-data')
+    deleteStaffDir(created.id)
+  })
+
+  it('GET /api/staffs/:id/metrics returns 500 when usage.jsonl is corrupt', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Metrics Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const { getStaffDir } = await import('../../data/staff-data')
+    const { mkdirSync } = await import('fs')
+    const { join } = await import('path')
+    const staffDir = getStaffDir(created.id)
+    mkdirSync(join(staffDir, 'usage.jsonl'), { recursive: true })
+
+    const { status, data } = await apiGet(`/api/staffs/${created.id}/metrics`)
+    expect(status).toBe(500)
+    expect(data.error).toBeTruthy()
+
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('GET /api/staffs/:id/kpi returns 500 when kpi.jsonl is corrupt', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'KPI Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const { getStaffDir } = await import('../../data/staff-data')
+    const { mkdirSync } = await import('fs')
+    const { join } = await import('path')
+    const staffDir = getStaffDir(created.id)
+    mkdirSync(join(staffDir, 'kpi.jsonl'), { recursive: true })
+
+    const { status, data } = await apiGet(`/api/staffs/${created.id}/kpi`)
+    expect(status).toBe(500)
+    expect(data.error).toBeTruthy()
+
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('GET /api/staffs/:id/memory returns 500 when readMemoryMd throws', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Memory Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    // Make memory.md a directory to trigger EISDIR
+    const { getStaffDir } = await import('../../data/staff-data')
+    const { mkdirSync, rmSync } = await import('fs')
+    const { join } = await import('path')
+    const staffDir = getStaffDir(created.id)
+    // Remove the memory.md file first if exists, then create directory
+    try { rmSync(join(staffDir, 'memory.md')) } catch {}
+    mkdirSync(join(staffDir, 'memory.md'), { recursive: true })
+
+    const { status, data } = await apiGet(`/api/staffs/${created.id}/memory`)
+    expect(status).toBe(500)
+    expect(data.error).toBeTruthy()
+
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('GET /api/staffs/:id/errors returns 500 when errors.jsonl is corrupt', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Errors Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    // Create errors.jsonl as a directory to trigger EISDIR
+    const { getStaffDir } = await import('../../data/staff-data')
+    const { mkdirSync } = await import('fs')
+    const { join } = await import('path')
+    const staffDir = getStaffDir(created.id)
+    mkdirSync(join(staffDir, 'errors.jsonl'), { recursive: true })
+
+    const { status, data } = await apiGet(`/api/staffs/${created.id}/errors`)
+    expect(status).toBe(500)
+    expect(data.error).toBeTruthy()
+
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('GET /api/staffs/:id/cycles returns 500 when staff dir is corrupt', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Cycle Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    // Create cycles.jsonl as a directory to trigger EISDIR
+    const { getStaffDir } = await import('../../data/staff-data')
+    const { mkdirSync } = await import('fs')
+    const { join } = await import('path')
+    const staffDir = getStaffDir(created.id)
+    mkdirSync(join(staffDir, 'cycles.jsonl'), { recursive: true })
+
+    const { status, data } = await apiGet(`/api/staffs/${created.id}/cycles`)
+    expect(status).toBe(500)
+    expect(data.error).toBeTruthy()
+
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('GET /api/staffs/:id/export returns 500 when readStaffConfig throws', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Export Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    // Corrupt the staff.json to trigger a parse error
+    const { getStaffDir } = await import('../../data/staff-data')
+    const { writeFileSync } = await import('fs')
+    const { join } = await import('path')
+    const staffDir = getStaffDir(created.id)
+    writeFileSync(join(staffDir, 'staff.json'), 'not valid json')
+
+    const { status, data } = await apiGet(`/api/staffs/${created.id}/export`)
+    expect(status).toBe(500)
+    expect(data.error).toBeTruthy()
+
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
   it('GET /api/staffs list shows uptime for running staffs', async () => {
     const { data: created } = await apiPost('/api/staffs', {
       name: 'Running List Staff',

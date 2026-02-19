@@ -85,6 +85,37 @@ describe('settings API routes', () => {
     expect(data.openai_api_key).toBe('')
   })
 
+  it('GET /api/settings shows empty when anthropic key is falsy', async () => {
+    const original = mockConfigStore.get('anthropic_api_key')
+    mockConfigStore.set('anthropic_api_key', '')
+
+    const res = await fetch(`http://localhost:${port}/api/settings`)
+    const data = await res.json()
+    expect(data.anthropic_api_key).toBe('')
+
+    mockConfigStore.set('anthropic_api_key', original)
+  })
+
+  it('GET /api/settings masks all sensitive keys when truthy', async () => {
+    // Set all sensitive keys to truthy values
+    mockConfigStore.set('openai_api_key', 'oai-key')
+    mockConfigStore.set('ngrok_api_key', 'ngrok-key-123')
+    mockConfigStore.set('ngrok_auth_password', 'secret-pass')
+
+    const res = await fetch(`http://localhost:${port}/api/settings`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.anthropic_api_key).toBe('***')
+    expect(data.openai_api_key).toBe('***')
+    expect(data.ngrok_api_key).toBe('***')
+    expect(data.ngrok_auth_password).toBe('***')
+
+    // Restore
+    mockConfigStore.set('openai_api_key', '')
+    mockConfigStore.set('ngrok_api_key', '')
+    mockConfigStore.set('ngrok_auth_password', '')
+  })
+
   it('PATCH /api/settings updates multiple keys at once', async () => {
     const res = await fetch(`http://localhost:${port}/api/settings`, {
       method: 'PATCH',

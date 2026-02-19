@@ -192,6 +192,16 @@ describe('system API routes with staff data', () => {
       cache_write_tokens: 0,
       cost_usd: 0.10
     })
+    // Add entry from same month but different day (covers month-only matching branch)
+    const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
+    appendJsonl(join(staffDir, 'usage.jsonl'), {
+      date: yesterday,
+      input_tokens: 500,
+      output_tokens: 250,
+      cache_read_tokens: 0,
+      cache_write_tokens: 0,
+      cost_usd: 0.02
+    })
 
     const mockManager = Object.assign(new EventEmitter(), {
       getRunningStaffIds: () => [staffId],
@@ -240,7 +250,121 @@ describe('system API routes with staff data', () => {
     expect(data.active_staffs).toBe(1)
     expect(data.total_cycles).toBe(2)
     expect(data.cost_today).toBeCloseTo(0.15, 2)
-    expect(data.cost_month).toBeCloseTo(0.15, 2)
+    expect(data.tokens_today).toBe(4500) // 1000+500+2000+1000
+    expect(data.cost_month).toBeCloseTo(0.17, 2) // 0.15 today + 0.02 yesterday
+    expect(data.tokens_month).toBe(5250) // 4500 today + 750 yesterday
+  })
+})
+
+describe('system API routes: ngrok disconnected', () => {
+  let dcServer: Server
+  let dcPort: number
+
+  beforeAll(async () => {
+    const dcTempDir = mkdtempSync(join(tmpdir(), 'openstaff-sys-dc-'))
+    tempDir = dcTempDir
+
+    const mockNgrok = {
+      isActive: () => false,
+      getUrl: () => null
+    }
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api/system', systemRoutes({
+      staffManager: Object.assign(new EventEmitter(), {
+        getRunningStaffIds: () => [],
+        getStatus: () => 'stopped' as const
+      }) as never,
+      configStore: {} as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never,
+      ngrokManager: mockNgrok as never
+    }))
+
+    dcServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      dcServer.listen(0, () => {
+        const addr = dcServer.address()
+        dcPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => {
+    dcServer.close()
+  })
+
+  it('GET /api/system/ngrok returns disconnected when ngrok inactive', async () => {
+    const res = await fetch(`http://localhost:${dcPort}/api/system/ngrok`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.ngrok_status).toBe('disconnected')
+    expect(data.ngrok_url).toBeNull()
+  })
+})
+
+describe('system API routes: stats with error staffs', () => {
+  let errStaffServer: Server
+  let errStaffPort: number
+  let errStaffTempDir: string
+
+  beforeAll(async () => {
+    errStaffTempDir = mkdtempSync(join(tmpdir(), 'openstaff-sys-errs-'))
+    tempDir = errStaffTempDir
+
+    const { writeStaffConfig, ensureStaffDir } = await import('../../data/staff-data')
+    ensureStaffDir('err-staff-1')
+    writeStaffConfig({
+      id: 'err-staff-1',
+      name: 'Error Staff',
+      role: 'Tester',
+      gather: 'g',
+      execute: 'e',
+      evaluate: 'ev',
+      kpi: '',
+      agent: 'claude-code',
+      model: 'claude-sonnet-4-5',
+      skills: [],
+      created_at: new Date().toISOString()
+    })
+
+    const mockManager = Object.assign(new EventEmitter(), {
+      getRunningStaffIds: () => [],
+      getStatus: (id: string) => id === 'err-staff-1' ? 'error' as const : 'stopped' as const
+    })
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api/system', systemRoutes({
+      staffManager: mockManager as never,
+      configStore: {} as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    errStaffServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      errStaffServer.listen(0, () => {
+        const addr = errStaffServer.address()
+        errStaffPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => {
+    errStaffServer.close()
+    rmSync(errStaffTempDir, { recursive: true, force: true })
+  })
+
+  it('GET /api/system/stats counts error staffs', async () => {
+    const res = await fetch(`http://localhost:${errStaffPort}/api/system/stats`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.error_staffs).toBe(1)
+    expect(data.active_staffs).toBe(0)
   })
 })
 
