@@ -211,12 +211,23 @@ function DashboardSkeleton(): React.ReactElement {
 }
 
 type SortField = 'name' | 'status' | 'cycles' | 'cost'
+type SortDir = 'asc' | 'desc'
 
 export function Dashboard(): React.ReactElement {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [sortField, setSortField] = useState<SortField>('name')
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortField(field)
+      setSortDir('asc')
+    }
+  }
 
   const statsQuery = useQuery<DashboardStats>({
     queryKey: ['dashboard-stats'],
@@ -292,19 +303,24 @@ export function Dashboard(): React.ReactElement {
       result = result.filter((s) => s.status === statusFilter)
     }
     result = [...result].sort((a, b) => {
+      let cmp = 0
       switch (sortField) {
         case 'status':
-          return a.status.localeCompare(b.status)
+          cmp = a.status.localeCompare(b.status)
+          break
         case 'cycles':
-          return b.cycles - a.cycles
+          cmp = a.cycles - b.cycles
+          break
         case 'cost':
-          return b.cost_today - a.cost_today
+          cmp = a.cost_today - b.cost_today
+          break
         default:
-          return a.name.localeCompare(b.name)
+          cmp = a.name.localeCompare(b.name)
       }
+      return sortDir === 'desc' ? -cmp : cmp
     })
     return result
-  }, [staffs, search, statusFilter, sortField])
+  }, [staffs, search, statusFilter, sortField, sortDir])
 
   return (
     <div className="space-y-6">
@@ -415,16 +431,24 @@ export function Dashboard(): React.ReactElement {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-10">Status</TableHead>
-                  <TableHead>Name</TableHead>
+                  <TableHead className="w-10 cursor-pointer select-none" onClick={() => toggleSort('status')}>
+                    Status {sortField === 'status' && (sortDir === 'asc' ? '↑' : '↓')}
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('name')}>
+                    Name {sortField === 'name' && (sortDir === 'asc' ? '↑' : '↓')}
+                  </TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Agent</TableHead>
                   <TableHead>Model</TableHead>
                   <TableHead>Uptime</TableHead>
                   <TableHead className="text-right">Restarts</TableHead>
                   <TableHead className="text-right">Tokens</TableHead>
-                  <TableHead className="text-right">Cost</TableHead>
-                  <TableHead className="text-right">Cycles</TableHead>
+                  <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort('cost')}>
+                    Cost {sortField === 'cost' && (sortDir === 'asc' ? '↑' : '↓')}
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort('cycles')}>
+                    Cycles {sortField === 'cycles' && (sortDir === 'asc' ? '↑' : '↓')}
+                  </TableHead>
                   <TableHead>KPI</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
