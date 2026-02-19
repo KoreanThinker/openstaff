@@ -18,7 +18,7 @@ import {
   createClaudeSettings
 } from '../data/staff-data'
 import { readJsonl, appendJsonl } from '../data/jsonl-reader'
-import { ensureBuiltinSkill } from '../data/skill-data'
+import { ensureBuiltinSkill, parseSkillMd, extractRequiredEnvVars } from '../data/skill-data'
 import { IDLE_TIMEOUT_MS, KEEP_GOING_PROMPT, INITIAL_PROMPT, MAX_CONSECUTIVE_FAILURES, FAILURE_WINDOW_MS, BACKOFF_DELAYS_MS } from '@shared/constants'
 import type { ConfigStore } from '../store/config-store'
 
@@ -80,10 +80,15 @@ export class StaffManager extends EventEmitter {
     const apiKey = this.configStore.get('anthropic_api_key')
     if (apiKey) env['ANTHROPIC_API_KEY'] = apiKey
 
-    // Add skill env vars
-    for (const _skillName of config.skills) {
-      // Skill env vars are stored as skill_env_VARNAME
-      // TODO: look up actual skill env vars
+    // Add skill env vars from configStore
+    for (const skillName of config.skills) {
+      const frontmatter = parseSkillMd(skillName)
+      if (!frontmatter?.compatibility) continue
+      const requiredVars = extractRequiredEnvVars(frontmatter.compatibility)
+      for (const varName of requiredVars) {
+        const val = this.configStore.get(`skill_env_${varName}` as never)
+        if (val && val !== '') env[varName] = val as string
+      }
     }
 
     const state = readStaffState(staffId)
