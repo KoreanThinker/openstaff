@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useNavigate } from 'react-router-dom'
+// No router needed — App re-renders when setupCompleted changes
 import { ArrowRight, ArrowLeft, Globe, Sparkles, Search, Zap, BarChart3, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -95,7 +95,6 @@ function LoopVisualization(): React.ReactElement {
 }
 
 export function SetupWizard(): React.ReactElement {
-  const navigate = useNavigate()
   const setSetupCompleted = useSettingsStore((s) => s.setSetupCompleted)
   const [step, setStep] = React.useState(0)
   const [ngrokKey, setNgrokKey] = React.useState('')
@@ -116,7 +115,6 @@ export function SetupWizard(): React.ReactElement {
       // API may not be ready yet; store locally
     }
     setSetupCompleted(true)
-    navigate('/')
   }
 
   return (

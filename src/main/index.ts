@@ -1,6 +1,11 @@
 import { app, shell, BrowserWindow, ipcMain, Tray, Notification } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+
+// Isolate user data per test run (for E2E tests)
+if (process.env.ELECTRON_USER_DATA_DIR) {
+  app.setPath('userData', process.env.ELECTRON_USER_DATA_DIR)
+}
 import { startApiServer } from './api/server'
 import { StaffManager } from './staff-manager/staff-manager'
 import { setupIpcHandlers } from './ipc/handlers'
@@ -30,7 +35,7 @@ function createWindow(): void {
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 16, y: 16 },
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false
     }
   })

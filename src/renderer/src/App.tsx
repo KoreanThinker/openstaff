@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AppShell } from '@/components/AppShell'
 import { SetupWizard } from '@/pages/SetupWizard'
 import { Dashboard } from '@/pages/Dashboard'
@@ -24,13 +24,19 @@ const queryClient = new QueryClient({
 export function App(): React.ReactElement {
   const setupCompleted = useSettingsStore((s) => s.setupCompleted)
 
+  if (!setupCompleted) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <SetupWizard />
+        <Toaster />
+      </QueryClientProvider>
+    )
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
-          {!setupCompleted && (
-            <Route path="/setup" element={<SetupWizard />} />
-          )}
           <Route element={<AppShell />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/staffs/new" element={<StaffCreate />} />
@@ -41,13 +47,10 @@ export function App(): React.ReactElement {
             <Route path="/registry" element={<Registry />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
-          <Route
-            path="*"
-            element={<Navigate to={setupCompleted ? '/' : '/setup'} replace />}
-          />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Toaster />
-      </BrowserRouter>
+      </HashRouter>
     </QueryClientProvider>
   )
 }

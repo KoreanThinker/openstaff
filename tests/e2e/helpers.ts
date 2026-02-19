@@ -12,12 +12,14 @@ export async function launchApp(): Promise<{
   cleanup: () => Promise<void>
 }> {
   const testHome = mkdtempSync(join(tmpdir(), 'openstaff-e2e-'))
+  const userDataDir = mkdtempSync(join(tmpdir(), 'openstaff-e2e-userdata-'))
 
   const app = await electron.launch({
     args: [join(__dirname, '../../out/main/index.js')],
     env: {
       ...process.env,
       OPENSTAFF_HOME: testHome,
+      ELECTRON_USER_DATA_DIR: userDataDir,
       NODE_ENV: 'test'
     }
   })
@@ -29,6 +31,7 @@ export async function launchApp(): Promise<{
     await app.close()
     const { rmSync } = await import('fs')
     rmSync(testHome, { recursive: true, force: true })
+    rmSync(userDataDir, { recursive: true, force: true })
   }
 
   return { app, page, cleanup }

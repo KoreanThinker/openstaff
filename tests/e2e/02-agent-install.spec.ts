@@ -15,12 +15,16 @@ test.describe('Agent Install + Connect', () => {
       await page.click('text=Skip')
       await page.click('text=Go to Dashboard')
 
-      // Navigate to Agents
-      await page.click('text=Agents')
-      await waitForText(page, 'Agents')
+      // Wait for Dashboard to fully load
+      await waitForText(page, 'Staff', 15000)
+      await page.waitForTimeout(1000)
 
-      // Check for Claude Code agent card
-      await expect(page.locator('text=Claude Code')).toBeVisible()
+      // Navigate to Agents via sidebar
+      await page.locator('a:has-text("Agents"), button:has-text("Agents")').first().click()
+      await waitForText(page, 'Agents', 15000)
+
+      // Check for Claude Code agent card — use specific text to avoid multiple matches
+      await expect(page.locator('text=Install Claude Code')).toBeVisible()
     } finally {
       await cleanup()
     }

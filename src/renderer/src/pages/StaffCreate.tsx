@@ -242,6 +242,32 @@ export function StaffCreate(): React.ReactElement {
     }
   }, [isEditMode, staff])
 
+  // ─── Apply template callback (must be before useEffect that uses it) ──
+
+  const applyTemplate = useCallback((template: {
+    role: string
+    gather: string
+    execute: string
+    evaluate: string
+    kpi: string
+    required_skills: string[]
+    recommended_agent: string
+    recommended_model: string
+  }) => {
+    isDirty.current = true
+    setForm((prev) => ({
+      ...prev,
+      role: template.role,
+      gather: template.gather,
+      execute: template.execute,
+      evaluate: template.evaluate,
+      kpi: template.kpi,
+      skills: template.required_skills,
+      agent: template.recommended_agent,
+      model: template.recommended_model
+    }))
+  }, [])
+
   // ─── Apply template from location state (Registry → Create) ──────
 
   useEffect(() => {
@@ -396,30 +422,6 @@ export function StaffCreate(): React.ReactElement {
     enabled: false
   })
 
-  const applyTemplate = useCallback((template: {
-    role: string
-    gather: string
-    execute: string
-    evaluate: string
-    kpi: string
-    required_skills: string[]
-    recommended_agent: string
-    recommended_model: string
-  }) => {
-    isDirty.current = true
-    setForm((prev) => ({
-      ...prev,
-      role: template.role,
-      gather: template.gather,
-      execute: template.execute,
-      evaluate: template.evaluate,
-      kpi: template.kpi,
-      skills: template.required_skills,
-      agent: template.recommended_agent,
-      model: template.recommended_model
-    }))
-  }, [])
-
   // ─── Loading State ────────────────────────────────────────────────
 
   if (isEditMode && staffLoading) {
@@ -518,6 +520,7 @@ export function StaffCreate(): React.ReactElement {
             </label>
             <Input
               id="staff-name"
+              name="name"
               placeholder="e.g., Meta Ads Creative Designer"
               value={form.name}
               onChange={(e) => updateField('name', e.target.value)}
@@ -538,6 +541,7 @@ export function StaffCreate(): React.ReactElement {
             </label>
             <Input
               id="staff-role"
+              name="role"
               placeholder="e.g., Meta ads creative designer"
               value={form.role}
               onChange={(e) => updateField('role', e.target.value)}
@@ -567,6 +571,7 @@ export function StaffCreate(): React.ReactElement {
               Gather
             </label>
             <Textarea
+              name="gather"
               rows={4}
               placeholder={"Where and how should this Staff collect information?\n\ne.g., Collect trending posts from Instagram and X for the last 3 days in our product category. Analyze visual styles, copy patterns, and hashtags of top 100 posts."}
               value={form.gather}
@@ -590,6 +595,7 @@ export function StaffCreate(): React.ReactElement {
               Execute
             </label>
             <Textarea
+              name="execute"
               rows={4}
               placeholder={"What specific work should this Staff perform?\n\ne.g., Create 3 ad creatives with A/B test variants per day, tailored to our product."}
               value={form.execute}
@@ -613,6 +619,7 @@ export function StaffCreate(): React.ReactElement {
               Evaluate
             </label>
             <Textarea
+              name="evaluate"
               rows={4}
               placeholder={"How should this Staff measure results and learn?\n\ne.g., Check CPI, CPM, CTR from Meta Ads dashboard. Analyze which patterns perform best and apply learnings."}
               value={form.evaluate}

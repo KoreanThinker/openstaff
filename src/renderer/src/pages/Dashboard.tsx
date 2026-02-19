@@ -281,10 +281,6 @@ export function Dashboard(): React.ReactElement {
     }
   }
 
-  if (statsQuery.isLoading || staffsQuery.isLoading) {
-    return <DashboardSkeleton />
-  }
-
   const stats = statsQuery.data
   const staffs = staffsQuery.data ?? []
   const resources = resourcesQuery.data
@@ -314,6 +310,10 @@ export function Dashboard(): React.ReactElement {
     })
     return result
   }, [staffs, search, statusFilter, sortField, sortDir])
+
+  if (statsQuery.isLoading || staffsQuery.isLoading) {
+    return <DashboardSkeleton />
+  }
 
   return (
     <div className="space-y-6">
