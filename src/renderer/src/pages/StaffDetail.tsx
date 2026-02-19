@@ -1002,10 +1002,11 @@ export function StaffDetail(): React.ReactElement {
 
   // ─── Error / Not Found ────────────────────────────────────────
 
-  if (isError) {
-    navigate('/')
-    return <></>
-  }
+  useEffect(() => {
+    if (isError) navigate('/')
+  }, [isError, navigate])
+
+  if (isError) return <></>
 
   // ─── Loading ──────────────────────────────────────────────────
 
