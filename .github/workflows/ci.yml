@@ -32,11 +32,13 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Install dependencies (skip postinstall)
-        run: pnpm install --ignore-scripts
+      - run: pnpm install
 
-      - name: Rebuild native modules for Node.js
-        run: pnpm rebuild
+      - name: Fix Electron binary
+        run: |
+          ELECTRON_DIR=$(node -e "console.log(require('electron/package.json').name ? require('path').dirname(require.resolve('electron/package.json')) : '')")
+          rm -rf "$ELECTRON_DIR/dist"
+          node "$ELECTRON_DIR/install.js"
 
       - name: Type Check
         run: pnpm type-check
