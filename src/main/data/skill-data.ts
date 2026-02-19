@@ -1,4 +1,4 @@
-import { readFileSync, existsSync, mkdirSync, readdirSync, cpSync, rmSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, cpSync, rmSync } from 'fs'
 import { join } from 'path'
 import { SKILLS_DIR } from '@shared/constants'
 import type { SkillInfo, SkillMdFrontmatter, SkillAuthStatus } from '@shared/types'
@@ -109,5 +109,39 @@ export function deleteSkill(skillName: string): void {
   const path = join(SKILLS_DIR, skillName)
   if (existsSync(path)) {
     rmSync(path, { recursive: true, force: true })
+  }
+}
+
+const OPENSTAFF_SKILL_CONTENT = `---
+name: openstaff
+description: >
+  OpenStaff platform integration. Use to report cycle completion,
+  record KPI metrics, and request human help when stuck.
+allowed-tools: Bash(echo *) Read
+---
+
+## cycle-complete
+After completing a full Gather → Execute → Evaluate cycle,
+append to ./cycles.jsonl:
+\`{"cycle": N, "date": "YYYY-MM-DD", "summary": "one line summary"}\`
+
+## record-kpi
+After Evaluate, record KPI metrics.
+Append to ./kpi.jsonl:
+\`{"date": "YYYY-MM-DD", "cycle": N, "metrics": {"metric_name": value}}\`
+
+## giveup
+ONLY after exhausting ALL options (retry at least 3 times).
+Append to ./signals.jsonl:
+\`{"type": "giveup", "reason": "detailed reason", "timestamp": "ISO8601"}\`
+This pauses your execution and alerts the user.
+`
+
+export function ensureBuiltinSkill(): void {
+  const dir = join(SKILLS_DIR, 'openstaff')
+  mkdirSync(dir, { recursive: true })
+  const skillPath = join(dir, 'SKILL.md')
+  if (!existsSync(skillPath)) {
+    writeFileSync(skillPath, OPENSTAFF_SKILL_CONTENT)
   }
 }

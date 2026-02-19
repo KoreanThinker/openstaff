@@ -20,7 +20,8 @@ const {
   parseSkillMd,
   extractRequiredEnvVars,
   importSkill,
-  deleteSkill
+  deleteSkill,
+  ensureBuiltinSkill
 } = await import('./skill-data')
 
 describe('skill-data', () => {
@@ -132,6 +133,28 @@ Use this skill for testing.`)
 
     it('handles non-existent skill gracefully', () => {
       expect(() => deleteSkill('nonexistent')).not.toThrow()
+    })
+  })
+
+  describe('ensureBuiltinSkill', () => {
+    it('creates openstaff skill if not exists', () => {
+      ensureBuiltinSkill()
+      const skillPath = join(tempDir, 'skills', 'openstaff', 'SKILL.md')
+      expect(existsSync(skillPath)).toBe(true)
+      const { readFileSync } = require('fs')
+      const content = readFileSync(skillPath, 'utf-8')
+      expect(content).toContain('name: openstaff')
+      expect(content).toContain('cycle-complete')
+      expect(content).toContain('record-kpi')
+      expect(content).toContain('giveup')
+    })
+
+    it('does not overwrite existing openstaff skill', () => {
+      createSkill('openstaff', '---\nname: openstaff\n---\ncustom content')
+      ensureBuiltinSkill()
+      const { readFileSync } = require('fs')
+      const content = readFileSync(join(tempDir, 'skills', 'openstaff', 'SKILL.md'), 'utf-8')
+      expect(content).toContain('custom content')
     })
   })
 })

@@ -18,6 +18,7 @@ import {
   createClaudeSettings
 } from '../data/staff-data'
 import { readJsonl, appendJsonl, countJsonlLines } from '../data/jsonl-reader'
+import { ensureBuiltinSkill } from '../data/skill-data'
 import { IDLE_TIMEOUT_MS, KEEP_GOING_PROMPT, INITIAL_PROMPT, MAX_CONSECUTIVE_FAILURES, FAILURE_WINDOW_MS, BACKOFF_DELAYS_MS } from '@shared/constants'
 import type { ConfigStore } from '../store/config-store'
 
@@ -68,7 +69,10 @@ export class StaffManager extends EventEmitter {
 
     const dir = ensureStaffDir(staffId)
     ensureMemoryMd(staffId)
-    symlinkSkills(staffId, config.skills)
+    ensureBuiltinSkill()
+    // Always include the built-in openstaff skill
+    const allSkills = [...new Set(['openstaff', ...config.skills])]
+    symlinkSkills(staffId, allSkills)
     createClaudeSettings(staffId)
 
     // Build env vars

@@ -413,6 +413,8 @@ export function Settings(): React.ReactElement {
                   onCheckedChange={(checked) => {
                     setStartOnLogin(checked)
                     handleImmediateSave({ start_on_login: checked })
+                    // Set OS login item via Electron IPC
+                    window.api?.setAutoStart?.(checked).catch(() => {})
                   }}
                 />
               </div>
