@@ -968,6 +968,35 @@ describe('staffs API routes', () => {
     mkdirSync(staffsDir, { recursive: true })
   })
 
+  it('POST /api/staffs fills defaults for missing fields', async () => {
+    const { status, data } = await apiPost('/api/staffs', {})
+    expect(status).toBe(201)
+    expect(data.name).toBe('')
+    expect(data.role).toBe('')
+    expect(data.gather).toBe('')
+    expect(data.execute).toBe('')
+    expect(data.evaluate).toBe('')
+    expect(data.kpi).toBe('')
+    expect(data.skills).toEqual([])
+    expect(data.id).toBeTruthy()
+
+    await apiDelete(`/api/staffs/${data.id}`)
+  })
+
+  it('POST /api/staffs/import fills defaults for missing optional fields', async () => {
+    const { status, data } = await apiPost('/api/staffs/import', { name: 'Import Test' })
+    expect(status).toBe(201)
+    expect(data.name).toBe('Import Test')
+    expect(data.role).toBe('')
+    expect(data.gather).toBe('')
+    expect(data.execute).toBe('')
+    expect(data.evaluate).toBe('')
+    expect(data.kpi).toBe('')
+    expect(data.skills).toEqual([])
+
+    await apiDelete(`/api/staffs/${data.id}`)
+  })
+
   it('GET /api/staffs list shows uptime for running staffs', async () => {
     const { data: created } = await apiPost('/api/staffs', {
       name: 'Running List Staff',
