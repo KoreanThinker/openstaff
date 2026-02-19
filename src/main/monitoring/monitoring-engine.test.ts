@@ -1,6 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { MonitoringEngine } from './monitoring-engine'
 import { EventEmitter } from 'events'
+import { join } from 'path'
+import { mkdtempSync, rmSync, mkdirSync, readFileSync } from 'fs'
+import { tmpdir } from 'os'
+
+let tempDir: string
+
+vi.mock('@shared/constants', async () => {
+  const actual = await vi.importActual('@shared/constants')
+  return {
+    ...actual,
+    get STAFFS_DIR() { return join(tempDir, 'staffs') },
+    get OPENSTAFF_HOME() { return tempDir }
+  }
+})
 
 describe('MonitoringEngine', () => {
   function createMockStaffManager() {
@@ -136,6 +150,85 @@ describe('MonitoringEngine', () => {
       expect(() => vi.advanceTimersByTime(61_000)).not.toThrow()
 
       engine.stop()
+    })
+  })
+
+  describe('token parsing from pty output', () => {
+    beforeEach(() => {
+      tempDir = mkdtempSync(join(tmpdir(), 'openstaff-monitoring-'))
+      mkdirSync(join(tempDir, 'staffs', 'staff-1'), { recursive: true })
+    })
+
+    afterEach(() => {
+      rmSync(tempDir, { recursive: true, force: true })
+    })
+
+    it('writes usage.jsonl when token info appears in pty output', () => {
+      const manager = createMockStaffManager()
+      manager.getStaffConfig = () => ({
+        id: 'staff-1',
+        name: 'Test',
+        role: 'Test',
+        gather: 'g',
+        execute: 'e',
+        evaluate: 'ev',
+        kpi: '',
+        agent: 'claude-code',
+        model: 'claude-sonnet-4-5',
+        skills: [],
+        created_at: new Date().toISOString()
+      })
+
+      const engine = new MonitoringEngine(manager as never)
+      engine.start()
+
+      // Simulate pty output with token info
+      manager.emit('staff:log', 'staff-1', '{"input_tokens":1000,"output_tokens":500}')
+
+      // Check that usage.jsonl was written
+      const usagePath = join(tempDir, 'staffs', 'staff-1', 'usage.jsonl')
+      const content = readFileSync(usagePath, 'utf-8')
+      const entry = JSON.parse(content.trim())
+      expect(entry.input_tokens).toBe(1000)
+      expect(entry.output_tokens).toBe(500)
+      expect(entry.cost_usd).toBeGreaterThan(0)
+
+      engine.stop()
+    })
+
+    it('ignores pty output without token info', () => {
+      const manager = createMockStaffManager()
+      const engine = new MonitoringEngine(manager as never)
+      engine.start()
+
+      // This should not throw or create files
+      manager.emit('staff:log', 'staff-1', 'hello world')
+
+      engine.stop()
+    })
+
+    it('stops listening to events after stop()', () => {
+      const manager = createMockStaffManager()
+      manager.getStaffConfig = () => ({
+        id: 'staff-1',
+        name: 'Test',
+        role: 'Test',
+        gather: 'g',
+        execute: 'e',
+        evaluate: 'ev',
+        kpi: '',
+        agent: 'claude-code',
+        model: 'claude-sonnet-4-5',
+        skills: [],
+        created_at: new Date().toISOString()
+      })
+
+      const engine = new MonitoringEngine(manager as never)
+      engine.start()
+      engine.stop()
+
+      // After stop, no listener should be active
+      expect(manager.listenerCount('staff:log')).toBe(0)
     })
   })
 })

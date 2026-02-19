@@ -1,10 +1,15 @@
+import { join } from 'path'
 import type { StaffManager } from '../staff-manager/staff-manager'
-import type { SystemResources } from '@shared/types'
+import type { SystemResources, UsageEntry } from '@shared/types'
 import { PRICING } from '@shared/constants'
+import { parseTokensFromOutput, calculateCostFromTokens } from './token-parser'
+import { getStaffDir } from '../data/staff-data'
+import { appendJsonl } from '../data/jsonl-reader'
 
 export class MonitoringEngine {
   private interval: ReturnType<typeof setInterval> | null = null
   private staffManager: StaffManager
+  private logHandler: ((staffId: string, data: string) => void) | null = null
 
   constructor(staffManager: StaffManager) {
     this.staffManager = staffManager
@@ -14,12 +19,22 @@ export class MonitoringEngine {
     this.interval = setInterval(() => {
       this.collectMetrics()
     }, 60_000)
+
+    // Listen for pty output to parse token usage
+    this.logHandler = (staffId: string, data: string) => {
+      this.parseAndRecordUsage(staffId, data)
+    }
+    this.staffManager.on('staff:log', this.logHandler)
   }
 
   stop(): void {
     if (this.interval) {
       clearInterval(this.interval)
       this.interval = null
+    }
+    if (this.logHandler) {
+      this.staffManager.removeListener('staff:log', this.logHandler)
+      this.logHandler = null
     }
   }
 
@@ -43,6 +58,28 @@ export class MonitoringEngine {
     }
   }
 
+  private parseAndRecordUsage(staffId: string, data: string): void {
+    const usage = parseTokensFromOutput(data)
+    if (!usage) return
+
+    const config = this.staffManager.getStaffConfig(staffId)
+    if (!config) return
+
+    const costUsd = calculateCostFromTokens(config.model, usage)
+    const entry: UsageEntry = {
+      date: new Date().toISOString().slice(0, 10),
+      input_tokens: usage.input_tokens,
+      output_tokens: usage.output_tokens,
+      cache_read_tokens: usage.cache_read_tokens,
+      cache_write_tokens: usage.cache_write_tokens,
+      cost_usd: Math.round(costUsd * 10000) / 10000
+    }
+
+    const dir = getStaffDir(staffId)
+    appendJsonl(join(dir, 'usage.jsonl'), entry)
+    this.staffManager.emit('staff:metrics', staffId)
+  }
+
   private async collectMetrics(): Promise<void> {
     const runningIds = this.staffManager.getRunningStaffIds()
 
@@ -51,8 +88,6 @@ export class MonitoringEngine {
         const config = this.staffManager.getStaffConfig(id)
         if (!config) continue
 
-        // Usage is tracked by parsing Claude Code's output for token info
-        // For now, we emit a metrics event for real-time display
         this.staffManager.emit('staff:metrics', id)
       } catch (err) {
         console.error(`Monitoring failed for ${id}:`, err)
