@@ -1,7 +1,10 @@
 import { _electron as electron, type ElectronApplication, type Page } from '@playwright/test'
 import { mkdtempSync } from 'fs'
-import { join } from 'path'
+import { join, dirname } from 'path'
 import { tmpdir } from 'os'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export async function launchApp(): Promise<{
   app: ElectronApplication
