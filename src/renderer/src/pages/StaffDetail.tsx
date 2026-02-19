@@ -455,10 +455,24 @@ function MetricsTab({ staffId }: { staffId: string }): React.ReactElement {
             <CardTitle className="text-lg">Cost Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {/* Cost breakdown is approximated from token counts + pricing */}
+            {[
+              { label: 'Input Tokens', value: totals.cost > 0 ? (totals.input / (totals.input + totals.output + totals.cacheRead + totals.cacheWrite || 1)) * totals.cost : 0, color: 'bg-chart-1' },
+              { label: 'Output Tokens', value: totals.cost > 0 ? (totals.output / (totals.input + totals.output + totals.cacheRead + totals.cacheWrite || 1)) * totals.cost : 0, color: 'bg-chart-2' },
+              { label: 'Cache Read', value: totals.cost > 0 ? (totals.cacheRead / (totals.input + totals.output + totals.cacheRead + totals.cacheWrite || 1)) * totals.cost : 0, color: 'bg-chart-3' },
+              { label: 'Cache Write', value: totals.cost > 0 ? (totals.cacheWrite / (totals.input + totals.output + totals.cacheRead + totals.cacheWrite || 1)) * totals.cost : 0, color: 'bg-chart-4' }
+            ].map((item) => (
+              <div key={item.label} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={cn('h-2 w-2 rounded-full', item.color)} />
+                  <span className="text-sm text-muted-foreground">{item.label}</span>
+                </div>
+                <span className="font-mono text-sm text-foreground">{formatCost(item.value)}</span>
+              </div>
+            ))}
+            <Separator />
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Total Cost</span>
-              <span className="font-mono text-sm text-foreground">{formatCost(totals.cost)}</span>
+              <span className="text-sm font-semibold text-foreground">Total</span>
+              <span className="font-mono text-sm font-semibold text-foreground">{formatCost(totals.cost)}</span>
             </div>
           </CardContent>
         </Card>
@@ -472,6 +486,7 @@ function MetricsTab({ staffId }: { staffId: string }): React.ReactElement {
 function LogsTab({ staffId }: { staffId: string }): React.ReactElement {
   const [lines, setLines] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [logFilter, setLogFilter] = useState<'all' | 'gather' | 'execute' | 'evaluate' | 'errors'>('all')
   const [autoScroll, setAutoScroll] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -524,9 +539,17 @@ function LogsTab({ staffId }: { staffId: string }): React.ReactElement {
     }
   }, [])
 
-  const filteredLines = searchQuery
-    ? lines.filter((line) => line.toLowerCase().includes(searchQuery.toLowerCase()))
-    : lines
+  const filteredLines = useMemo(() => {
+    let result = lines
+    if (logFilter !== 'all') {
+      const keyword = logFilter === 'errors' ? 'error' : logFilter
+      result = result.filter((line) => line.toLowerCase().includes(keyword))
+    }
+    if (searchQuery) {
+      result = result.filter((line) => line.toLowerCase().includes(searchQuery.toLowerCase()))
+    }
+    return result
+  }, [lines, logFilter, searchQuery])
 
   if (lines.length === 0) {
     return (
@@ -556,6 +579,17 @@ function LogsTab({ staffId }: { staffId: string }): React.ReactElement {
             <X className="h-3 w-3" />
           </Button>
         )}
+        <select
+          value={logFilter}
+          onChange={(e) => setLogFilter(e.target.value as typeof logFilter)}
+          className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground"
+        >
+          <option value="all">All</option>
+          <option value="gather">Gather</option>
+          <option value="execute">Execute</option>
+          <option value="evaluate">Evaluate</option>
+          <option value="errors">Errors</option>
+        </select>
         <Button variant="ghost" size="sm" onClick={() => setLines([])}>
           Clear
         </Button>

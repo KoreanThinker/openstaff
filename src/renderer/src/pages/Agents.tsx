@@ -663,12 +663,13 @@ function ClaudeCodeCard({
                   {(() => {
                     const used = dashStats?.cost_month ?? 0
                     const pct = Math.min(100, (used / budget.monthly_limit) * 100)
+                    const isOverLimit = pct >= 100
                     const isWarning = pct >= budget.warning_threshold
                     return (
                       <>
                         <div className="h-2 rounded-full bg-muted">
                           <div
-                            className={cn('h-2 rounded-full transition-all', isWarning ? 'bg-warning' : 'bg-success')}
+                            className={cn('h-2 rounded-full transition-all', isOverLimit ? 'bg-destructive' : isWarning ? 'bg-warning' : 'bg-success')}
                             style={{ width: `${pct}%` }}
                           />
                         </div>
@@ -692,7 +693,7 @@ function ClaudeCodeCard({
               {staffsList && staffsList.filter((s) => s.agent === agent.id).length > 0 ? (
                 <div className="mt-3 space-y-2">
                   {staffsList.filter((s) => s.agent === agent.id).map((staff) => (
-                    <div key={staff.id} className="flex items-center justify-between text-sm">
+                    <Link key={staff.id} to={`/staffs/${staff.id}`} className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-muted transition-colors">
                       <div className="flex items-center gap-2">
                         <div className={cn(
                           'h-2 w-2 rounded-full',
@@ -701,7 +702,7 @@ function ClaudeCodeCard({
                         <span className="text-foreground">{staff.name}</span>
                       </div>
                       <span className="text-muted-foreground">{formatCost(staff.cost_today)}</span>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               ) : (
