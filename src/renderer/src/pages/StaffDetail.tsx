@@ -951,6 +951,14 @@ export function StaffDetail(): React.ReactElement {
     refetchInterval: 5000
   })
 
+  const { data: errors } = useQuery({
+    queryKey: ['staff-errors', staffId],
+    queryFn: () => api.getStaffErrors(staffId),
+    refetchInterval: 10000
+  })
+
+  const errorCount = errors?.length ?? 0
+
   // ─── WebSocket status updates ─────────────────────────────────
 
   useEffect(() => {
@@ -1104,7 +1112,14 @@ export function StaffDetail(): React.ReactElement {
           <TabsTrigger value="logs">Logs</TabsTrigger>
           <TabsTrigger value="kpi">KPI</TabsTrigger>
           <TabsTrigger value="memory">Memory</TabsTrigger>
-          <TabsTrigger value="errors">Errors</TabsTrigger>
+          <TabsTrigger value="errors">
+            Errors
+            {errorCount > 0 && (
+              <Badge variant="destructive" className="ml-1.5 h-5 min-w-5 rounded-full px-1.5 text-xs">
+                {errorCount}
+              </Badge>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">

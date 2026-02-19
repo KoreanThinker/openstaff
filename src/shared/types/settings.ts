@@ -32,4 +32,6 @@ export interface DashboardStats {
   cost_month_trend: number | null
   total_cycles: number
   cycles_trend: number | null
+  tokens_today: number
+  tokens_month: number
 }

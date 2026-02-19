@@ -88,6 +88,8 @@ describe('system API routes', () => {
     expect(data.active_staffs).toBe(0)
     expect(data.total_staffs).toBe(0)
     expect(data.total_cycles).toBe(0)
+    expect(data.tokens_today).toBe(0)
+    expect(data.tokens_month).toBe(0)
   })
 })
 

@@ -27,6 +27,8 @@ export function systemRoutes(ctx: ApiContext): Router {
       let totalCycles = 0
       let costToday = 0
       let costMonth = 0
+      let tokensToday = 0
+      let tokensMonth = 0
 
       for (const id of ids) {
         const status = ctx.staffManager.getStatus(id)
@@ -40,8 +42,15 @@ export function systemRoutes(ctx: ApiContext): Router {
         const today = new Date().toISOString().slice(0, 10)
         const thisMonth = today.slice(0, 7)
         for (const entry of usage) {
-          if (entry.date === today) costToday += entry.cost_usd
-          if (entry.date.startsWith(thisMonth)) costMonth += entry.cost_usd
+          const entryTokens = (entry.input_tokens || 0) + (entry.output_tokens || 0)
+          if (entry.date === today) {
+            costToday += entry.cost_usd
+            tokensToday += entryTokens
+          }
+          if (entry.date.startsWith(thisMonth)) {
+            costMonth += entry.cost_usd
+            tokensMonth += entryTokens
+          }
         }
       }
 
@@ -54,7 +63,9 @@ export function systemRoutes(ctx: ApiContext): Router {
         cost_month: Math.round(costMonth * 100) / 100,
         cost_month_trend: null,
         total_cycles: totalCycles,
-        cycles_trend: null
+        cycles_trend: null,
+        tokens_today: tokensToday,
+        tokens_month: tokensMonth
       }
 
       res.json(stats)

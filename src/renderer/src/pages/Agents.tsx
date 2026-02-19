@@ -21,12 +21,15 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
+import { toast } from '@/hooks/use-toast'
 import type {
   AgentInfo,
   AgentModel,
   AgentUsage,
   AgentBudget,
-  AgentUsageBreakdown
+  AgentUsageBreakdown,
+  DashboardStats,
+  StaffSummary
 } from '@shared/types'
 
 function AgentStatusPill({
@@ -352,6 +355,7 @@ function ClaudeCodeCard({
     'connected' | 'disconnected' | 'not_tested'
   >(agent.connected ? 'connected' : agent.api_key_configured ? 'disconnected' : 'not_tested')
   const [autoUpdate, setAutoUpdate] = useState(false)
+  const [updateChecking, setUpdateChecking] = useState(false)
 
   const testMutation = useMutation({
     mutationFn: async () => {
@@ -374,23 +378,40 @@ function ClaudeCodeCard({
     warning_threshold: 80
   })
 
-  // Load budget from settings
+  // Load budget and auto-update from settings
   useEffect(() => {
-    api.get('/api/settings').then((settings) => {
+    api.get<Record<string, unknown>>('/api/settings').then((settings) => {
       if (settings.monthly_budget_usd) {
         setBudget((prev) => ({
           ...prev,
-          monthly_limit: settings.monthly_budget_usd > 0 ? settings.monthly_budget_usd : null
+          monthly_limit: (settings.monthly_budget_usd as number) > 0 ? settings.monthly_budget_usd as number : null
         }))
       }
       if (settings.budget_warning_percent) {
         setBudget((prev) => ({
           ...prev,
-          warning_threshold: settings.budget_warning_percent
+          warning_threshold: settings.budget_warning_percent as number
         }))
+      }
+      if (settings.auto_update_agents !== undefined) {
+        setAutoUpdate(settings.auto_update_agents as boolean)
       }
     }).catch(() => {})
   }, [])
+
+  // Load usage from dashboard stats
+  const { data: dashStats } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: () => api.getDashboardStats(),
+    refetchInterval: 10000
+  })
+
+  // Load staffs for usage breakdown
+  const { data: staffsList } = useQuery({
+    queryKey: ['staffs'],
+    queryFn: () => api.getStaffs(),
+    refetchInterval: 10000
+  })
 
   // Save budget changes to settings
   const saveBudget = useCallback((newBudget: AgentBudget) => {
@@ -491,8 +512,32 @@ function ClaudeCodeCard({
                 )}
               </div>
               {agent.installed && (
-                <Button variant="outline" size="sm">
-                  <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={updateChecking}
+                  onClick={async () => {
+                    setUpdateChecking(true)
+                    try {
+                      await api.installAgent(agent.id)
+                      await queryClient.invalidateQueries({ queryKey: ['agents'] })
+                      toast({ title: 'Agent is up to date' })
+                    } catch (err) {
+                      toast({
+                        title: 'Update check failed',
+                        description: err instanceof Error ? err.message : 'Unknown error',
+                        variant: 'destructive'
+                      })
+                    } finally {
+                      setUpdateChecking(false)
+                    }
+                  }}
+                >
+                  {updateChecking ? (
+                    <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                  )}
                   Check for Updates
                 </Button>
               )}
@@ -505,7 +550,10 @@ function ClaudeCodeCard({
                 <Switch
                   id="auto-update"
                   checked={autoUpdate}
-                  onCheckedChange={setAutoUpdate}
+                  onCheckedChange={(checked) => {
+                    setAutoUpdate(checked)
+                    api.patch('/api/settings', { auto_update_agents: checked }).catch(() => {})
+                  }}
                 />
               </div>
             )}
@@ -542,12 +590,17 @@ function ClaudeCodeCard({
                 Usage
               </h3>
               <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <UsageCard label="Today" tokens={0} cost={0} trend={null} />
+                <UsageCard
+                  label="Today"
+                  tokens={dashStats?.tokens_today ?? 0}
+                  cost={dashStats?.cost_today ?? 0}
+                  trend={dashStats?.cost_today_trend ?? null}
+                />
                 <UsageCard
                   label="This Month"
-                  tokens={0}
-                  cost={0}
-                  trend={null}
+                  tokens={dashStats?.tokens_month ?? 0}
+                  cost={dashStats?.cost_month ?? 0}
+                  trend={dashStats?.cost_month_trend ?? null}
                 />
               </div>
             </div>
@@ -613,15 +666,24 @@ function ClaudeCodeCard({
               )}
               {budget.monthly_limit !== null && (
                 <div className="mt-3">
-                  <div className="h-2 rounded-full bg-muted">
-                    <div
-                      className="h-2 rounded-full bg-success transition-all"
-                      style={{ width: '0%' }}
-                    />
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    $0.00 of {formatCost(budget.monthly_limit)} used
-                  </p>
+                  {(() => {
+                    const used = dashStats?.cost_month ?? 0
+                    const pct = Math.min(100, (used / budget.monthly_limit) * 100)
+                    const isWarning = pct >= budget.warning_threshold
+                    return (
+                      <>
+                        <div className="h-2 rounded-full bg-muted">
+                          <div
+                            className={cn('h-2 rounded-full transition-all', isWarning ? 'bg-warning' : 'bg-success')}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {formatCost(used)} of {formatCost(budget.monthly_limit)} used
+                        </p>
+                      </>
+                    )
+                  })()}
                 </div>
               )}
             </div>
@@ -633,9 +695,26 @@ function ClaudeCodeCard({
               <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
                 Usage by Staff
               </h3>
-              <p className="mt-3 text-sm text-muted-foreground">
-                No Staff are using this agent.
-              </p>
+              {staffsList && staffsList.filter((s) => s.agent === agent.id).length > 0 ? (
+                <div className="mt-3 space-y-2">
+                  {staffsList.filter((s) => s.agent === agent.id).map((staff) => (
+                    <div key={staff.id} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className={cn(
+                          'h-2 w-2 rounded-full',
+                          staff.status === 'running' ? 'bg-success' : 'bg-muted-foreground'
+                        )} />
+                        <span className="text-foreground">{staff.name}</span>
+                      </div>
+                      <span className="text-muted-foreground">{formatCost(staff.cost_today)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  No Staff are using this agent.
+                </p>
+              )}
             </div>
           )}
         </div>
