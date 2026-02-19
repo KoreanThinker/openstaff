@@ -21,7 +21,8 @@ const {
   extractRequiredEnvVars,
   importSkill,
   deleteSkill,
-  ensureBuiltinSkill
+  ensureBuiltinSkill,
+  getSkillsDir
 } = await import('./skill-data')
 
 describe('skill-data', () => {
@@ -39,6 +40,13 @@ describe('skill-data', () => {
     mkdirSync(dir, { recursive: true })
     writeFileSync(join(dir, 'SKILL.md'), skillMdContent)
   }
+
+  describe('getSkillsDir', () => {
+    it('returns the skills directory path', () => {
+      const dir = getSkillsDir()
+      expect(dir).toContain('skills')
+    })
+  })
 
   describe('listSkillNames', () => {
     it('returns empty array when no skills installed', () => {
