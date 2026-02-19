@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Cpu,
@@ -325,7 +326,7 @@ function GuidedSetup({
                   Agent installed and connected.
                 </p>
                 <Button variant="link" className="mt-1 h-auto p-0 text-sm" asChild>
-                  <a href="/staffs/new">Create your first Staff</a>
+                  <Link to="/staffs/new">Create your first Staff</Link>
                 </Button>
               </div>
             )}
