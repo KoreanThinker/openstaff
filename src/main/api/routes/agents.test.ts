@@ -37,6 +37,7 @@ vi.mock('../../agent-driver/agent-registry', () => {
 })
 
 const { agentRoutes } = await import('./agents')
+const agentRegistry = await import('../../agent-driver/agent-registry')
 
 function createMockConfigStore() {
   const store: Record<string, unknown> = {
@@ -186,6 +187,98 @@ describe('agents API routes', () => {
   it('GET /api/agents/unknown/models returns 404', async () => {
     const res = await fetch(`http://localhost:${port}/api/agents/unknown/models`)
     expect(res.status).toBe(404)
+  })
+})
+
+describe('agents API routes: test-connection catch block', () => {
+  let errServer: Server
+  let errPort: number
+
+  beforeAll(async () => {
+    const app = express()
+    app.use(express.json())
+
+    // Config store that throws on get to trigger the test-connection catch block
+    const throwingConfigStore = {
+      get: () => { throw new Error('config store exploded') },
+      set: vi.fn()
+    }
+
+    app.use('/api/agents', agentRoutes({
+      staffManager: {} as never,
+      configStore: throwingConfigStore as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    errServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      errServer.listen(0, () => {
+        const addr = errServer.address()
+        errPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => errServer.close())
+
+  it('POST /api/agents/:id/test-connection returns 500 when handler throws', async () => {
+    const res = await fetch(`http://localhost:${errPort}/api/agents/claude-code/test-connection`, {
+      method: 'POST'
+    })
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('config store exploded')
+  })
+})
+
+describe('agents API routes: models catch block', () => {
+  let modelsErrServer: Server
+  let modelsErrPort: number
+  let originalGetDriver: typeof agentRegistry.getDriver
+
+  beforeAll(async () => {
+    // Temporarily override getDriver to return a driver whose getAvailableModels throws
+    originalGetDriver = agentRegistry.getDriver
+    ;(agentRegistry as Record<string, unknown>).getDriver = (id: string) => {
+      if (id !== 'claude-code') return undefined
+      return {
+        id: 'claude-code',
+        name: 'Claude Code',
+        getAvailableModels: () => { throw new Error('models exploded') }
+      }
+    }
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api/agents', agentRoutes({
+      staffManager: {} as never,
+      configStore: createMockConfigStore() as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    modelsErrServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      modelsErrServer.listen(0, () => {
+        const addr = modelsErrServer.address()
+        modelsErrPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => {
+    ;(agentRegistry as Record<string, unknown>).getDriver = originalGetDriver
+    modelsErrServer.close()
+  })
+
+  it('GET /api/agents/:id/models returns 500 when getAvailableModels throws', async () => {
+    const res = await fetch(`http://localhost:${modelsErrPort}/api/agents/claude-code/models`)
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('models exploded')
   })
 })
 

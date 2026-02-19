@@ -658,6 +658,48 @@ describe('staffs API routes', () => {
     await apiDelete(`/api/staffs/${data.id}`)
   })
 
+  it('POST /api/staffs/import returns 500 when createStaff throws', async () => {
+    const originalCreateStaff = mockManager.createStaff
+    mockManager.createStaff = vi.fn(() => { throw new Error('createStaff import failed') })
+
+    const importData = {
+      name: 'Failing Import',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    }
+
+    const { status, data } = await apiPost('/api/staffs/import', importData)
+    expect(status).toBe(500)
+    expect(data.error).toContain('createStaff import failed')
+
+    mockManager.createStaff = originalCreateStaff
+  })
+
+  it('GET /api/staffs/:id/logs returns 500 when output.log is a directory', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Log Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    // Create output.log as a directory instead of a file to trigger EISDIR
+    const { getStaffDir } = await import('../../data/staff-data')
+    const { mkdirSync } = await import('fs')
+    const { join } = await import('path')
+    const staffDir = getStaffDir(created.id)
+    mkdirSync(join(staffDir, 'output.log'), { recursive: true })
+
+    const { status, data } = await apiGet(`/api/staffs/${created.id}/logs`)
+    expect(status).toBe(500)
+    expect(data.error).toBeTruthy()
+
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
   it('GET /api/staffs list shows uptime for running staffs', async () => {
     const { data: created } = await apiPost('/api/staffs', {
       name: 'Running List Staff',

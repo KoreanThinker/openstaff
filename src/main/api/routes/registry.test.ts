@@ -322,3 +322,42 @@ describe('registry routes with expired cache', () => {
     expect(data.version).toBe('0.9.0')
   })
 })
+
+describe('registry routes: catch blocks for GET /skills and POST /skills/:name/install', () => {
+  const realFetch = globalThis.fetch
+
+  beforeAll(() => {
+    // Delete cache so fetchRegistryIndex must call fetch
+    const { unlinkSync } = require('fs')
+    try { unlinkSync(join(tempDir, 'registry', 'cache.json')) } catch {}
+
+    // Mock fetch to throw (network error) for GitHub URLs, pass through localhost
+    globalThis.fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.href : url.url
+      if (urlStr.includes('localhost')) {
+        return realFetch(url, init)
+      }
+      throw new Error('Network error: DNS resolution failed')
+    }) as typeof fetch
+  })
+
+  afterAll(() => {
+    globalThis.fetch = realFetch
+  })
+
+  it('GET /api/registry/skills returns 500 when fetchRegistryIndex throws', async () => {
+    const res = await realFetch(`http://localhost:${port}/api/registry/skills`)
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('Network error')
+  })
+
+  it('POST /api/registry/skills/:name/install returns 500 when fetchRegistryIndex throws', async () => {
+    const res = await realFetch(`http://localhost:${port}/api/registry/skills/test-skill/install`, {
+      method: 'POST'
+    })
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('Network error')
+  })
+})

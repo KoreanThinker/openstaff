@@ -207,6 +207,21 @@ describe('MonitoringEngine', () => {
       engine.stop()
     })
 
+    it('skips recording usage when staff config is null', () => {
+      const manager = createMockStaffManager()
+      // getStaffConfig returns null (default), so even with valid token data
+      // parseAndRecordUsage should exit early at the config check
+      const engine = new MonitoringEngine(manager as never)
+      engine.start()
+
+      // Send valid token JSON that will be parsed, but config is null
+      manager.emit('staff:log', 'staff-1', '{"input_tokens":500,"output_tokens":200}')
+
+      // Should not throw and no usage file should be created
+      // (staff-1 dir doesn't exist and getStaffConfig returns null, so it exits before writing)
+      engine.stop()
+    })
+
     it('stops listening to events after stop()', () => {
       const manager = createMockStaffManager()
       manager.getStaffConfig = () => ({

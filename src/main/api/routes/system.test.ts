@@ -244,6 +244,76 @@ describe('system API routes with staff data', () => {
   })
 })
 
+describe('system API routes: stats catch block', () => {
+  let statsErrServer: Server
+  let statsErrPort: number
+  let statsErrTempDir: string
+
+  beforeAll(async () => {
+    const { mkdtempSync, mkdirSync, writeFileSync } = await import('fs')
+    statsErrTempDir = mkdtempSync(join(tmpdir(), 'openstaff-sys-stats-err-'))
+    tempDir = statsErrTempDir
+
+    // Create a staff with corrupt usage.jsonl to trigger JSON.parse error in readJsonl
+    const { ensureStaffDir, writeStaffConfig } = await import('../../data/staff-data')
+    ensureStaffDir('corrupt-staff')
+    writeStaffConfig({
+      id: 'corrupt-staff',
+      name: 'Corrupt Staff',
+      role: 'Tester',
+      gather: 'g',
+      execute: 'e',
+      evaluate: 'ev',
+      kpi: '',
+      agent: 'claude-code',
+      model: 'claude-sonnet-4-5',
+      skills: [],
+      created_at: new Date().toISOString()
+    })
+
+    // Write corrupt usage.jsonl that will cause JSON.parse to throw
+    writeFileSync(
+      join(statsErrTempDir, 'staffs', 'corrupt-staff', 'usage.jsonl'),
+      'this is not valid json\n'
+    )
+
+    const mockManager = Object.assign(new EventEmitter(), {
+      getRunningStaffIds: () => [],
+      getStatus: () => 'stopped' as const
+    })
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api/system', systemRoutes({
+      staffManager: mockManager as never,
+      configStore: {} as never,
+      monitoringEngine: { getSystemResources: async () => ({}) } as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    statsErrServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      statsErrServer.listen(0, () => {
+        const addr = statsErrServer.address()
+        statsErrPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => {
+    statsErrServer.close()
+    rmSync(statsErrTempDir, { recursive: true, force: true })
+  })
+
+  it('GET /api/system/stats returns 500 when readJsonl throws on corrupt data', async () => {
+    const res = await fetch(`http://localhost:${statsErrPort}/api/system/stats`)
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toBeTruthy()
+  })
+})
+
 describe('system API routes: error handling', () => {
   let errServer: Server
   let errPort: number

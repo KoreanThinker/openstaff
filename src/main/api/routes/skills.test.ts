@@ -311,3 +311,143 @@ description: A skill used by running staff
     expect(restartFn).toHaveBeenCalledWith('running-staff')
   })
 })
+
+describe('skills API routes: error handling catch blocks', () => {
+  let tempDirErr: string
+  let serverErr: Server
+  let portErr: number
+
+  beforeAll(async () => {
+    tempDirErr = mkdtempSync(join(tmpdir(), 'openstaff-skills-err-'))
+    tempDir = tempDirErr
+    mkdirSync(join(tempDirErr, 'skills'), { recursive: true })
+    mkdirSync(join(tempDirErr, 'staffs'), { recursive: true })
+
+    // Create a skill so GET /:name finds it and exercises getSkillInfo -> getSkillAuthStatus -> configStore.get
+    const skillDir = join(tempDirErr, 'skills', 'err-skill')
+    mkdirSync(skillDir, { recursive: true })
+    writeFileSync(join(skillDir, 'SKILL.md'), `---
+name: err-skill
+description: A skill for error testing
+compatibility: Requires ERR_API_KEY
+---
+# Err Skill`)
+
+    // Config store that throws to trigger catch blocks
+    const throwingConfigStore = {
+      get: () => { throw new Error('configStore.get exploded') },
+      set: () => { throw new Error('configStore.set exploded') }
+    }
+
+    const mockManager = Object.assign(new EventEmitter(), {
+      isRunning: () => false,
+      restartStaff: vi.fn()
+    })
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api/skills', skillRoutes({
+      staffManager: mockManager as never,
+      configStore: throwingConfigStore as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    serverErr = createServer(app)
+    await new Promise<void>((resolve) => {
+      serverErr.listen(0, () => {
+        const addr = serverErr.address()
+        portErr = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => {
+    serverErr.close()
+    rmSync(tempDirErr, { recursive: true, force: true })
+  })
+
+  it('GET /api/skills/:name returns 500 when configStore.get throws', async () => {
+    const res = await fetch(`http://localhost:${portErr}/api/skills/err-skill`)
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('configStore.get exploded')
+  })
+
+  it('PUT /api/skills/:name/auth returns 500 when configStore.set throws', async () => {
+    const res = await fetch(`http://localhost:${portErr}/api/skills/err-skill/auth`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ERR_API_KEY: 'some-value' })
+    })
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('configStore.set exploded')
+  })
+})
+
+describe('skills API routes: delete catch block', () => {
+  let tempDirDel: string
+  let serverDel: Server
+  let portDel: number
+
+  beforeAll(async () => {
+    tempDirDel = mkdtempSync(join(tmpdir(), 'openstaff-skills-del-err-'))
+    tempDir = tempDirDel
+    mkdirSync(join(tempDirDel, 'skills'), { recursive: true })
+    mkdirSync(join(tempDirDel, 'staffs'), { recursive: true })
+
+    // Create a skill
+    const skillDir = join(tempDirDel, 'skills', 'del-err-skill')
+    mkdirSync(skillDir, { recursive: true })
+    writeFileSync(join(skillDir, 'SKILL.md'), `---
+name: del-err-skill
+description: Skill for delete error test
+---
+# Del Err Skill`)
+
+    // Create a staff that uses this skill with corrupt JSON to trigger an error during delete
+    const { ensureStaffDir } = await import('../../data/staff-data')
+    ensureStaffDir('staff-del-err')
+    // Write a corrupt staff.json that will cause readStaffConfig to fail when JSON parsing
+    writeFileSync(join(tempDirDel, 'staffs', 'staff-del-err', 'staff.json'), '{invalid json}')
+
+    const mockManager = Object.assign(new EventEmitter(), {
+      isRunning: () => false,
+      restartStaff: vi.fn()
+    })
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api/skills', skillRoutes({
+      staffManager: mockManager as never,
+      configStore: createMockConfigStore() as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    serverDel = createServer(app)
+    await new Promise<void>((resolve) => {
+      serverDel.listen(0, () => {
+        const addr = serverDel.address()
+        portDel = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => {
+    serverDel.close()
+    rmSync(tempDirDel, { recursive: true, force: true })
+  })
+
+  it('DELETE /api/skills/:name returns 500 when readStaffConfig throws on corrupt JSON', async () => {
+    const res = await fetch(`http://localhost:${portDel}/api/skills/del-err-skill`, {
+      method: 'DELETE'
+    })
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toBeTruthy()
+  })
+})
