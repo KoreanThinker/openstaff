@@ -921,6 +921,53 @@ describe('staffs API routes', () => {
     mockManager.createStaff = originalCreateStaff
   })
 
+  it('GET /api/staffs list shows KPI trend when two kpi entries exist', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'KPI Trend Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const { getStaffDir } = await import('../../data/staff-data')
+    const { appendJsonl } = await import('../../data/jsonl-reader')
+    const { join } = await import('path')
+    const dir = getStaffDir(created.id)
+    // Two KPI entries with same metric to trigger trend calculation (line 35)
+    appendJsonl(join(dir, 'kpi.jsonl'), { date: '2026-01-01', cycle: 1, metrics: { ctr: 2.0 } })
+    appendJsonl(join(dir, 'kpi.jsonl'), { date: '2026-01-02', cycle: 2, metrics: { ctr: 3.0 } })
+
+    const { data: list } = await apiGet('/api/staffs')
+    const staff = list.find((s: { id: string }) => s.id === created.id)
+    expect(staff).toBeTruthy()
+    expect(staff.kpi_summary.length).toBe(1)
+    expect(staff.kpi_summary[0].name).toBe('ctr')
+    expect(staff.kpi_summary[0].value).toBe(3.0)
+    expect(staff.kpi_summary[0].trend).toBe(50) // (3-2)/2 * 100
+
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('GET /api/staffs list returns 500 when listStaffIds throws', async () => {
+    // Corrupt the staffs directory to trigger the list catch block
+    const { mkdirSync, rmSync, writeFileSync } = await import('fs')
+    const { join } = await import('path')
+
+    // Temporarily replace staffs dir with a file to cause readdirSync to throw
+    const staffsDir = join(tempDir, 'staffs')
+    rmSync(staffsDir, { recursive: true, force: true })
+    writeFileSync(staffsDir, 'not a directory')
+
+    const { status, data } = await apiGet('/api/staffs')
+    expect(status).toBe(500)
+    expect(data.error).toBeTruthy()
+
+    // Restore the directory
+    try { rmSync(staffsDir) } catch {}
+    mkdirSync(staffsDir, { recursive: true })
+  })
+
   it('GET /api/staffs list shows uptime for running staffs', async () => {
     const { data: created } = await apiPost('/api/staffs', {
       name: 'Running List Staff',
