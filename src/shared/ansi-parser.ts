@@ -1,6 +1,7 @@
 // ANSI escape code parser for terminal output
 // Converts ANSI codes to inline styles for React rendering
 
+// eslint-disable-next-line no-control-regex
 const ANSI_REGEX = /\x1b\[([0-9;]*)m/g
 
 // Dracula-inspired palette for dark/light readability

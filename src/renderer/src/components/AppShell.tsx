@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   Puzzle,
@@ -49,7 +49,6 @@ export function AppShell(): React.ReactElement {
   const { theme, setTheme } = useSettingsStore()
   const { actionButton } = useHeaderActionStore()
   const location = useLocation()
-  const navigate = useNavigate()
   const pageTitle = pageTitleFromPath(location.pathname)
   const searchRef = React.useRef<HTMLInputElement>(null)
   const [searchOpen, setSearchOpen] = React.useState(false)
