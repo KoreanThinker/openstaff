@@ -104,3 +104,10 @@ export function createClaudeSettings(staffId: string): void {
     }
   }, null, 2))
 }
+
+export function createStaffMcpConfig(staffId: string): void {
+  const staffDir = getStaffDir(staffId)
+  writeFileSync(join(staffDir, 'staff-mcp.json'), JSON.stringify({
+    mcpServers: {}
+  }, null, 2))
+}

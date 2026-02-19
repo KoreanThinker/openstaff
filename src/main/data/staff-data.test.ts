@@ -31,7 +31,8 @@ const {
   ensureMemoryMd,
   readMemoryMd,
   symlinkSkills,
-  createClaudeSettings
+  createClaudeSettings,
+  createStaffMcpConfig
 } = await import('./staff-data')
 
 describe('staff-data', () => {
@@ -204,6 +205,17 @@ describe('staff-data', () => {
       expect(existsSync(settingsPath)).toBe(true)
       const content = JSON.parse(readFileSync(settingsPath, 'utf-8'))
       expect(content.permissions).toBeDefined()
+    })
+  })
+
+  describe('createStaffMcpConfig', () => {
+    it('creates staff-mcp.json with empty mcpServers', () => {
+      ensureStaffDir('staff-mcp')
+      createStaffMcpConfig('staff-mcp')
+      const mcpPath = join(tempDir, 'staffs', 'staff-mcp', 'staff-mcp.json')
+      expect(existsSync(mcpPath)).toBe(true)
+      const content = JSON.parse(readFileSync(mcpPath, 'utf-8'))
+      expect(content.mcpServers).toEqual({})
     })
   })
 })

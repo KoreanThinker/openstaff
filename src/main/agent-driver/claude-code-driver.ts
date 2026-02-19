@@ -111,6 +111,7 @@ export class ClaudeCodeDriver implements AgentDriver {
     const args = [
       '--dangerously-skip-permissions',
       '--setting-sources', 'project,local',
+      '--strict-mcp-config', '--mcp-config', join(opts.workingDir, 'staff-mcp.json'),
       '--verbose'
     ]
 
@@ -135,6 +136,7 @@ export class ClaudeCodeDriver implements AgentDriver {
       '--resume', opts.sessionId!,
       '--dangerously-skip-permissions',
       '--setting-sources', 'project,local',
+      '--strict-mcp-config', '--mcp-config', join(opts.workingDir, 'staff-mcp.json'),
       '--verbose'
     ]
 
@@ -171,13 +173,19 @@ export class ClaudeCodeDriver implements AgentDriver {
       },
       async kill(): Promise<void> {
         const treeKill = require('tree-kill')
-        return new Promise<void>((resolve) => {
-          treeKill(pty.pid, 'SIGTERM', (err: Error | null) => {
-            if (err) {
-              treeKill(pty.pid, 'SIGKILL', () => resolve())
-            } else {
-              resolve()
-            }
+
+        // PRD: SIGTERM → 5s wait → SIGKILL
+        await new Promise<void>((resolve) => {
+          treeKill(pty.pid, 'SIGTERM', () => {
+            // Wait 5s for graceful shutdown
+            setTimeout(() => {
+              try {
+                process.kill(pty.pid, 0) // Check if still alive
+                treeKill(pty.pid, 'SIGKILL', () => resolve())
+              } catch {
+                resolve() // Already dead
+              }
+            }, 5000)
           })
         })
       }

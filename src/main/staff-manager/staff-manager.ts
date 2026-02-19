@@ -15,7 +15,8 @@ import {
   ensureStaffDir,
   ensureMemoryMd,
   symlinkSkills,
-  createClaudeSettings
+  createClaudeSettings,
+  createStaffMcpConfig
 } from '../data/staff-data'
 import { readJsonl, appendJsonl } from '../data/jsonl-reader'
 import { ensureBuiltinSkill, parseSkillMd, extractRequiredEnvVars } from '../data/skill-data'
@@ -75,6 +76,7 @@ export class StaffManager extends EventEmitter {
     const allSkills = [...new Set(['openstaff', ...config.skills])]
     symlinkSkills(staffId, allSkills)
     createClaudeSettings(staffId)
+    createStaffMcpConfig(staffId)
 
     // Build env vars
     const env: Record<string, string> = {}
@@ -235,6 +237,16 @@ export class StaffManager extends EventEmitter {
 
   getStaffConfig(staffId: string): StaffConfig | null {
     return readStaffConfig(staffId)
+  }
+
+  getProcessPid(staffId: string): number | null {
+    const entry = this.running.get(staffId)
+    return entry ? entry.process.pid : null
+  }
+
+  getLastOutputAt(staffId: string): number | null {
+    const entry = this.running.get(staffId)
+    return entry ? entry.lastOutputAt : null
   }
 
   private async checkIdle(staffId: string): Promise<void> {

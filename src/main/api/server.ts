@@ -1,5 +1,7 @@
 import express from 'express'
 import { createServer } from 'http'
+import { join } from 'path'
+import { existsSync } from 'fs'
 import { Server as SocketIOServer } from 'socket.io'
 import { staffRoutes } from './routes/staffs'
 import { skillRoutes } from './routes/skills'
@@ -49,6 +51,15 @@ export async function startApiServer(
   app.use('/api/settings', settingsRoutes(ctx))
   app.use('/api/system', systemRoutes(ctx))
   app.use('/api/registry', registryRoutes(ctx))
+
+  // Serve static React build for web UI (Ngrok remote access)
+  const staticDir = join(__dirname, '../renderer')
+  if (existsSync(staticDir)) {
+    app.use(express.static(staticDir))
+    app.get('*', (_req, res) => {
+      res.sendFile(join(staticDir, 'index.html'))
+    })
+  }
 
   // WebSocket
   io.on('connection', (socket) => {
