@@ -375,3 +375,35 @@ describe('registry routes: catch blocks for GET /skills and POST /skills/:name/i
     expect(data.error).toContain('Network error')
   })
 })
+
+describe('registry routes: corrupt cache file', () => {
+  const realFetch = globalThis.fetch
+
+  beforeAll(() => {
+    // Write corrupt JSON to cache file to trigger the catch at line 24
+    const { writeFileSync, mkdirSync } = require('fs')
+    mkdirSync(join(tempDir, 'registry'), { recursive: true })
+    writeFileSync(join(tempDir, 'registry', 'cache.json'), 'not valid json{{{')
+
+    // Mock fetch to return valid data (so it recovers after corrupt cache)
+    globalThis.fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.href : url.url
+      if (urlStr.includes('localhost')) {
+        return realFetch(url, init)
+      }
+      return new Response(JSON.stringify({ templates: [], skills: [] }), { status: 200 })
+    }) as typeof fetch
+  })
+
+  afterAll(() => {
+    globalThis.fetch = realFetch
+  })
+
+  it('GET /api/registry recovers from corrupt cache by fetching fresh data', async () => {
+    const res = await realFetch(`http://localhost:${port}/api/registry`)
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data).toHaveProperty('templates')
+    expect(data).toHaveProperty('skills')
+  })
+})
