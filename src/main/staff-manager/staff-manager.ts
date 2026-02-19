@@ -21,6 +21,7 @@ import { readJsonl, appendJsonl } from '../data/jsonl-reader'
 import { ensureBuiltinSkill, parseSkillMd, extractRequiredEnvVars } from '../data/skill-data'
 import { IDLE_TIMEOUT_MS, KEEP_GOING_PROMPT, INITIAL_PROMPT, MAX_CONSECUTIVE_FAILURES, FAILURE_WINDOW_MS, BACKOFF_DELAYS_MS } from '@shared/constants'
 import type { ConfigStore } from '../store/config-store'
+import { hasChildProcesses } from './process-utils'
 
 interface RunningStaff {
   config: StaffConfig
@@ -236,12 +237,16 @@ export class StaffManager extends EventEmitter {
     return readStaffConfig(staffId)
   }
 
-  private checkIdle(staffId: string): void {
+  private async checkIdle(staffId: string): Promise<void> {
     const entry = this.running.get(staffId)
     if (!entry) return
 
     const elapsed = Date.now() - entry.lastOutputAt
     if (elapsed >= IDLE_TIMEOUT_MS) {
+      // PRD: Only send keep-going prompt if no pty output AND no child processes
+      const hasChildren = await hasChildProcesses(entry.process.pid)
+      if (hasChildren) return
+
       entry.process.write(KEEP_GOING_PROMPT)
       entry.lastOutputAt = Date.now()
       this.emit('staff:idle_nudge', staffId)
