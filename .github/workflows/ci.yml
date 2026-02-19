@@ -32,12 +32,11 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm install
+      - name: Install dependencies (skip postinstall)
+        run: pnpm install --ignore-scripts
 
-      - name: Reinstall Electron binary
-        run: |
-          rm -rf node_modules/electron/dist
-          node node_modules/electron/install.js
+      - name: Rebuild native modules for Node.js
+        run: pnpm rebuild
 
       - name: Type Check
         run: pnpm type-check
