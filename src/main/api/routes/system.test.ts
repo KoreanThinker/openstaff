@@ -192,6 +192,12 @@ describe('system API routes with staff data', () => {
       cache_write_tokens: 0,
       cost_usd: 0.10
     })
+    // Add entry with missing token fields (covers || 0 fallback branch)
+    appendJsonl(join(staffDir, 'usage.jsonl'), {
+      date: today,
+      cost_usd: 0.001
+    })
+
     // Add entry from same month but different day (covers month-only matching branch)
     const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
     appendJsonl(join(staffDir, 'usage.jsonl'), {
@@ -249,9 +255,9 @@ describe('system API routes with staff data', () => {
     expect(data.total_staffs).toBe(1)
     expect(data.active_staffs).toBe(1)
     expect(data.total_cycles).toBe(2)
-    expect(data.cost_today).toBeCloseTo(0.15, 2)
-    expect(data.tokens_today).toBe(4500) // 1000+500+2000+1000
-    expect(data.cost_month).toBeCloseTo(0.17, 2) // 0.15 today + 0.02 yesterday
+    expect(data.cost_today).toBeCloseTo(0.151, 2)
+    expect(data.tokens_today).toBe(4500) // 1000+500+2000+1000+0(missing fields)
+    expect(data.cost_month).toBeCloseTo(0.171, 2) // 0.151 today + 0.02 yesterday
     expect(data.tokens_month).toBe(5250) // 4500 today + 750 yesterday
   })
 })
