@@ -2,7 +2,8 @@ import { dialog, app, BrowserWindow } from 'electron'
 import type { IpcMain } from 'electron'
 import type { ConfigStore } from '../store/config-store'
 import { getApiPort } from '../api/server'
-import { autoUpdater } from 'electron-updater'
+import pkg from 'electron-updater'
+const { autoUpdater } = pkg
 
 export function setupIpcHandlers(
   ipcMain: IpcMain,
