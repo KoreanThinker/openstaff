@@ -1,6 +1,7 @@
 export interface SkillInfo {
   name: string
   description: string
+  content: string
   author: string
   version: string
   allowed_tools: string

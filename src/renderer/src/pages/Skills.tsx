@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback, useEffect, createElement } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Puzzle,
@@ -13,6 +13,7 @@ import {
   AlertTriangle
 } from 'lucide-react'
 import { api } from '@/lib/api'
+import { useHeaderActionStore } from '@/stores/header-action-store'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -114,6 +115,18 @@ export function Skills(): React.ReactElement {
   const [showAuthValues, setShowAuthValues] = useState<Record<string, boolean>>(
     {}
   )
+  const setActionButton = useHeaderActionStore((s) => s.setActionButton)
+
+  useEffect(() => {
+    setActionButton(
+      createElement(Button, {
+        size: 'sm',
+        className: 'rounded-full gap-2',
+        onClick: () => setAddModalOpen(true)
+      }, '+ Add Skill')
+    )
+    return () => setActionButton(null)
+  }, [setActionButton])
 
   const {
     data: skills,
@@ -392,6 +405,18 @@ export function Skills(): React.ReactElement {
                 <p className="mt-2 text-sm text-muted-foreground">
                   {selectedSkill.description}
                 </p>
+                {selectedSkill.content && (
+                  <div className="mt-3 prose prose-sm max-w-none text-muted-foreground">
+                    {selectedSkill.content.split('\n').map((line, i) => {
+                      if (line.startsWith('## ')) return <h3 key={i} className="text-sm font-semibold text-foreground mt-4 mb-1">{line.slice(3)}</h3>
+                      if (line.startsWith('# ')) return <h2 key={i} className="text-base font-semibold text-foreground mt-4 mb-1">{line.slice(2)}</h2>
+                      if (line.startsWith('- ')) return <li key={i} className="text-sm text-muted-foreground ml-4">{line.slice(2)}</li>
+                      if (line.startsWith('`') && line.endsWith('`')) return <code key={i} className="block text-xs bg-muted rounded px-2 py-1 my-1 font-mono">{line.slice(1, -1)}</code>
+                      if (line.trim() === '') return <br key={i} />
+                      return <p key={i} className="text-sm text-muted-foreground">{line}</p>
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Authentication */}

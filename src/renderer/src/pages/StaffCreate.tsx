@@ -563,77 +563,91 @@ export function StaffCreate(): React.ReactElement {
         <CardHeader>
           <CardTitle className="text-lg">The Loop</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Gather */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Search className="h-4 w-4 text-chart-1" />
-              Gather
-            </label>
-            <Textarea
-              name="gather"
-              rows={4}
-              placeholder={"Where and how should this Staff collect information?\n\ne.g., Collect trending posts from Instagram and X for the last 3 days in our product category. Analyze visual styles, copy patterns, and hashtags of top 100 posts."}
-              value={form.gather}
-              onChange={(e) => updateField('gather', e.target.value)}
-              onFocus={() => setActivePhase('gather')}
-              onBlur={() => setActivePhase(null)}
-              disabled={isFormDisabled}
-              className={cn(errors.gather && 'border-destructive')}
-            />
-            {errors.gather ? (
-              <p className="text-sm text-destructive">{errors.gather}</p>
-            ) : (
-              <p className="text-sm text-muted-foreground">Tell your Staff where to look and what to collect</p>
-            )}
-          </div>
+        <CardContent>
+          <div className="relative space-y-6 pl-10">
+            {/* Vertical connector line */}
+            <div className="absolute left-[15px] top-4 bottom-4 w-px bg-border" />
 
-          {/* Execute */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Zap className="h-4 w-4 text-chart-2" />
-              Execute
-            </label>
-            <Textarea
-              name="execute"
-              rows={4}
-              placeholder={"What specific work should this Staff perform?\n\ne.g., Create 3 ad creatives with A/B test variants per day, tailored to our product."}
-              value={form.execute}
-              onChange={(e) => updateField('execute', e.target.value)}
-              onFocus={() => setActivePhase('execute')}
-              onBlur={() => setActivePhase(null)}
-              disabled={isFormDisabled}
-              className={cn(errors.execute && 'border-destructive')}
-            />
-            {errors.execute ? (
-              <p className="text-sm text-destructive">{errors.execute}</p>
-            ) : (
-              <p className="text-sm text-muted-foreground">Describe the actual work to produce</p>
-            )}
-          </div>
+            {/* Step 1: Gather */}
+            <div className="relative space-y-2">
+              <div className="absolute -left-10 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-chart-1/10 text-sm font-bold text-chart-1">
+                1
+              </div>
+              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Search className="h-4 w-4 text-chart-1" />
+                Gather
+              </label>
+              <Textarea
+                name="gather"
+                rows={4}
+                placeholder={"Where and how should this Staff collect information?\n\ne.g., Collect trending posts from Instagram and X for the last 3 days in our product category. Analyze visual styles, copy patterns, and hashtags of top 100 posts."}
+                value={form.gather}
+                onChange={(e) => updateField('gather', e.target.value)}
+                onFocus={() => setActivePhase('gather')}
+                onBlur={() => setActivePhase(null)}
+                disabled={isFormDisabled}
+                className={cn(errors.gather && 'border-destructive')}
+              />
+              {errors.gather ? (
+                <p className="text-sm text-destructive">{errors.gather}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Tell your Staff where to look and what to collect</p>
+              )}
+            </div>
 
-          {/* Evaluate */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <BarChart3 className="h-4 w-4 text-chart-3" />
-              Evaluate
-            </label>
-            <Textarea
-              name="evaluate"
-              rows={4}
-              placeholder={"How should this Staff measure results and learn?\n\ne.g., Check CPI, CPM, CTR from Meta Ads dashboard. Analyze which patterns perform best and apply learnings."}
-              value={form.evaluate}
-              onChange={(e) => updateField('evaluate', e.target.value)}
-              onFocus={() => setActivePhase('evaluate')}
-              onBlur={() => setActivePhase(null)}
-              disabled={isFormDisabled}
-              className={cn(errors.evaluate && 'border-destructive')}
-            />
-            {errors.evaluate ? (
-              <p className="text-sm text-destructive">{errors.evaluate}</p>
-            ) : (
-              <p className="text-sm text-muted-foreground">Define how to measure performance and what to learn</p>
-            )}
+            {/* Step 2: Execute */}
+            <div className="relative space-y-2">
+              <div className="absolute -left-10 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-chart-2/10 text-sm font-bold text-chart-2">
+                2
+              </div>
+              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Zap className="h-4 w-4 text-chart-2" />
+                Execute
+              </label>
+              <Textarea
+                name="execute"
+                rows={4}
+                placeholder={"What specific work should this Staff perform?\n\ne.g., Create 3 ad creatives with A/B test variants per day, tailored to our product."}
+                value={form.execute}
+                onChange={(e) => updateField('execute', e.target.value)}
+                onFocus={() => setActivePhase('execute')}
+                onBlur={() => setActivePhase(null)}
+                disabled={isFormDisabled}
+                className={cn(errors.execute && 'border-destructive')}
+              />
+              {errors.execute ? (
+                <p className="text-sm text-destructive">{errors.execute}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Describe the actual work to produce</p>
+              )}
+            </div>
+
+            {/* Step 3: Evaluate */}
+            <div className="relative space-y-2">
+              <div className="absolute -left-10 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-chart-3/10 text-sm font-bold text-chart-3">
+                3
+              </div>
+              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <BarChart3 className="h-4 w-4 text-chart-3" />
+                Evaluate
+              </label>
+              <Textarea
+                name="evaluate"
+                rows={4}
+                placeholder={"How should this Staff measure results and learn?\n\ne.g., Check CPI, CPM, CTR from Meta Ads dashboard. Analyze which patterns perform best and apply learnings."}
+                value={form.evaluate}
+                onChange={(e) => updateField('evaluate', e.target.value)}
+                onFocus={() => setActivePhase('evaluate')}
+                onBlur={() => setActivePhase(null)}
+                disabled={isFormDisabled}
+                className={cn(errors.evaluate && 'border-destructive')}
+              />
+              {errors.evaluate ? (
+                <p className="text-sm text-destructive">{errors.evaluate}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Define how to measure performance and what to learn</p>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

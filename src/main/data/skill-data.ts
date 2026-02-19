@@ -66,6 +66,15 @@ export function getSkillAuthStatus(
   return allConfigured ? 'active' : 'needs_auth'
 }
 
+export function readSkillMdContent(skillName: string): string {
+  const skillMdPath = join(SKILLS_DIR, skillName, 'SKILL.md')
+  if (!existsSync(skillMdPath)) return ''
+  const raw = readFileSync(skillMdPath, 'utf-8')
+  // Extract markdown body after frontmatter
+  const match = raw.match(/^---\n[\s\S]*?\n---\n?([\s\S]*)$/)
+  return match ? match[1]!.trim() : raw
+}
+
 export function getSkillInfo(skillName: string, configStore: ConfigStore, connectedStaffs: string[] = []): SkillInfo | null {
   const frontmatter = parseSkillMd(skillName)
   if (!frontmatter) return null
@@ -76,6 +85,7 @@ export function getSkillInfo(skillName: string, configStore: ConfigStore, connec
   return {
     name: frontmatter.name,
     description: frontmatter.description,
+    content: readSkillMdContent(skillName),
     author: frontmatter.metadata?.author || 'unknown',
     version: frontmatter.metadata?.version || '1.0',
     allowed_tools: frontmatter['allowed-tools'] || '',

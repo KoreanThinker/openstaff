@@ -136,6 +136,7 @@ description: Info skill description
       expect(info).not.toBeNull()
       expect(info!.author).toBe('unknown')
       expect(info!.version).toBe('1.0')
+      expect(info!.content).toBe('# Content')
       expect(info!.source).toBe('local')
     })
 

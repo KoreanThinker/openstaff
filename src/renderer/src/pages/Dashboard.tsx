@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, createElement } from 'react'
 import {
   Users,
   DollarSign,
@@ -47,6 +47,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { toast } from '@/hooks/use-toast'
+import { useHeaderActionStore } from '@/stores/header-action-store'
 import type { StaffSummary, DashboardStats, SystemResources, StaffStatus } from '@shared/types'
 
 function StatusDot({ status }: { status: StaffStatus }): React.ReactElement {
@@ -82,12 +83,14 @@ function SummaryCard({
   title,
   value,
   trend,
-  icon: Icon
+  icon: Icon,
+  subtitle
 }: {
   title: string
   value: string | number
   trend: number | null
   icon: React.ElementType
+  subtitle?: React.ReactNode
 }): React.ReactElement {
   return (
     <Card>
@@ -100,6 +103,7 @@ function SummaryCard({
           <div className="text-2xl font-bold">{value}</div>
           <TrendBadge trend={trend} />
         </div>
+        {subtitle && <p className="mt-1 text-xs">{subtitle}</p>}
       </CardContent>
     </Card>
   )
@@ -219,6 +223,19 @@ export function Dashboard(): React.ReactElement {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [sortField, setSortField] = useState<SortField>('name')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const setActionButton = useHeaderActionStore((s) => s.setActionButton)
+
+  // Set header action button
+  useEffect(() => {
+    setActionButton(
+      createElement(Button, {
+        size: 'sm',
+        className: 'rounded-full gap-2',
+        onClick: () => navigate('/staffs/new')
+      }, createElement(Plus, { className: 'h-4 w-4' }), 'Create Staff')
+    )
+    return () => setActionButton(null)
+  }, [setActionButton, navigate])
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -324,6 +341,9 @@ export function Dashboard(): React.ReactElement {
           value={`${stats?.active_staffs ?? 0} / ${stats?.total_staffs ?? 0}`}
           trend={null}
           icon={Users}
+          subtitle={stats?.error_staffs ? (
+            <span className="text-destructive">{stats.error_staffs} error{stats.error_staffs > 1 ? 's' : ''}</span>
+          ) : undefined}
         />
         <SummaryCard
           title="Cost Today"
