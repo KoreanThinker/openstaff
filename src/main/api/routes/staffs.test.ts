@@ -881,6 +881,46 @@ describe('staffs API routes', () => {
     await apiDelete(`/api/staffs/${created.id}`)
   })
 
+  it('GET /api/staffs/:id returns 500 when staff.json is corrupt', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Detail Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    // Corrupt staff.json to trigger parse error in detail route
+    const { getStaffDir } = await import('../../data/staff-data')
+    const { writeFileSync } = await import('fs')
+    const { join } = await import('path')
+    const staffDir = getStaffDir(created.id)
+    writeFileSync(join(staffDir, 'staff.json'), '{bad json}')
+
+    const { status, data } = await apiGet(`/api/staffs/${created.id}`)
+    expect(status).toBe(500)
+    expect(data.error).toBeTruthy()
+
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('POST /api/staffs returns 500 when createStaff throws', async () => {
+    const originalCreateStaff = mockManager.createStaff
+    mockManager.createStaff = vi.fn(() => { throw new Error('create exploded') })
+
+    const { status, data } = await apiPost('/api/staffs', {
+      name: 'Failing Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+    expect(status).toBe(500)
+    expect(data.error).toContain('create exploded')
+
+    mockManager.createStaff = originalCreateStaff
+  })
+
   it('GET /api/staffs list shows uptime for running staffs', async () => {
     const { data: created } = await apiPost('/api/staffs', {
       name: 'Running List Staff',

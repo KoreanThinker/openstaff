@@ -368,6 +368,13 @@ compatibility: Requires ERR_API_KEY
     rmSync(tempDirErr, { recursive: true, force: true })
   })
 
+  it('GET /api/skills returns 500 when configStore.get throws', async () => {
+    const res = await fetch(`http://localhost:${portErr}/api/skills`)
+    expect(res.status).toBe(500)
+    const data = await res.json()
+    expect(data.error).toContain('configStore.get exploded')
+  })
+
   it('GET /api/skills/:name returns 500 when configStore.get throws', async () => {
     const res = await fetch(`http://localhost:${portErr}/api/skills/err-skill`)
     expect(res.status).toBe(500)

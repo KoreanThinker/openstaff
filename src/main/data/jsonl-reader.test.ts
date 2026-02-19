@@ -80,6 +80,16 @@ describe('jsonl-reader', () => {
       expect(countJsonlLines(testFile)).toBe(0)
     })
 
+    it('returns 0 for empty file', () => {
+      require('fs').writeFileSync(testFile, '')
+      expect(countJsonlLines(testFile)).toBe(0)
+    })
+
+    it('returns 0 for whitespace-only file', () => {
+      require('fs').writeFileSync(testFile, '   \n   \n')
+      expect(countJsonlLines(testFile)).toBe(0)
+    })
+
     it('counts lines correctly', () => {
       appendJsonl(testFile, { a: 1 })
       appendJsonl(testFile, { b: 2 })
