@@ -303,20 +303,13 @@ export function Dashboard(): React.ReactElement {
       result = result.filter((s) => s.status === statusFilter)
     }
     result = [...result].sort((a, b) => {
-      let cmp = 0
-      switch (sortField) {
-        case 'status':
-          cmp = a.status.localeCompare(b.status)
-          break
-        case 'cycles':
-          cmp = a.cycles - b.cycles
-          break
-        case 'cost':
-          cmp = a.cost_today - b.cost_today
-          break
-        default:
-          cmp = a.name.localeCompare(b.name)
-      }
+      const cmp = sortField === 'status'
+        ? a.status.localeCompare(b.status)
+        : sortField === 'cycles'
+          ? a.cycles - b.cycles
+          : sortField === 'cost'
+            ? a.cost_today - b.cost_today
+            : a.name.localeCompare(b.name)
       return sortDir === 'desc' ? -cmp : cmp
     })
     return result

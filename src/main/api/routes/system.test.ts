@@ -374,7 +374,7 @@ describe('system API routes: stats catch block', () => {
   let statsErrTempDir: string
 
   beforeAll(async () => {
-    const { mkdtempSync, mkdirSync, writeFileSync } = await import('fs')
+    const { mkdtempSync, writeFileSync } = await import('fs')
     statsErrTempDir = mkdtempSync(join(tmpdir(), 'openstaff-sys-stats-err-'))
     tempDir = statsErrTempDir
 
