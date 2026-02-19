@@ -968,6 +968,21 @@ describe('staffs API routes', () => {
     mkdirSync(staffsDir, { recursive: true })
   })
 
+  it('GET /api/staffs list skips staffs with no valid config', async () => {
+    // Create a staff dir with no staff.json to trigger !config return null
+    const { ensureStaffDir } = await import('../../data/staff-data')
+    ensureStaffDir('orphan-staff-no-config')
+
+    const { data: list } = await apiGet('/api/staffs')
+    // Should not include the orphan staff
+    const orphan = list.find((s: { id: string }) => s.id === 'orphan-staff-no-config')
+    expect(orphan).toBeUndefined()
+
+    // Clean up
+    const { deleteStaffDir } = await import('../../data/staff-data')
+    deleteStaffDir('orphan-staff-no-config')
+  })
+
   it('POST /api/staffs fills defaults for missing fields', async () => {
     const { status, data } = await apiPost('/api/staffs', {})
     expect(status).toBe(201)
@@ -983,10 +998,10 @@ describe('staffs API routes', () => {
     await apiDelete(`/api/staffs/${data.id}`)
   })
 
-  it('POST /api/staffs/import fills defaults for missing optional fields', async () => {
-    const { status, data } = await apiPost('/api/staffs/import', { name: 'Import Test' })
+  it('POST /api/staffs/import fills all defaults when body is empty', async () => {
+    const { status, data } = await apiPost('/api/staffs/import', {})
     expect(status).toBe(201)
-    expect(data.name).toBe('Import Test')
+    expect(data.name).toBe('')
     expect(data.role).toBe('')
     expect(data.gather).toBe('')
     expect(data.execute).toBe('')
