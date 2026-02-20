@@ -34,6 +34,11 @@ export const api = {
     ipcRenderer.invoke('install-update'),
   onUpdateDownloaded: (callback: () => void): void => {
     ipcRenderer.on('update-downloaded', () => callback())
+  },
+  onNavigate: (callback: (path: string) => void): (() => void) => {
+    const handler = (_: Electron.IpcRendererEvent, path: string): void => callback(path)
+    ipcRenderer.on('navigate', handler)
+    return () => ipcRenderer.removeListener('navigate', handler)
   }
 }
 

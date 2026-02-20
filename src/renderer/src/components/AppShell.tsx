@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   Puzzle,
@@ -12,17 +12,25 @@ import {
   Sun,
   Moon,
   Monitor,
-  Search
+  Search,
+  AlertTriangle,
+  XCircle,
+  Info
 } from 'lucide-react'
 import { useSidebarStore } from '@/stores/sidebar-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { useHeaderActionStore } from '@/stores/header-action-store'
+import { useNotificationStore } from '@/stores/notification-store'
+import { getSocket } from '@/lib/socket'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
@@ -44,14 +52,90 @@ function pageTitleFromPath(pathname: string): string {
   return item?.label ?? 'OpenStaff'
 }
 
+const notificationIcon = {
+  error: XCircle,
+  warning: AlertTriangle,
+  info: Info
+} as const
+
+const notificationColor = {
+  error: 'text-destructive',
+  warning: 'text-warning',
+  info: 'text-muted-foreground'
+} as const
+
 export function AppShell(): React.ReactElement {
   const { expanded, toggle } = useSidebarStore()
   const { theme, setTheme } = useSettingsStore()
   const { actionButton } = useHeaderActionStore()
+  const { notifications, unreadCount, addNotification, markAllRead, clearAll } =
+    useNotificationStore()
   const location = useLocation()
+  const navigate = useNavigate()
   const pageTitle = pageTitleFromPath(location.pathname)
   const searchRef = React.useRef<HTMLInputElement>(null)
   const [searchOpen, setSearchOpen] = React.useState(false)
+
+  // IPC navigate listener (tray Settings click)
+  React.useEffect(() => {
+    const cleanup = window.api?.onNavigate?.((path: string) => {
+      navigate(path)
+    })
+    return () => cleanup?.()
+  }, [navigate])
+
+  // Socket event listeners for notifications
+  React.useEffect(() => {
+    const socket = getSocket()
+
+    const onStaffError = (data: { staffId: string; error?: string }) => {
+      addNotification({
+        title: 'Staff Error',
+        body: `Staff ${data.staffId} encountered an error${data.error ? `: ${data.error}` : ''}.`,
+        type: 'error'
+      })
+    }
+
+    const onStaffGiveup = (data: { staffId: string }) => {
+      addNotification({
+        title: 'Staff Paused',
+        body: `Staff ${data.staffId} gave up and is now paused.`,
+        type: 'warning'
+      })
+    }
+
+    const onBudgetWarning = (data: {
+      monthly_cost: number
+      budget_limit: number
+      warning_percent: number
+    }) => {
+      addNotification({
+        title: 'Budget Warning',
+        body: `Monthly cost ($${data.monthly_cost}) has reached ${data.warning_percent}% of your $${data.budget_limit} budget.`,
+        type: 'warning'
+      })
+    }
+
+    const onStaffStoppedBackoff = (data: { staffId: string }) => {
+      addNotification({
+        title: 'Staff Stopped',
+        body: `Staff ${data.staffId} stopped after repeated failures.`,
+        type: 'error'
+      })
+    }
+
+    socket.on('staff:error', onStaffError)
+    socket.on('staff:giveup', onStaffGiveup)
+    socket.on('budget:warning', onBudgetWarning)
+    socket.on('staff:stopped_backoff', onStaffStoppedBackoff)
+
+    return () => {
+      socket.off('staff:error', onStaffError)
+      socket.off('staff:giveup', onStaffGiveup)
+      socket.off('budget:warning', onBudgetWarning)
+      socket.off('staff:stopped_backoff', onStaffStoppedBackoff)
+    }
+  }, [addNotification])
 
   // Cmd+K / Ctrl+K shortcut
   React.useEffect(() => {
@@ -183,14 +267,72 @@ export function AppShell(): React.ReactElement {
             {/* Notification Bell */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Notifications">
+                <Button variant="ghost" size="icon" className="relative rounded-xl" aria-label="Notifications">
                   <Bell className="h-4 w-4" />
+                  {unreadCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full p-0 text-[10px]"
+                    >
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </Badge>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <div className="px-3 py-2 text-sm text-muted-foreground text-center">
-                  No new notifications
+              <DropdownMenuContent align="end" className="w-80">
+                <div className="flex items-center justify-between px-3 py-2">
+                  <span className="text-sm font-medium text-foreground">Notifications</span>
+                  {notifications.length > 0 && (
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        onClick={markAllRead}
+                      >
+                        Mark read
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs"
+                        onClick={clearAll}
+                      >
+                        Clear
+                      </Button>
+                    </div>
+                  )}
                 </div>
+                <DropdownMenuSeparator />
+                {notifications.length === 0 ? (
+                  <div className="px-3 py-6 text-sm text-muted-foreground text-center">
+                    No notifications
+                  </div>
+                ) : (
+                  <ScrollArea className="max-h-64">
+                    {notifications.map((n) => {
+                      const Icon = notificationIcon[n.type]
+                      return (
+                        <div
+                          key={n.id}
+                          className={cn(
+                            'flex gap-3 px-3 py-2 text-sm',
+                            !n.read && 'bg-muted/50'
+                          )}
+                        >
+                          <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', notificationColor[n.type])} />
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-foreground">{n.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{n.body}</p>
+                            <p className="mt-0.5 text-[10px] text-muted-foreground">
+                              {new Date(n.timestamp).toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </ScrollArea>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

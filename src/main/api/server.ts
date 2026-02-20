@@ -88,6 +88,12 @@ export async function startApiServer(
   staffManager.on('staff:metrics', (staffId) => {
     io.emit('staff:metrics', { staffId })
   })
+  staffManager.on('staff:stopped_backoff', (staffId) => {
+    io.emit('staff:stopped_backoff', { staffId })
+  })
+  staffManager.on('staff:health_check_fail', (staffId) => {
+    io.emit('staff:error', { staffId, error: 'Health check failed: process unresponsive' })
+  })
   staffManager.on('budget:warning', (data) => {
     io.emit('budget:warning', data)
   })

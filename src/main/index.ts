@@ -123,6 +123,18 @@ app.whenReady().then(async () => {
     }).show()
   })
 
+  staffManager.on('staff:health_check_fail', (staffId: string) => {
+    const config = staffManager.getStaffConfig(staffId)
+    new Notification({
+      title: 'Health Check Failed',
+      body: `${config?.name || staffId} is unresponsive. Attempting restart...`
+    }).show()
+    // Trigger restart via error handler path
+    staffManager.restartStaff(staffId).catch((err: Error) => {
+      console.error(`Failed to restart unresponsive staff ${staffId}:`, err)
+    })
+  })
+
   staffManager.on('budget:warning', (data: { monthly_cost: number; budget_limit: number; warning_percent: number }) => {
     new Notification({
       title: 'Budget Warning',

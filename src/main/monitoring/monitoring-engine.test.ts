@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { MonitoringEngine } from './monitoring-engine'
 import { EventEmitter } from 'events'
 import { join } from 'path'
-import { mkdtempSync, rmSync, mkdirSync, readFileSync } from 'fs'
+import { mkdtempSync, rmSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 
 let tempDir: string
@@ -244,6 +244,156 @@ describe('MonitoringEngine', () => {
 
       // After stop, no listener should be active
       expect(manager.listenerCount('staff:log')).toBe(0)
+    })
+  })
+
+  describe('budget warning', () => {
+    beforeEach(() => {
+      tempDir = mkdtempSync(join(tmpdir(), 'openstaff-budget-'))
+      mkdirSync(join(tempDir, 'staffs', 'staff-1'), { recursive: true })
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+      rmSync(tempDir, { recursive: true, force: true })
+    })
+
+    function createMockConfigStore(values: Record<string, unknown>) {
+      return {
+        get: (key: string, def?: unknown) => values[key] ?? def,
+        set: vi.fn(),
+        delete: vi.fn()
+      }
+    }
+
+    it('emits budget:warning when monthly cost exceeds threshold', () => {
+      const manager = createMockStaffManager()
+      manager.getRunningStaffIds = () => ['staff-1']
+      manager.getStaffConfig = () => ({
+        id: 'staff-1', name: 'Test', role: 'Test', gather: 'g',
+        execute: 'e', evaluate: 'ev', kpi: '', agent: 'claude-code',
+        model: 'claude-sonnet-4-5', skills: [], created_at: new Date().toISOString()
+      })
+
+      const configStore = createMockConfigStore({
+        monthly_budget_usd: 100,
+        budget_warning_percent: 80
+      })
+
+      // Write usage.jsonl with cost exceeding 80% of $100 = $80
+      const thisMonth = new Date().toISOString().slice(0, 10)
+      const usagePath = join(tempDir, 'staffs', 'staff-1', 'usage.jsonl')
+      writeFileSync(usagePath, JSON.stringify({
+        date: thisMonth,
+        input_tokens: 1000,
+        output_tokens: 500,
+        cache_read_tokens: 0,
+        cache_write_tokens: 0,
+        cost_usd: 85.0
+      }) + '\n')
+
+      const emitSpy = vi.spyOn(manager, 'emit')
+      const engine = new MonitoringEngine(manager as never, configStore as never)
+      engine.start()
+
+      // Advance timer to trigger collectMetrics which calls checkBudgetWarning
+      vi.advanceTimersByTime(61_000)
+
+      expect(emitSpy).toHaveBeenCalledWith('budget:warning', {
+        monthly_cost: 85.0,
+        budget_limit: 100,
+        warning_percent: 80
+      })
+
+      engine.stop()
+    })
+
+    it('emits budget:warning only once per threshold crossing', () => {
+      const manager = createMockStaffManager()
+      manager.getRunningStaffIds = () => ['staff-1']
+      manager.getStaffConfig = () => ({
+        id: 'staff-1', name: 'Test', role: 'Test', gather: 'g',
+        execute: 'e', evaluate: 'ev', kpi: '', agent: 'claude-code',
+        model: 'claude-sonnet-4-5', skills: [], created_at: new Date().toISOString()
+      })
+
+      const configStore = createMockConfigStore({
+        monthly_budget_usd: 100,
+        budget_warning_percent: 80
+      })
+
+      const thisMonth = new Date().toISOString().slice(0, 10)
+      const usagePath = join(tempDir, 'staffs', 'staff-1', 'usage.jsonl')
+      writeFileSync(usagePath, JSON.stringify({
+        date: thisMonth, input_tokens: 1000, output_tokens: 500,
+        cache_read_tokens: 0, cache_write_tokens: 0, cost_usd: 90.0
+      }) + '\n')
+
+      const emitSpy = vi.spyOn(manager, 'emit')
+      const engine = new MonitoringEngine(manager as never, configStore as never)
+      engine.start()
+
+      // First tick - should emit
+      vi.advanceTimersByTime(61_000)
+      // Second tick - should NOT emit again
+      vi.advanceTimersByTime(60_000)
+
+      const budgetCalls = emitSpy.mock.calls.filter(c => c[0] === 'budget:warning')
+      expect(budgetCalls).toHaveLength(1)
+
+      engine.stop()
+    })
+
+    it('does not emit when cost is below threshold', () => {
+      const manager = createMockStaffManager()
+      manager.getRunningStaffIds = () => ['staff-1']
+      manager.getStaffConfig = () => ({
+        id: 'staff-1', name: 'Test', role: 'Test', gather: 'g',
+        execute: 'e', evaluate: 'ev', kpi: '', agent: 'claude-code',
+        model: 'claude-sonnet-4-5', skills: [], created_at: new Date().toISOString()
+      })
+
+      const configStore = createMockConfigStore({
+        monthly_budget_usd: 100,
+        budget_warning_percent: 80
+      })
+
+      const thisMonth = new Date().toISOString().slice(0, 10)
+      const usagePath = join(tempDir, 'staffs', 'staff-1', 'usage.jsonl')
+      writeFileSync(usagePath, JSON.stringify({
+        date: thisMonth, input_tokens: 1000, output_tokens: 500,
+        cache_read_tokens: 0, cache_write_tokens: 0, cost_usd: 50.0
+      }) + '\n')
+
+      const emitSpy = vi.spyOn(manager, 'emit')
+      const engine = new MonitoringEngine(manager as never, configStore as never)
+      engine.start()
+
+      vi.advanceTimersByTime(61_000)
+
+      const budgetCalls = emitSpy.mock.calls.filter(c => c[0] === 'budget:warning')
+      expect(budgetCalls).toHaveLength(0)
+
+      engine.stop()
+    })
+
+    it('does not emit when no budget is configured', () => {
+      const manager = createMockStaffManager()
+      manager.getRunningStaffIds = () => []
+
+      const configStore = createMockConfigStore({})
+
+      const emitSpy = vi.spyOn(manager, 'emit')
+      const engine = new MonitoringEngine(manager as never, configStore as never)
+      engine.start()
+
+      vi.advanceTimersByTime(61_000)
+
+      const budgetCalls = emitSpy.mock.calls.filter(c => c[0] === 'budget:warning')
+      expect(budgetCalls).toHaveLength(0)
+
+      engine.stop()
     })
   })
 })
