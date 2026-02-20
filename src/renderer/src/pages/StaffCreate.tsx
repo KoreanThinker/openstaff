@@ -528,11 +528,16 @@ export function StaffCreate(): React.ReactElement {
               className={cn(errors.name && 'border-destructive')}
               ref={(el) => { if (errors.name && !firstErrorRef.current) firstErrorRef.current = el }}
             />
-            {errors.name ? (
-              <p className="text-sm text-destructive">{errors.name}</p>
-            ) : (
-              <p className="text-sm text-muted-foreground">A friendly name for this Staff</p>
-            )}
+            <div className="flex items-center justify-between">
+              {errors.name ? (
+                <p className="text-sm text-destructive">{errors.name}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">A friendly name for this Staff</p>
+              )}
+              <span className={cn('text-xs', form.name.length > 70 ? 'text-destructive' : 'text-muted-foreground')}>
+                {form.name.length}/80
+              </span>
+            </div>
           </div>
 
           <div className="space-y-2">

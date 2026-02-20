@@ -322,9 +322,11 @@ function MetricsTab({ staffId }: { staffId: string }): React.ReactElement {
   if (!metrics || metrics.length === 0) {
     return (
       <Card className="border border-border">
-        <CardContent className="flex items-center justify-center py-16">
-          <p className="text-sm text-muted-foreground">
-            No usage data yet. Metrics will appear once the Staff starts running.
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <BarChart3 className="h-10 w-10 mb-3 text-muted-foreground/40" />
+          <p className="text-sm font-medium text-foreground mb-1">No metrics yet</p>
+          <p className="text-sm text-muted-foreground text-center max-w-xs">
+            Token usage and cost data will appear after the Staff completes its first cycle.
           </p>
         </CardContent>
       </Card>
@@ -556,9 +558,11 @@ function LogsTab({ staffId }: { staffId: string }): React.ReactElement {
   if (lines.length === 0) {
     return (
       <Card className="border border-border">
-        <CardContent className="flex items-center justify-center py-16">
-          <p className="text-sm text-muted-foreground">
-            No log output yet. Start the Staff to see live output here.
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <Search className="h-10 w-10 mb-3 text-muted-foreground/40" />
+          <p className="text-sm font-medium text-foreground mb-1">No output yet</p>
+          <p className="text-sm text-muted-foreground text-center max-w-xs">
+            Terminal output will stream here in real-time once the Staff starts running.
           </p>
         </CardContent>
       </Card>
@@ -663,9 +667,11 @@ function KpiTab({ staffId }: { staffId: string }): React.ReactElement {
   if (!kpiData || kpiData.length === 0) {
     return (
       <Card className="border border-border">
-        <CardContent className="flex items-center justify-center py-16">
-          <p className="text-sm text-muted-foreground">
-            No KPI data recorded yet. The Staff will report KPIs after completing Evaluate cycles.
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <Zap className="h-10 w-10 mb-3 text-muted-foreground/40" />
+          <p className="text-sm font-medium text-foreground mb-1">No KPI data yet</p>
+          <p className="text-sm text-muted-foreground text-center max-w-xs">
+            KPI metrics will appear after the Staff completes its Evaluate cycles.
           </p>
         </CardContent>
       </Card>
@@ -893,8 +899,12 @@ function ErrorsTab({ staffId }: { staffId: string }): React.ReactElement {
   if (errors.length === 0) {
     return (
       <Card className="border border-border">
-        <CardContent className="flex items-center justify-center py-16">
-          <p className="text-sm text-muted-foreground">
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <div className="h-10 w-10 mb-3 rounded-full bg-success/10 flex items-center justify-center">
+            <Zap className="h-5 w-5 text-success" />
+          </div>
+          <p className="text-sm font-medium text-foreground mb-1">All clear</p>
+          <p className="text-sm text-muted-foreground text-center max-w-xs">
             No errors recorded. Your Staff is running smoothly.
           </p>
         </CardContent>
