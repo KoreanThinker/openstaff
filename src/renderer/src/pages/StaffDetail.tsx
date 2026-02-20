@@ -68,6 +68,7 @@ function StatusDot({ status }: { status: StaffStatus }): React.ReactElement {
   const classes: Record<StaffStatus, string> = {
     running: 'bg-success animate-status-pulse',
     stopped: 'bg-muted-foreground',
+    paused: 'bg-warning',
     error: 'bg-destructive',
     warning: 'bg-warning'
   }
@@ -77,6 +78,7 @@ function StatusDot({ status }: { status: StaffStatus }): React.ReactElement {
 const STATUS_LABELS: Record<StaffStatus, string> = {
   running: 'Running',
   stopped: 'Stopped',
+  paused: 'Paused (Giveup)',
   error: 'Error',
   warning: 'Warning (Backoff)'
 }
@@ -1037,6 +1039,12 @@ export function StaffDetail(): React.ReactElement {
     onError: (err) => toast({ title: 'Failed to restart', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' })
   })
 
+  const resumeMutation = useMutation({
+    mutationFn: () => api.resumeStaff(staffId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff', staffId] }),
+    onError: (err) => toast({ title: 'Failed to resume', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' })
+  })
+
   const deleteMutation = useMutation({
     mutationFn: () => api.deleteStaff(staffId),
     onSuccess: () => {
@@ -1094,7 +1102,8 @@ export function StaffDetail(): React.ReactElement {
   }
 
   const isStopped = staff.status === 'stopped'
-  const isActionLoading = startMutation.isPending || stopMutation.isPending || restartMutation.isPending
+  const isPaused = staff.status === 'paused'
+  const isActionLoading = startMutation.isPending || stopMutation.isPending || restartMutation.isPending || resumeMutation.isPending
 
   return (
     <div className="space-y-6">
@@ -1122,7 +1131,19 @@ export function StaffDetail(): React.ReactElement {
 
         {/* Action buttons */}
         <div className="flex flex-wrap items-center gap-2 ml-11">
-          {isStopped ? (
+          {isPaused ? (
+            <Button
+              onClick={() => resumeMutation.mutate()}
+              disabled={isActionLoading}
+            >
+              {resumeMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="mr-2 h-4 w-4" />
+              )}
+              Resume
+            </Button>
+          ) : isStopped ? (
             <Button
               onClick={() => startMutation.mutate()}
               disabled={isActionLoading}

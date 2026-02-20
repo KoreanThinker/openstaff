@@ -22,7 +22,7 @@ let apiServerRef: { port: number; close: () => void } | null = null
 const configStore = new ConfigStore()
 const staffManager = new StaffManager(configStore)
 const healthChecker = new HealthChecker(staffManager)
-const monitoringEngine = new MonitoringEngine(staffManager)
+const monitoringEngine = new MonitoringEngine(staffManager, configStore)
 const ngrokManager = new NgrokManager(configStore)
 
 function createWindow(): void {
@@ -110,8 +110,8 @@ app.whenReady().then(async () => {
   staffManager.on('staff:giveup', (staffId: string) => {
     const config = staffManager.getStaffConfig(staffId)
     new Notification({
-      title: 'Staff Needs Help',
-      body: `${config?.name || staffId} gave up and stopped. Check the Errors tab.`
+      title: 'Staff Paused',
+      body: `${config?.name || staffId} gave up and is paused. Resume it after investigating.`
     }).show()
   })
 
@@ -120,6 +120,13 @@ app.whenReady().then(async () => {
     new Notification({
       title: 'Staff Stopped',
       body: `${config?.name || staffId} stopped after repeated failures.`
+    }).show()
+  })
+
+  staffManager.on('budget:warning', (data: { monthly_cost: number; budget_limit: number; warning_percent: number }) => {
+    new Notification({
+      title: 'Budget Warning',
+      body: `Monthly cost ($${data.monthly_cost}) has reached ${data.warning_percent}% of your $${data.budget_limit} budget.`
     }).show()
   })
 

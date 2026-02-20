@@ -62,6 +62,7 @@ export interface AgentProcess {
   onData(cb: (data: string) => void): void
   onExit(cb: (code: number) => void): void
   kill(): Promise<void>
+  dispose(): void
 }
 
 export interface AgentDriver {

@@ -67,6 +67,7 @@ function StatusDot({ status }: { status: StaffStatus }): React.ReactElement {
         'h-2 w-2 rounded-full',
         status === 'running' && 'bg-success animate-status-pulse',
         status === 'stopped' && 'bg-muted-foreground',
+        status === 'paused' && 'bg-warning',
         status === 'error' && 'bg-destructive',
         status === 'warning' && 'bg-warning'
       )}
@@ -153,16 +154,23 @@ function StaffActions({
             <Square className="mr-2 h-4 w-4" />
             Stop
           </DropdownMenuItem>
+        ) : staff.status === 'paused' ? (
+          <DropdownMenuItem onClick={() => onAction('resume', staff.id)}>
+            <Play className="mr-2 h-4 w-4" />
+            Resume
+          </DropdownMenuItem>
         ) : (
           <DropdownMenuItem onClick={() => onAction('start', staff.id)}>
             <Play className="mr-2 h-4 w-4" />
             Start
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onClick={() => onAction('restart', staff.id)}>
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Restart
-        </DropdownMenuItem>
+        {staff.status !== 'paused' && (
+          <DropdownMenuItem onClick={() => onAction('restart', staff.id)}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Restart
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => onAction('view', staff.id)}>
           <Eye className="mr-2 h-4 w-4" />
@@ -308,6 +316,10 @@ export function Dashboard(): React.ReactElement {
         case 'restart':
           await api.restartStaff(staffId)
           toast({ title: 'Staff restarted' })
+          break
+        case 'resume':
+          await api.resumeStaff(staffId)
+          toast({ title: 'Staff resumed' })
           break
         case 'view':
           navigate(`/staffs/${staffId}`)
@@ -465,6 +477,7 @@ export function Dashboard(): React.ReactElement {
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="running">Running</SelectItem>
               <SelectItem value="stopped">Stopped</SelectItem>
+              <SelectItem value="paused">Paused</SelectItem>
               <SelectItem value="error">Error</SelectItem>
               <SelectItem value="warning">Warning</SelectItem>
             </SelectContent>

@@ -1,18 +1,22 @@
 import { join } from 'path'
 import type { StaffManager } from '../staff-manager/staff-manager'
+import type { ConfigStore } from '../store/config-store'
 import type { SystemResources, UsageEntry } from '@shared/types'
 import { PRICING } from '@shared/constants'
 import { parseTokensFromOutput, calculateCostFromTokens } from './token-parser'
-import { getStaffDir } from '../data/staff-data'
-import { appendJsonl } from '../data/jsonl-reader'
+import { getStaffDir, listStaffIds } from '../data/staff-data'
+import { appendJsonl, readJsonl } from '../data/jsonl-reader'
 
 export class MonitoringEngine {
   private interval: ReturnType<typeof setInterval> | null = null
   private staffManager: StaffManager
+  private configStore: ConfigStore | null = null
   private logHandler: ((staffId: string, data: string) => void) | null = null
+  private budgetWarningEmitted = false
 
-  constructor(staffManager: StaffManager) {
+  constructor(staffManager: StaffManager, configStore?: ConfigStore) {
     this.staffManager = staffManager
+    this.configStore = configStore ?? null
   }
 
   start(): void {
@@ -81,6 +85,9 @@ export class MonitoringEngine {
     const dir = getStaffDir(staffId)
     appendJsonl(join(dir, 'usage.jsonl'), entry)
     this.staffManager.emit('staff:metrics', staffId)
+
+    // Check budget after recording new usage
+    this.checkBudgetWarning()
   }
 
   private async collectMetrics(): Promise<void> {
@@ -95,6 +102,47 @@ export class MonitoringEngine {
       } catch (err) {
         console.error(`Monitoring failed for ${id}:`, err)
       }
+    }
+
+    // Check budget periodically
+    this.checkBudgetWarning()
+  }
+
+  private checkBudgetWarning(): void {
+    if (!this.configStore) return
+
+    const budgetLimit = this.configStore.get('monthly_budget_usd') as number
+    if (!budgetLimit || budgetLimit <= 0) return
+
+    const warningPercent = (this.configStore.get('budget_warning_percent') as number) || 80
+    const warningThreshold = budgetLimit * (warningPercent / 100)
+
+    // Calculate total monthly cost across all staff
+    const thisMonth = new Date().toISOString().slice(0, 7)
+    let monthCost = 0
+    for (const id of listStaffIds()) {
+      const dir = getStaffDir(id)
+      const usage = readJsonl<UsageEntry>(join(dir, 'usage.jsonl'))
+      for (const entry of usage) {
+        if (entry.date.startsWith(thisMonth)) {
+          monthCost += entry.cost_usd
+        }
+      }
+    }
+
+    // Emit warning only once per threshold crossing (reset monthly)
+    if (monthCost >= warningThreshold && !this.budgetWarningEmitted) {
+      this.budgetWarningEmitted = true
+      this.staffManager.emit('budget:warning', {
+        monthly_cost: Math.round(monthCost * 100) / 100,
+        budget_limit: budgetLimit,
+        warning_percent: warningPercent
+      })
+    }
+
+    // Reset warning flag if cost drops below threshold (new month)
+    if (monthCost < warningThreshold) {
+      this.budgetWarningEmitted = false
     }
   }
 

@@ -35,6 +35,8 @@ function createMockStaffManager() {
     startStaff: vi.fn(),
     stopStaff: vi.fn(),
     restartStaff: vi.fn(),
+    pauseStaff: vi.fn(),
+    resumeStaff: vi.fn(),
     getStaffConfig: vi.fn(),
     emit: emitter.emit.bind(emitter),
     on: emitter.on.bind(emitter)
@@ -215,6 +217,24 @@ describe('staffs API routes', () => {
     const { status, data } = await apiPost(`/api/staffs/${id}/restart`)
     expect(status).toBe(200)
     expect(data.status).toBe('running')
+  })
+
+  it('POST /api/staffs/:id/pause calls pauseStaff', async () => {
+    const { data: list } = await apiGet('/api/staffs')
+    const id = list[0].id
+    const { status, data } = await apiPost(`/api/staffs/${id}/pause`)
+    expect(status).toBe(200)
+    expect(data.status).toBe('paused')
+    expect(mockManager.pauseStaff).toHaveBeenCalledWith(id)
+  })
+
+  it('POST /api/staffs/:id/resume calls resumeStaff', async () => {
+    const { data: list } = await apiGet('/api/staffs')
+    const id = list[0].id
+    const { status, data } = await apiPost(`/api/staffs/${id}/resume`)
+    expect(status).toBe(200)
+    expect(data.status).toBe('running')
+    expect(mockManager.resumeStaff).toHaveBeenCalledWith(id)
   })
 
   it('GET /api/staffs/:id/metrics returns empty array', async () => {
@@ -529,6 +549,46 @@ describe('staffs API routes', () => {
     expect(data.error).toContain('Restart failed')
 
     mockManager.restartStaff = originalRestart
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('POST /api/staffs/:id/pause returns 500 when pauseStaff throws', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Pause Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const originalPause = mockManager.pauseStaff
+    mockManager.pauseStaff = vi.fn().mockRejectedValue(new Error('Pause failed'))
+
+    const { status, data } = await apiPost(`/api/staffs/${created.id}/pause`)
+    expect(status).toBe(500)
+    expect(data.error).toContain('Pause failed')
+
+    mockManager.pauseStaff = originalPause
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('POST /api/staffs/:id/resume returns 500 when resumeStaff throws', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Resume Error Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const originalResume = mockManager.resumeStaff
+    mockManager.resumeStaff = vi.fn().mockRejectedValue(new Error('Resume failed'))
+
+    const { status, data } = await apiPost(`/api/staffs/${created.id}/resume`)
+    expect(status).toBe(500)
+    expect(data.error).toContain('Resume failed')
+
+    mockManager.resumeStaff = originalResume
     await apiDelete(`/api/staffs/${created.id}`)
   })
 

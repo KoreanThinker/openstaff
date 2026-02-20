@@ -88,6 +88,9 @@ export async function startApiServer(
   staffManager.on('staff:metrics', (staffId) => {
     io.emit('staff:metrics', { staffId })
   })
+  staffManager.on('budget:warning', (data) => {
+    io.emit('budget:warning', data)
+  })
 
   return new Promise((resolve) => {
     httpServer.listen(0, () => {

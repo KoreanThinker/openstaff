@@ -27,6 +27,7 @@ import { hasChildProcesses } from './process-utils'
 interface RunningStaff {
   config: StaffConfig
   process: AgentProcess
+  processPid: number
   lastOutputAt: number
   idleTimer: ReturnType<typeof setInterval> | null
   promptTimer: ReturnType<typeof setTimeout> | null
@@ -38,6 +39,7 @@ export class StaffManager extends EventEmitter {
   private running: Map<string, RunningStaff> = new Map()
   private starting: Set<string> = new Set()
   private intentionalStops: Set<string> = new Set()
+  private paused: Set<string> = new Set()
   private failureHistory: Map<string, number[]> = new Map()
   private configStore: ConfigStore
 
@@ -55,6 +57,7 @@ export class StaffManager extends EventEmitter {
   }
 
   getStatus(staffId: string): StaffStatus {
+    if (this.paused.has(staffId)) return 'paused'
     const r = this.running.get(staffId)
     if (!r) return 'stopped'
     return 'running'
@@ -64,6 +67,20 @@ export class StaffManager extends EventEmitter {
     if (this.running.has(staffId)) return
     if (this.starting.has(staffId)) return
     this.starting.add(staffId)
+
+    // Clear paused state when explicitly starting
+    this.paused.delete(staffId)
+
+    const entry: RunningStaff = {
+      config: null!,
+      process: null!,
+      processPid: 0,
+      lastOutputAt: 0,
+      idleTimer: null,
+      promptTimer: null,
+      logStream: () => {},
+      watchers: []
+    }
 
     try {
     const config = readStaffConfig(staffId)
@@ -130,15 +147,10 @@ export class StaffManager extends EventEmitter {
     }
 
     const now = Date.now()
-    const entry: RunningStaff = {
-      config,
-      process: proc,
-      lastOutputAt: now,
-      idleTimer: null,
-      promptTimer: null,
-      logStream: () => {},
-      watchers: []
-    }
+    entry.config = config
+    entry.process = proc
+    entry.processPid = proc.pid
+    entry.lastOutputAt = now
 
     // Rotate output.log if older than 30 days
     const logPath = join(dir, 'output.log')
@@ -171,9 +183,10 @@ export class StaffManager extends EventEmitter {
     }
     proc.onData(entry.logStream)
 
-    // Handle exit
+    // Handle exit - capture processPid to guard against stale callbacks
+    const expectedPid = proc.pid
     proc.onExit((code) => {
-      this.handleExit(staffId, code)
+      this.handleExit(staffId, code, expectedPid)
     })
 
     // Idle detection
@@ -189,10 +202,11 @@ export class StaffManager extends EventEmitter {
     this.running.set(staffId, entry)
     this.starting.delete(staffId)
 
-    // Update state
+    // Clear paused flag in persisted state
     writeStaffState(staffId, {
       session_id: proc.sessionId || state.session_id,
-      last_started_at: new Date().toISOString()
+      last_started_at: new Date().toISOString(),
+      paused: false
     })
 
     // Send initial prompt if new session
@@ -207,6 +221,8 @@ export class StaffManager extends EventEmitter {
 
     this.emit('staff:status', staffId, 'running')
     } catch (err) {
+      // Clean up watchers created before failure
+      for (const w of entry.watchers) w.close()
       this.starting.delete(staffId)
       throw err
     }
@@ -222,14 +238,45 @@ export class StaffManager extends EventEmitter {
     for (const w of entry.watchers) w.close()
 
     await entry.process.kill()
+    entry.process.dispose()
     this.running.delete(staffId)
     this.failureHistory.delete(staffId)
 
     // Clear last_started_at so recoverRunningStaffs won't restart this staff on reboot
     const state = readStaffState(staffId)
-    writeStaffState(staffId, { ...state, last_started_at: null })
+    writeStaffState(staffId, { ...state, last_started_at: null, paused: false })
 
+    this.paused.delete(staffId)
     this.emit('staff:status', staffId, 'stopped')
+  }
+
+  async pauseStaff(staffId: string): Promise<void> {
+    const entry = this.running.get(staffId)
+    if (!entry) return
+
+    this.intentionalStops.add(staffId)
+    if (entry.idleTimer) clearInterval(entry.idleTimer)
+    if (entry.promptTimer) clearTimeout(entry.promptTimer)
+    for (const w of entry.watchers) w.close()
+
+    await entry.process.kill()
+    entry.process.dispose()
+    this.running.delete(staffId)
+    this.failureHistory.delete(staffId)
+    this.paused.add(staffId)
+
+    // Keep session_id for resume, but mark as paused
+    const state = readStaffState(staffId)
+    writeStaffState(staffId, { ...state, last_started_at: null, paused: true })
+
+    this.emit('staff:status', staffId, 'paused')
+  }
+
+  async resumeStaff(staffId: string): Promise<void> {
+    this.paused.delete(staffId)
+    const state = readStaffState(staffId)
+    writeStaffState(staffId, { ...state, paused: false })
+    await this.startStaff(staffId)
   }
 
   async restartStaff(staffId: string): Promise<void> {
@@ -246,6 +293,11 @@ export class StaffManager extends EventEmitter {
     const ids = listStaffIds()
     for (const id of ids) {
       const state = readStaffState(id)
+      // Don't auto-recover paused staff
+      if (state.paused) {
+        this.paused.add(id)
+        continue
+      }
       if (state.last_started_at && state.session_id) {
         try {
           await this.startStaff(id)
@@ -299,7 +351,7 @@ export class StaffManager extends EventEmitter {
     }
   }
 
-  private handleExit(staffId: string, code: number): void {
+  private handleExit(staffId: string, code: number, exitedPid: number): void {
     // Don't auto-restart if this was an intentional stop
     if (this.intentionalStops.has(staffId)) {
       this.intentionalStops.delete(staffId)
@@ -309,9 +361,13 @@ export class StaffManager extends EventEmitter {
     const entry = this.running.get(staffId)
     if (!entry) return
 
+    // Guard: ignore stale exit callbacks from old processes after restart
+    if (entry.processPid !== exitedPid) return
+
     if (entry.idleTimer) clearInterval(entry.idleTimer)
     if (entry.promptTimer) clearTimeout(entry.promptTimer)
     for (const w of entry.watchers) w.close()
+    entry.process.dispose()
     this.running.delete(staffId)
 
     // Log error
@@ -379,7 +435,10 @@ export class StaffManager extends EventEmitter {
     const signals = readJsonl<{ type: string }>(signalsPath)
     const lastSignal = signals[signals.length - 1]
     if (lastSignal?.type === 'giveup') {
-      this.stopStaff(staffId).catch(() => {})
+      // PRD: Giveup pauses the staff and alerts the user
+      this.pauseStaff(staffId).catch((err) => {
+        console.error(`Failed to pause staff ${staffId} on giveup:`, err)
+      })
       this.emit('staff:giveup', staffId)
     }
   }

@@ -28,7 +28,7 @@ export function createTray(
       const status = staffManager.getStatus(id)
       const dir = getStaffDir(id)
       const cycles = countJsonlLines(join(dir, 'cycles.jsonl'))
-      const statusIcon = status === 'running' ? '🟢' : status === 'error' ? '🔴' : '⚪'
+      const statusIcon = status === 'running' ? '🟢' : status === 'paused' ? '🟡' : status === 'error' ? '🔴' : '⚪'
       return {
         label: `${statusIcon} ${config.name} (Cycle #${cycles})`,
         click: (): void => {

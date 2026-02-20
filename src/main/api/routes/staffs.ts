@@ -232,6 +232,26 @@ export function staffRoutes(ctx: ApiContext): Router {
     }
   })
 
+  // Pause staff (giveup signal or manual)
+  router.post('/:id/pause', async (req, res) => {
+    try {
+      await ctx.staffManager.pauseStaff(req.params.id!)
+      res.json({ status: 'paused' })
+    } catch (err) {
+      res.status(500).json({ error: String(err) })
+    }
+  })
+
+  // Resume paused staff
+  router.post('/:id/resume', async (req, res) => {
+    try {
+      await ctx.staffManager.resumeStaff(req.params.id!)
+      res.json({ status: 'running' })
+    } catch (err) {
+      res.status(500).json({ error: String(err) })
+    }
+  })
+
   // Restart staff
   router.post('/:id/restart', async (req, res) => {
     try {

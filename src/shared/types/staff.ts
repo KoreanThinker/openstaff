@@ -15,9 +15,10 @@ export interface StaffConfig {
 export interface StaffState {
   session_id: string | null
   last_started_at: string | null
+  paused?: boolean
 }
 
-export type StaffStatus = 'running' | 'stopped' | 'error' | 'warning'
+export type StaffStatus = 'running' | 'stopped' | 'paused' | 'error' | 'warning'
 
 export interface StaffSummary {
   id: string
