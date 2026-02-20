@@ -615,7 +615,7 @@ function LogsTab({ staffId }: { staffId: string }): React.ReactElement {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="relative h-[500px] overflow-y-auto bg-card p-4"
+        className="relative h-[300px] overflow-y-auto bg-card p-4 sm:h-[500px]"
       >
         <div className="space-y-0.5">
           {filteredLines.map((line, i) => (
@@ -1031,25 +1031,37 @@ export function StaffDetail(): React.ReactElement {
 
   const startMutation = useMutation({
     mutationFn: () => api.startStaff(staffId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff', staffId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff', staffId] })
+      toast({ title: 'Staff started' })
+    },
     onError: (err) => toast({ title: 'Failed to start', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' })
   })
 
   const stopMutation = useMutation({
     mutationFn: () => api.stopStaff(staffId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff', staffId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff', staffId] })
+      toast({ title: 'Staff stopped' })
+    },
     onError: (err) => toast({ title: 'Failed to stop', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' })
   })
 
   const restartMutation = useMutation({
     mutationFn: () => api.restartStaff(staffId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff', staffId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff', staffId] })
+      toast({ title: 'Staff restarted' })
+    },
     onError: (err) => toast({ title: 'Failed to restart', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' })
   })
 
   const resumeMutation = useMutation({
     mutationFn: () => api.resumeStaff(staffId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff', staffId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff', staffId] })
+      toast({ title: 'Staff resumed' })
+    },
     onError: (err) => toast({ title: 'Failed to resume', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' })
   })
 
@@ -1069,7 +1081,10 @@ export function StaffDetail(): React.ReactElement {
   // ─── Error / Not Found ────────────────────────────────────────
 
   useEffect(() => {
-    if (isError) navigate('/')
+    if (isError) {
+      toast({ title: 'Staff not found', variant: 'destructive' })
+      navigate('/')
+    }
   }, [isError, navigate])
 
   if (isError) return <></>
