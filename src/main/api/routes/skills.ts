@@ -67,6 +67,15 @@ export function skillRoutes(ctx: ApiContext): Router {
     try {
       const envVars = req.body as Record<string, string>
       for (const [key, value] of Object.entries(envVars)) {
+        if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) {
+          return res.status(400).json({ error: `Invalid env var name: ${key}` })
+        }
+        if (typeof value !== 'string') {
+          return res.status(400).json({ error: `Value for ${key} must be a string` })
+        }
+        if (value.length > 1000) {
+          return res.status(400).json({ error: `Value for ${key} is too long` })
+        }
         ctx.configStore.set(`skill_env_${key}` as never, value as never)
       }
       res.json({ status: 'saved' })

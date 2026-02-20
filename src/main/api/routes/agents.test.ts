@@ -46,7 +46,8 @@ function createMockConfigStore() {
   }
   return {
     get: (key: string) => store[key] ?? '',
-    set: (key: string, value: unknown) => { store[key] = value }
+    set: (key: string, value: unknown) => { store[key] = value },
+    delete: (key: string) => { delete store[key] }
   }
 }
 
@@ -115,6 +116,39 @@ describe('agents API routes', () => {
     const data = await res.json()
     expect(res.status).toBe(200)
     expect(data.status).toBe('saved')
+  })
+
+  it('PUT /api/agents/:id/api-key rejects non-string api_key', async () => {
+    const res = await fetch(`http://localhost:${port}/api/agents/claude-code/api-key`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: 12345 })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('api_key must be a string')
+  })
+
+  it('PUT /api/agents/:id/api-key rejects overly long api_key', async () => {
+    const res = await fetch(`http://localhost:${port}/api/agents/claude-code/api-key`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: 'x'.repeat(501) })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('too long')
+  })
+
+  it('PUT /api/agents/:id/api-key rejects unknown agent', async () => {
+    const res = await fetch(`http://localhost:${port}/api/agents/unknown-agent/api-key`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: 'test' })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('Unknown agent')
   })
 
   it('POST /api/agents/:id/test-connection tests connection', async () => {

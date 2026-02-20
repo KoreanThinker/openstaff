@@ -137,6 +137,60 @@ describe('settings API routes', () => {
     expect(mockConfigStore.get('skill_env_GITHUB_TOKEN')).toBe('test-token')
   })
 
+  it('PATCH /api/settings rejects boolean setting with wrong type', async () => {
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ setup_completed: 'yes' })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('must be a boolean')
+  })
+
+  it('PATCH /api/settings rejects number setting with wrong type', async () => {
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ monthly_budget_usd: 'hundred' })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('must be a finite number')
+  })
+
+  it('PATCH /api/settings rejects negative budget', async () => {
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ monthly_budget_usd: -50 })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('must be non-negative')
+  })
+
+  it('PATCH /api/settings rejects string setting with wrong type', async () => {
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ theme: 123 })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('must be a string')
+  })
+
+  it('PATCH /api/settings accepts valid budget number', async () => {
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ monthly_budget_usd: 100 })
+    })
+    expect(res.status).toBe(200)
+    expect(mockConfigStore.get('monthly_budget_usd')).toBe(100)
+  })
+
   it('PATCH /api/settings updates multiple keys at once', async () => {
     const res = await fetch(`http://localhost:${port}/api/settings`, {
       method: 'PATCH',

@@ -144,6 +144,28 @@ compatibility: Requires TEST_API_KEY
     expect(data.status).toBe('saved')
   })
 
+  it('PUT /api/skills/:name/auth rejects invalid env var name', async () => {
+    const res = await fetch(`http://localhost:${port}/api/skills/test-skill/auth`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 'invalid-key!': 'value' })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('Invalid env var name')
+  })
+
+  it('PUT /api/skills/:name/auth rejects non-string value', async () => {
+    const res = await fetch(`http://localhost:${port}/api/skills/test-skill/auth`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ VALID_KEY: 12345 })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('must be a string')
+  })
+
   it('GET /api/skills/:name returns 404 for nonexistent', async () => {
     const res = await fetch(`http://localhost:${port}/api/skills/nonexistent-skill`)
     expect(res.status).toBe(404)

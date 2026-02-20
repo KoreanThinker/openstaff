@@ -103,10 +103,22 @@ export function agentRoutes(ctx: ApiContext): Router {
   router.put('/:id/api-key', (req, res) => {
     try {
       const { api_key } = req.body as { api_key: string }
-      if (req.params.id === 'claude-code') {
-        ctx.configStore.set('anthropic_api_key', api_key)
-      } else if (req.params.id === 'codex') {
-        ctx.configStore.set('openai_api_key', api_key)
+      if (typeof api_key !== 'string') {
+        return res.status(400).json({ error: 'api_key must be a string' })
+      }
+      if (api_key.length > 500) {
+        return res.status(400).json({ error: 'api_key is too long' })
+      }
+      const storeKey = req.params.id === 'claude-code' ? 'anthropic_api_key'
+        : req.params.id === 'codex' ? 'openai_api_key'
+        : null
+      if (!storeKey) {
+        return res.status(400).json({ error: 'Unknown agent' })
+      }
+      if (api_key === '') {
+        ctx.configStore.delete(storeKey)
+      } else {
+        ctx.configStore.set(storeKey, api_key)
       }
       res.json({ status: 'saved' })
     } catch (err) {

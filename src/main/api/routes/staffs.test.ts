@@ -1093,10 +1093,16 @@ describe('staffs API routes', () => {
     await apiDelete(`/api/staffs/${data.id}`)
   })
 
-  it('POST /api/staffs/import fills all defaults when body is empty', async () => {
+  it('POST /api/staffs/import rejects empty body (name required)', async () => {
     const { status, data } = await apiPost('/api/staffs/import', {})
+    expect(status).toBe(400)
+    expect(data.error).toBe('name is required')
+  })
+
+  it('POST /api/staffs/import fills defaults when only name is provided', async () => {
+    const { status, data } = await apiPost('/api/staffs/import', { name: 'Imported Staff' })
     expect(status).toBe(201)
-    expect(data.name).toBe('')
+    expect(data.name).toBe('Imported Staff')
     expect(data.role).toBe('')
     expect(data.gather).toBe('')
     expect(data.execute).toBe('')
@@ -1170,6 +1176,37 @@ describe('staffs API routes', () => {
     expect(data.role).toBe('Role')
 
     await apiDelete(`/api/staffs/${data.id}`)
+  })
+
+  it('POST /api/staffs rejects skills with non-string elements', async () => {
+    const { status, data } = await apiPost('/api/staffs', {
+      name: 'Test',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV',
+      skills: ['valid', 123]
+    })
+    expect(status).toBe(400)
+    expect(data.error).toContain('skills must contain only strings')
+  })
+
+  it('POST /api/staffs/import rejects non-array required_skills', async () => {
+    const { status, data } = await apiPost('/api/staffs/import', {
+      name: 'Test Import',
+      required_skills: 'not-an-array'
+    })
+    expect(status).toBe(400)
+    expect(data.error).toContain('required_skills must be an array')
+  })
+
+  it('POST /api/staffs/import rejects required_skills with non-string elements', async () => {
+    const { status, data } = await apiPost('/api/staffs/import', {
+      name: 'Test Import',
+      required_skills: ['valid', 42]
+    })
+    expect(status).toBe(400)
+    expect(data.error).toContain('required_skills must contain only strings')
   })
 
   it('PUT /api/staffs/:id rejects invalid skills type', async () => {

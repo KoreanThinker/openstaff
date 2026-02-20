@@ -19,8 +19,9 @@ function validateStaffInput(body: Partial<StaffConfig>): string | null {
     if (body.name.trim().length === 0) return 'name is required'
     if (body.name.length > 100) return 'name must be 100 characters or less'
   }
-  if (body.skills !== undefined && !Array.isArray(body.skills)) {
-    return 'skills must be an array'
+  if (body.skills !== undefined) {
+    if (!Array.isArray(body.skills)) return 'skills must be an array'
+    if (body.skills.some((s) => typeof s !== 'string')) return 'skills must contain only strings'
   }
   return null
 }
@@ -356,6 +357,17 @@ export function staffRoutes(ctx: ApiContext): Router {
         required_skills?: string[]
         recommended_agent?: string
         recommended_model?: string
+      }
+
+      // Validate imported data
+      if (!body.name || typeof body.name !== 'string' || body.name.trim().length === 0) {
+        return res.status(400).json({ error: 'name is required' })
+      }
+      if (body.required_skills !== undefined && !Array.isArray(body.required_skills)) {
+        return res.status(400).json({ error: 'required_skills must be an array' })
+      }
+      if (body.required_skills?.some((s) => typeof s !== 'string')) {
+        return res.status(400).json({ error: 'required_skills must contain only strings' })
       }
 
       const config: StaffConfig = {
