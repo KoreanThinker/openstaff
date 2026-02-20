@@ -241,12 +241,13 @@ export function staffRoutes(ctx: ApiContext): Router {
     }
   })
 
-  // Get metrics
+  // Get metrics (returns last 1000 by default, configurable via ?limit=N)
   router.get('/:id/metrics', (req, res) => {
     try {
       const dir = getStaffDir(req.params.id!)
       const usage = readJsonl<UsageEntry>(join(dir, 'usage.jsonl'))
-      res.json(usage)
+      const limit = Math.min(Math.max(Number(req.query.limit) || 1000, 1), 10000)
+      res.json(usage.slice(-limit))
     } catch (err) {
       res.status(500).json({ error: String(err) })
     }
@@ -284,12 +285,13 @@ export function staffRoutes(ctx: ApiContext): Router {
     }
   })
 
-  // Get cycles
+  // Get cycles (returns last 1000 by default, configurable via ?limit=N)
   router.get('/:id/cycles', (req, res) => {
     try {
       const dir = getStaffDir(req.params.id!)
       const cycles = readJsonl<CycleEntry>(join(dir, 'cycles.jsonl'))
-      res.json(cycles)
+      const limit = Math.min(Math.max(Number(req.query.limit) || 1000, 1), 10000)
+      res.json(cycles.slice(-limit))
     } catch (err) {
       res.status(500).json({ error: String(err) })
     }
