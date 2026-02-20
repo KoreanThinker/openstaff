@@ -25,7 +25,7 @@ const STRING_SETTINGS = new Set([
   'default_agent', 'default_model', 'theme'
 ])
 const THEME_SETTINGS = new Set(['light', 'dark', 'system'])
-const DEFAULT_AGENT_SETTINGS = new Set(['claude-code', 'codex'])
+const DEFAULT_AGENT_SETTINGS = new Set(['claude-code', 'codex', 'gemini-cli'])
 
 function isValidSettingsKey(key: string): boolean {
   return ALLOWED_SETTINGS.includes(key) || key.startsWith('skill_env_')
@@ -48,7 +48,7 @@ function validateSettingValue(key: string, value: unknown): string | null {
       return `${key} must be one of light, dark, system`
     }
     if (key === 'default_agent' && !DEFAULT_AGENT_SETTINGS.has(value)) {
-      return `${key} must be one of claude-code, codex`
+      return `${key} must be one of claude-code, codex, gemini-cli`
     }
   }
   return null

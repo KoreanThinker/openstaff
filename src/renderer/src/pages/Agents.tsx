@@ -940,6 +940,164 @@ function CodexCard({
   )
 }
 
+function GeminiCliCard({
+  agent
+}: {
+  agent: AgentInfo
+}): React.ReactElement {
+  const queryClient = useQueryClient()
+  const [connectionStatus, setConnectionStatus] = useState<
+    'connected' | 'disconnected' | 'not_tested'
+  >(agent.connected ? 'connected' : 'not_tested')
+  const [installing, setInstalling] = useState(false)
+  const [testingConnection, setTestingConnection] = useState(false)
+
+  const installLabel = agent.installed ? 'Check for Updates' : 'Install'
+
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+              <Cpu className="h-5 w-5 text-foreground" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                Google Gemini CLI
+              </h2>
+            </div>
+            <span className="font-mono text-sm text-muted-foreground">
+              {agent.version ?? '--'}
+            </span>
+          </div>
+          <AgentStatusPill status={agent.status} />
+        </div>
+
+        <div className="mt-6 space-y-6">
+          <div className="rounded-lg bg-muted/50 p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+              Installation
+            </h3>
+            <div className="mt-3 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-foreground">
+                  Status:{' '}
+                  <span className="font-medium">
+                    {agent.installed ? 'Installed' : 'Not Installed'}
+                  </span>
+                </p>
+                {agent.version && (
+                  <p className="font-mono text-sm text-muted-foreground">
+                    v{agent.version}
+                  </p>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={installing}
+                onClick={async () => {
+                  setInstalling(true)
+                  try {
+                    await api.installAgent(agent.id)
+                    await queryClient.invalidateQueries({ queryKey: ['agents'] })
+                    toast({ title: agent.installed ? 'Gemini CLI is up to date' : 'Gemini CLI installed' })
+                  } catch (err) {
+                    toast({
+                      title: 'Gemini CLI install failed',
+                      description: err instanceof Error ? err.message : 'Unknown error',
+                      variant: 'destructive'
+                    })
+                  } finally {
+                    setInstalling(false)
+                  }
+                }}
+              >
+                {installing ? (
+                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                )}
+                {installLabel}
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-muted/50 p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+              Connection
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Gemini CLI uses your local Gemini authentication (`gemini login`) or configured environment.
+            </p>
+            <div className="mt-3 flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={testingConnection}
+                onClick={async () => {
+                  setTestingConnection(true)
+                  try {
+                    const result = await api.testAgentConnection(agent.id)
+                    setConnectionStatus(result.connected ? 'connected' : 'disconnected')
+                    if (!result.connected) {
+                      toast({ title: 'Gemini connection check failed', variant: 'destructive' })
+                    }
+                    await queryClient.invalidateQueries({ queryKey: ['agents'] })
+                  } catch (err) {
+                    setConnectionStatus('disconnected')
+                    toast({
+                      title: 'Gemini connection check failed',
+                      description: err instanceof Error ? err.message : 'Unknown error',
+                      variant: 'destructive'
+                    })
+                  } finally {
+                    setTestingConnection(false)
+                  }
+                }}
+              >
+                {testingConnection ? (
+                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                ) : null}
+                Test
+              </Button>
+              <ConnectionStatusDot status={connectionStatus} />
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-muted/50 p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+              Available Models
+            </h3>
+            {agent.models.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">
+                No models available.
+              </p>
+            ) : (
+              <div className="mt-3 flex flex-wrap gap-3">
+                {agent.models.map((model) => (
+                  <div
+                    key={model.id}
+                    className="rounded-lg bg-muted px-4 py-2"
+                  >
+                    <p className="text-sm font-medium text-foreground">
+                      {model.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {model.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 function UsageCard({
   label,
   tokens,
@@ -994,6 +1152,7 @@ export function Agents(): React.ReactElement {
 
   const claudeCode = agents?.find((a) => a.id === 'claude-code')
   const codex = agents?.find((a) => a.id === 'codex')
+  const geminiCli = agents?.find((a) => a.id === 'gemini-cli')
 
   const isFirstSetup =
     claudeCode &&
@@ -1043,6 +1202,10 @@ export function Agents(): React.ReactElement {
 
         {!isLoading && !isError && codex && (
           <CodexCard agent={codex} />
+        )}
+
+        {!isLoading && !isError && geminiCli && (
+          <GeminiCliCard agent={geminiCli} />
         )}
       </div>
     </div>

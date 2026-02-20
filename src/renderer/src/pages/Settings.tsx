@@ -65,6 +65,24 @@ const FALLBACK_CODEX_MODELS: AgentModel[] = [
   }
 ]
 
+const FALLBACK_GEMINI_MODELS: AgentModel[] = [
+  {
+    id: 'gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro',
+    description: 'Most capable'
+  },
+  {
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    description: 'Balanced speed and quality'
+  },
+  {
+    id: 'gemini-2.5-flash-lite',
+    name: 'Gemini 2.5 Flash Lite',
+    description: 'Fastest and lowest cost'
+  }
+]
+
 const FALLBACK_AGENTS: AgentInfo[] = [
   {
     id: 'claude-code',
@@ -85,8 +103,25 @@ const FALLBACK_AGENTS: AgentInfo[] = [
     api_key_configured: false,
     models: FALLBACK_CODEX_MODELS,
     status: 'not_installed'
+  },
+  {
+    id: 'gemini-cli',
+    name: 'Google Gemini CLI',
+    installed: false,
+    version: null,
+    connected: false,
+    api_key_configured: false,
+    models: FALLBACK_GEMINI_MODELS,
+    status: 'not_installed'
   }
 ]
+
+function fallbackModelsForAgent(agentId: string): AgentModel[] {
+  if (agentId === 'claude-code') return FALLBACK_CLAUDE_MODELS
+  if (agentId === 'codex') return FALLBACK_CODEX_MODELS
+  if (agentId === 'gemini-cli') return FALLBACK_GEMINI_MODELS
+  return FALLBACK_CLAUDE_MODELS
+}
 
 function useDebounce<T>(
   callback: (value: T) => void,
@@ -162,11 +197,7 @@ export function Settings(): React.ReactElement {
 
       const modelsForAgent =
         agentOptions.find((agent) => agent.id === nextAgent)?.models ?? []
-      const modelFallback =
-        modelsForAgent[0]?.id ||
-        (nextAgent === 'claude-code'
-          ? FALLBACK_CLAUDE_MODELS[0].id
-          : FALLBACK_CODEX_MODELS[0].id)
+      const modelFallback = modelsForAgent[0]?.id || fallbackModelsForAgent(nextAgent)[0]?.id || FALLBACK_CLAUDE_MODELS[0].id
       const requestedModel = settings.default_model || modelFallback
       const hasRequestedModel = modelsForAgent.some((model) => model.id === requestedModel)
       setDefaultAgent(nextAgent)
@@ -217,9 +248,7 @@ export function Settings(): React.ReactElement {
   const availableModels =
     selectedAgent?.models.length
       ? selectedAgent.models
-      : selectedAgent?.id === 'claude-code'
-        ? FALLBACK_CLAUDE_MODELS
-        : FALLBACK_CODEX_MODELS
+      : fallbackModelsForAgent(selectedAgent?.id || 'claude-code')
 
   // Query ngrok status from system API
   const { data: ngrokStatus } = useQuery({
@@ -435,9 +464,7 @@ export function Settings(): React.ReactElement {
                     setDefaultAgent(value)
                     const firstModel =
                       agentOptions.find((agent) => agent.id === value)?.models[0]?.id ||
-                      (value === 'claude-code'
-                        ? FALLBACK_CLAUDE_MODELS[0].id
-                        : FALLBACK_CODEX_MODELS[0].id)
+                      fallbackModelsForAgent(value)[0]?.id
                     if (!firstModel) return
                     setDefaultModel(firstModel)
                     handleImmediateSave({

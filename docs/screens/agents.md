@@ -42,6 +42,11 @@ When a user first visits the Agents screen (or arrives via the Dashboard banner 
 |           |  |  OPENAI CODEX                                    | |
 |           |  |  Install / API key / models management card      | |
 |           |  +--------------------------------------------------+ |
+|           |                                                       |
+|           |  +--------------------------------------------------+ |
+|           |  |  GOOGLE GEMINI CLI                               | |
+|           |  |  Install / connection test / models card         | |
+|           |  +--------------------------------------------------+ |
 +------------------------------------------------------------------+
 ```
 
@@ -137,10 +142,15 @@ Breadcrumb: `Agents`
 |           |  |  Connection / Installation / Models sections      | |
 |           |  +--------------------------------------------------+ |
 |           |                                                       |
+|           |  +--------------------------------------------------+ |
+|           |  |  GEMINI CLI CARD                                 | |
+|           |  |  Installation / Connection / Models sections      | |
+|           |  +--------------------------------------------------+ |
+|           |                                                       |
 +------------------------------------------------------------------+
 ```
 
-The page scrolls vertically. Each agent is a full-width `<Card>` stacked top to bottom. Claude Code is first, Codex second.
+The page scrolls vertically. Each agent is a full-width `<Card>` stacked top to bottom. Claude Code is first, Codex second, Gemini CLI third.
 
 ---
 
@@ -156,8 +166,8 @@ Each agent gets one large Card component containing all its sections. The card u
 +------------------------------------------------------------------+
 ```
 
-- **Agent Logo**: 32x32 icon. Claude Code uses the Anthropic mark; Codex uses the OpenAI mark.
-- **Agent Name**: `text-foreground font-sans text-lg font-semibold`. "Claude Code" or "Codex".
+- **Agent Logo**: 32x32 icon. Claude Code uses the Anthropic mark; Codex uses the OpenAI mark; Gemini uses the Google mark.
+- **Agent Name**: `text-foreground font-sans text-lg font-semibold`. "Claude Code", "OpenAI Codex", or "Google Gemini CLI".
 - **Version**: `text-muted-foreground text-sm font-mono`. Displays installed version or `--` if not installed.
 - **Status Pill**: `rounded-full px-3 py-1 text-xs font-medium`. States:
 
@@ -169,7 +179,7 @@ Each agent gets one large Card component containing all its sections. The card u
 | Installing      | `bg-warning/15 text-warning` + spinner          |
 | Updating        | `bg-warning/15 text-warning` + spinner          |
 
-The overall status pill reflects the combined state: the agent is "Connected" only when installed AND the API key is valid.
+The overall status pill reflects runtime readiness. For key-based agents (Claude/Codex), "Connected" means installed + valid key. For Gemini CLI, "Connected" means installed and connection test succeeded.
 
 ---
 

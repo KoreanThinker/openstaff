@@ -35,7 +35,7 @@ export function agentRoutes(ctx: ApiContext): Router {
           const version = installed ? await driver.getVersion() : null
           const apiKeyStoreKey = getApiKeyStoreKey(driver.id)
           const apiKey = apiKeyStoreKey ? ctx.configStore.get(apiKeyStoreKey) : ''
-          const apiKeyConfigured = !!apiKey && apiKey !== ''
+          const apiKeyConfigured = apiKeyStoreKey ? !!apiKey && apiKey !== '' : true
 
           let status: AgentInfo['status'] = 'not_installed'
           if (installed && apiKeyConfigured) status = 'connected'
@@ -80,7 +80,7 @@ export function agentRoutes(ctx: ApiContext): Router {
       const version = installed ? await driver.getVersion() : null
       const apiKeyStoreKey = getApiKeyStoreKey(driver.id)
       const apiKey = apiKeyStoreKey ? ctx.configStore.get(apiKeyStoreKey) : ''
-      const apiKeyConfigured = !!apiKey && apiKey !== ''
+      const apiKeyConfigured = apiKeyStoreKey ? !!apiKey && apiKey !== '' : true
 
       res.json({
         id: driver.id,
@@ -149,8 +149,9 @@ export function agentRoutes(ctx: ApiContext): Router {
 
       const apiKeyStoreKey = getApiKeyStoreKey(req.params.id!)
       const apiKey = apiKeyStoreKey ? ctx.configStore.get(apiKeyStoreKey) : ''
-
-      if (!apiKey) return res.json({ connected: false, error: 'No API key configured' })
+      if (apiKeyStoreKey && !apiKey) {
+        return res.json({ connected: false, error: 'No API key configured' })
+      }
 
       const connected = await driver.testConnection(apiKey)
       res.json({ connected })

@@ -26,6 +26,7 @@ test.describe('Staff Create Validation + Discard', () => {
       const comboBoxes = page.locator('[role="combobox"]')
       await comboBoxes.nth(0).click()
       await expect(page.getByRole('option', { name: /OpenAI Codex/ })).toBeVisible()
+      await expect(page.getByRole('option', { name: /Google Gemini CLI/ })).toBeVisible()
       await page.getByRole('option', { name: /OpenAI Codex/ }).click()
       await expect(comboBoxes.nth(1)).toContainText('GPT-5')
 

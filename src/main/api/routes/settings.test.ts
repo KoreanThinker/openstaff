@@ -230,7 +230,18 @@ describe('settings API routes', () => {
     })
     expect(res.status).toBe(400)
     const data = await res.json()
-    expect(data.error).toContain('must be one of claude-code, codex')
+    expect(data.error).toContain('must be one of claude-code, codex, gemini-cli')
+  })
+
+  it('PATCH /api/settings accepts gemini-cli as default agent', async () => {
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ default_agent: 'gemini-cli' })
+    })
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.status).toBe('saved')
   })
 
   it('PATCH /api/settings rejects empty default model', async () => {

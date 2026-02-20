@@ -720,3 +720,74 @@ describe('agents API routes: non-claude-code driver branches', () => {
     expect(data.connected).toBe(true)
   })
 })
+
+describe('agents API routes: driver without API key requirement', () => {
+  let noKeyServer: Server
+  let noKeyPort: number
+  let originalGetAllDrivers: typeof agentRegistry.getAllDrivers
+  let originalGetDriver: typeof agentRegistry.getDriver
+
+  beforeAll(async () => {
+    originalGetAllDrivers = agentRegistry.getAllDrivers
+    originalGetDriver = agentRegistry.getDriver
+
+    const geminiDriver = {
+      id: 'gemini-cli',
+      name: 'Google Gemini CLI',
+      isInstalled: async () => true,
+      getVersion: async () => '0.29.0',
+      getAvailableModels: () => [{ id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', description: 'Most capable' }],
+      install: async () => {},
+      testConnection: async () => true
+    }
+
+    ;(agentRegistry as Record<string, unknown>).getAllDrivers = () => [geminiDriver]
+    ;(agentRegistry as Record<string, unknown>).getDriver = (id: string) => {
+      if (id === 'gemini-cli') return geminiDriver
+      return undefined
+    }
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api/agents', agentRoutes({
+      staffManager: {} as never,
+      configStore: { get: () => '', set: vi.fn() } as never,
+      monitoringEngine: {} as never,
+      io: { emit: vi.fn() } as never
+    }))
+
+    noKeyServer = createServer(app)
+    await new Promise<void>((resolve) => {
+      noKeyServer.listen(0, () => {
+        const addr = noKeyServer.address()
+        noKeyPort = typeof addr === 'object' && addr ? addr.port : 0
+        resolve()
+      })
+    })
+  })
+
+  afterAll(() => {
+    ;(agentRegistry as Record<string, unknown>).getAllDrivers = originalGetAllDrivers
+    ;(agentRegistry as Record<string, unknown>).getDriver = originalGetDriver
+    noKeyServer.close()
+  })
+
+  it('GET /api/agents marks no-key driver as connected when installed', async () => {
+    const res = await fetch(`http://localhost:${noKeyPort}/api/agents`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    const gemini = data.find((a: { id: string }) => a.id === 'gemini-cli')
+    expect(gemini).toBeTruthy()
+    expect(gemini.status).toBe('connected')
+    expect(gemini.api_key_configured).toBe(true)
+  })
+
+  it('POST /api/agents/:id/test-connection works without stored API key', async () => {
+    const res = await fetch(`http://localhost:${noKeyPort}/api/agents/gemini-cli/test-connection`, {
+      method: 'POST'
+    })
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.connected).toBe(true)
+  })
+})

@@ -67,7 +67,7 @@ Default agent and model for newly created Staff. Does not affect existing Staff.
 
 | Element | Component | Details |
 |---------|-----------|---------|
-| Default Agent | Select dropdown | Options: "Claude Code", "OpenAI Codex". Uses shadcn Select. |
+| Default Agent | Select dropdown | Options: "Claude Code", "OpenAI Codex", "Google Gemini CLI". Uses shadcn Select. |
 | Default Model | Select dropdown | Options filtered by selected agent. For Claude Code: Claude Sonnet 4.5, Claude Opus 4.6, Claude Haiku 4.5, etc. |
 
 **Behavior:**
@@ -117,7 +117,7 @@ interface AppSettings {
   ngrok_status: 'connected' | 'disconnected' | 'connecting' | 'error'
   ngrok_url: string | null
   ngrok_error: string | null
-  default_agent: 'claude-code' | 'codex'
+  default_agent: 'claude-code' | 'codex' | 'gemini-cli'
   default_model: string
   start_on_login: boolean
   show_window_on_startup: boolean
