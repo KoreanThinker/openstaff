@@ -568,7 +568,7 @@ export function Dashboard(): React.ReactElement {
                       <StatusDot status={staff.status} />
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate font-medium">{staff.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{staff.role}</TableCell>
+                    <TableCell className="max-w-[180px] truncate text-muted-foreground">{staff.role}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-xs">
                         {staff.agent}
