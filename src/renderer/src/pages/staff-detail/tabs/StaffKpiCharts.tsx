@@ -1,17 +1,8 @@
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine
-} from 'recharts'
 import { cn, formatTrend } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import type { KpiEntry } from '@shared/types'
+import { SimpleLineChart } from '@/components/charts/SimpleCharts'
 
 export function StaffKpiCharts({
   metricNames,
@@ -61,42 +52,12 @@ export function StaffKpiCharts({
               )}
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" opacity={0.3} />
-                  <XAxis dataKey="date" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: 'var(--radius)'
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke={isMeetingGoal ? 'hsl(var(--chart-1))' : 'hsl(var(--chart-5))'}
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    name={metric}
-                  />
-                  {goalValue != null && (
-                    <ReferenceLine
-                      y={goalValue}
-                      stroke="hsl(var(--muted-foreground))"
-                      strokeDasharray="5 5"
-                      strokeOpacity={0.5}
-                      label={{
-                        value: `Goal: ${goalValue}`,
-                        position: 'right',
-                        fill: 'hsl(var(--muted-foreground))',
-                        fontSize: 12
-                      }}
-                    />
-                  )}
-                </LineChart>
-              </ResponsiveContainer>
+              <SimpleLineChart
+                data={chartData}
+                valueKey="value"
+                lineColorVar={isMeetingGoal ? '--chart-1' : '--chart-5'}
+                goalValue={goalValue}
+              />
             </CardContent>
           </Card>
         )
