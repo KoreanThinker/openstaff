@@ -150,7 +150,7 @@ pnpm test:watch
 # Coverage report
 pnpm test:coverage
 
-# E2E tests (requires built app)
+# E2E tests (requires built app, default: headless)
 pnpm test:e2e
 
 # E2E tests in headed mode (visual debugging)

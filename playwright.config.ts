@@ -7,6 +7,7 @@ export default defineConfig({
   workers: 1,
   reporter: 'list',
   use: {
+    headless: true,
     trace: 'on-first-retry'
   }
 })
