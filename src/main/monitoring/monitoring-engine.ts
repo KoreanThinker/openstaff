@@ -1,4 +1,5 @@
 import { join } from 'path'
+import { totalmem, freemem, cpus as osCpus } from 'os'
 import type { StaffManager } from '../staff-manager/staff-manager'
 import type { ConfigStore } from '../store/config-store'
 import type { SystemResources, UsageEntry } from '@shared/types'
@@ -48,11 +49,10 @@ export class MonitoringEngine {
   }
 
   async getSystemResources(): Promise<SystemResources> {
-    const os = require('os')
-    const totalMem = os.totalmem()
-    const freeMem = os.freemem()
+    const totalMem = totalmem()
+    const freeMem = freemem()
     const usedMem = totalMem - freeMem
-    const cpus: { times: { user: number; nice: number; sys: number; idle: number } }[] = os.cpus()
+    const cpus: { times: { user: number; nice: number; sys: number; idle: number } }[] = osCpus()
 
     // Calculate CPU percent using delta from previous sample
     const currentTimes = cpus.map((cpu) => {
