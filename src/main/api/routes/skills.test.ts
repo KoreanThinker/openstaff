@@ -149,6 +149,26 @@ compatibility: Requires TEST_API_KEY
     expect(res.status).toBe(404)
   })
 
+  it('POST /api/skills/import rejects path traversal', async () => {
+    const res = await fetch(`http://localhost:${port}/api/skills/import`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: '../../etc/passwd' })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toBe('Invalid path')
+  })
+
+  it('POST /api/skills/import rejects missing path', async () => {
+    const res = await fetch(`http://localhost:${port}/api/skills/import`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    })
+    expect(res.status).toBe(400)
+  })
+
   it('POST /api/skills/import returns 500 for invalid path', async () => {
     const res = await fetch(`http://localhost:${port}/api/skills/import`, {
       method: 'POST',

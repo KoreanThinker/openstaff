@@ -176,9 +176,18 @@ export function AppShell(): React.ReactElement {
             </DropdownMenu>
 
             {/* Notification Bell */}
-            <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Notifications">
-              <Bell className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Notifications">
+                  <Bell className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <div className="px-3 py-2 text-sm text-muted-foreground text-center">
+                  No new notifications
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
