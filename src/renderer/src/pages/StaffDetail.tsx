@@ -15,6 +15,7 @@ import {
   ArrowDown,
   Filter,
   X,
+  Loader2,
 } from 'lucide-react'
 import {
   AreaChart,
@@ -1097,7 +1098,7 @@ export function StaffDetail(): React.ReactElement {
               disabled={isActionLoading}
             >
               {startMutation.isPending ? (
-                <span className="animate-spin mr-2">...</span>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Play className="mr-2 h-4 w-4" />
               )}

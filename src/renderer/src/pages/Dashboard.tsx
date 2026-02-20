@@ -444,11 +444,11 @@ export function Dashboard(): React.ReactElement {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-10 cursor-pointer select-none" onClick={() => toggleSort('status')}>
-                    Status {sortField === 'status' && (sortDir === 'asc' ? '↑' : '↓')}
+                  <TableHead className={cn('w-10 cursor-pointer select-none transition-colors hover:bg-muted', sortField === 'status' && 'text-foreground')} onClick={() => toggleSort('status')}>
+                    <span className="inline-flex items-center gap-1">Status{sortField === 'status' && <span className="text-xs">{sortDir === 'asc' ? '▲' : '▼'}</span>}</span>
                   </TableHead>
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('name')}>
-                    Name {sortField === 'name' && (sortDir === 'asc' ? '↑' : '↓')}
+                  <TableHead className={cn('cursor-pointer select-none transition-colors hover:bg-muted', sortField === 'name' && 'text-foreground')} onClick={() => toggleSort('name')}>
+                    <span className="inline-flex items-center gap-1">Name{sortField === 'name' && <span className="text-xs">{sortDir === 'asc' ? '▲' : '▼'}</span>}</span>
                   </TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Agent</TableHead>
@@ -456,11 +456,11 @@ export function Dashboard(): React.ReactElement {
                   <TableHead>Uptime</TableHead>
                   <TableHead className="text-right">Restarts</TableHead>
                   <TableHead className="text-right">Tokens</TableHead>
-                  <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort('cost')}>
-                    Cost {sortField === 'cost' && (sortDir === 'asc' ? '↑' : '↓')}
+                  <TableHead className={cn('cursor-pointer select-none text-right transition-colors hover:bg-muted', sortField === 'cost' && 'text-foreground')} onClick={() => toggleSort('cost')}>
+                    <span className="inline-flex items-center justify-end gap-1 w-full">Cost{sortField === 'cost' && <span className="text-xs">{sortDir === 'asc' ? '▲' : '▼'}</span>}</span>
                   </TableHead>
-                  <TableHead className="cursor-pointer select-none text-right" onClick={() => toggleSort('cycles')}>
-                    Cycles {sortField === 'cycles' && (sortDir === 'asc' ? '↑' : '↓')}
+                  <TableHead className={cn('cursor-pointer select-none text-right transition-colors hover:bg-muted', sortField === 'cycles' && 'text-foreground')} onClick={() => toggleSort('cycles')}>
+                    <span className="inline-flex items-center justify-end gap-1 w-full">Cycles{sortField === 'cycles' && <span className="text-xs">{sortDir === 'asc' ? '▲' : '▼'}</span>}</span>
                   </TableHead>
                   <TableHead>KPI</TableHead>
                   <TableHead className="w-10" />

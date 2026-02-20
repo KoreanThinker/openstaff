@@ -119,6 +119,7 @@ export function AppShell(): React.ReactElement {
             size="icon"
             onClick={toggle}
             className="w-full rounded-xl"
+            aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
           >
             {expanded ? (
               <ChevronLeft className="h-4 w-4" />
@@ -154,7 +155,7 @@ export function AppShell(): React.ReactElement {
             {/* Theme Toggle */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-xl">
+                <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Toggle theme">
                   {React.createElement(themeIcon, { className: 'h-4 w-4' })}
                 </Button>
               </DropdownMenuTrigger>
@@ -175,7 +176,7 @@ export function AppShell(): React.ReactElement {
             </DropdownMenu>
 
             {/* Notification Bell */}
-            <Button variant="ghost" size="icon" className="rounded-xl">
+            <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Notifications">
               <Bell className="h-4 w-4" />
             </Button>
           </div>
