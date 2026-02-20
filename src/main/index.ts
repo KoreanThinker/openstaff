@@ -80,7 +80,7 @@ app.whenReady().then(async () => {
   const apiServer = await startApiServer(staffManager, configStore, monitoringEngine, ngrokManager)
 
   setupIpcHandlers(ipcMain, configStore)
-  _tray = createTray(staffManager, mainWindow)
+  _tray = createTray(staffManager)
 
   createWindow()
 

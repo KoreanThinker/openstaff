@@ -6,8 +6,7 @@ import { countJsonlLines } from '../data/jsonl-reader'
 import { getStaffDir } from '../data/staff-data'
 
 export function createTray(
-  staffManager: StaffManager,
-  mainWindow: BrowserWindow | null
+  staffManager: StaffManager
 ): Tray {
   // Use template tray icon (macOS renders as monochrome menu bar icon)
   const iconPath = join(process.resourcesPath || join(__dirname, '../../resources'), 'trayTemplate.png')
@@ -33,8 +32,9 @@ export function createTray(
       return {
         label: `${statusIcon} ${config.name} (Cycle #${cycles})`,
         click: (): void => {
-          mainWindow?.show()
-          mainWindow?.focus()
+          const win = BrowserWindow.getAllWindows()[0]
+          win?.show()
+          win?.focus()
         }
       }
     })
@@ -47,16 +47,18 @@ export function createTray(
       {
         label: 'Open Dashboard',
         click: (): void => {
-          mainWindow?.show()
-          mainWindow?.focus()
+          const win = BrowserWindow.getAllWindows()[0]
+          win?.show()
+          win?.focus()
         }
       },
       {
         label: 'Settings',
         click: (): void => {
-          mainWindow?.show()
-          mainWindow?.focus()
-          mainWindow?.webContents.send('navigate', '/settings')
+          const win = BrowserWindow.getAllWindows()[0]
+          win?.show()
+          win?.focus()
+          win?.webContents.send('navigate', '/settings')
         }
       },
       { type: 'separator' },
@@ -81,8 +83,9 @@ export function createTray(
   setInterval(updateMenu, 30_000)
 
   tray.on('click', () => {
-    mainWindow?.show()
-    mainWindow?.focus()
+    const win = BrowserWindow.getAllWindows()[0]
+    win?.show()
+    win?.focus()
   })
 
   return tray
