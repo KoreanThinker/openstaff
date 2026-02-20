@@ -20,8 +20,10 @@ export const api = {
     })
     return result.canceled ? null : result.filePaths[0] || null
   },
-  onNotification: (callback: (data: { title: string; body: string }) => void): void => {
-    ipcRenderer.on('notification', (_, data) => callback(data))
+  onNotification: (callback: (data: { title: string; body: string }) => void): (() => void) => {
+    const handler = (_: Electron.IpcRendererEvent, data: { title: string; body: string }): void => callback(data)
+    ipcRenderer.on('notification', handler)
+    return () => ipcRenderer.removeListener('notification', handler)
   },
   setAutoStart: (enabled: boolean): Promise<void> =>
     ipcRenderer.invoke('set-auto-start', enabled),
@@ -32,8 +34,10 @@ export const api = {
     ipcRenderer.invoke('download-update'),
   installUpdate: (): Promise<void> =>
     ipcRenderer.invoke('install-update'),
-  onUpdateDownloaded: (callback: () => void): void => {
-    ipcRenderer.on('update-downloaded', () => callback())
+  onUpdateDownloaded: (callback: () => void): (() => void) => {
+    const handler = (): void => callback()
+    ipcRenderer.on('update-downloaded', handler)
+    return () => ipcRenderer.removeListener('update-downloaded', handler)
   },
   onNavigate: (callback: (path: string) => void): (() => void) => {
     const handler = (_: Electron.IpcRendererEvent, path: string): void => callback(path)

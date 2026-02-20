@@ -151,13 +151,20 @@ app.whenReady().then(async () => {
   })
 })
 
-app.on('before-quit', async () => {
-  (app as Electron.App & { isQuitting: boolean }).isQuitting = true
-  healthChecker.stop()
-  monitoringEngine.stop()
-  await ngrokManager.stop()
-  if (apiServerRef) apiServerRef.close()
-  await staffManager.stopAll()
+app.on('before-quit', (event) => {
+  if (!app.isQuitting) {
+    event.preventDefault()
+    app.isQuitting = true
+    healthChecker.stop()
+    monitoringEngine.stop()
+    Promise.all([
+      ngrokManager.stop(),
+      staffManager.stopAll()
+    ]).finally(() => {
+      if (apiServerRef) apiServerRef.close()
+      app.quit()
+    })
+  }
 })
 
 app.on('window-all-closed', () => {

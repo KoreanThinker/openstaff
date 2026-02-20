@@ -14,6 +14,7 @@ export class MonitoringEngine {
   private logHandler: ((staffId: string, data: string) => void) | null = null
   private budgetWarningEmitted = false
   private budgetWarningMonth: string | null = null
+  private prevCpuTimes: { idle: number; total: number }[] | null = null
 
   constructor(staffManager: StaffManager, configStore?: ConfigStore) {
     this.staffManager = staffManager
@@ -51,12 +52,25 @@ export class MonitoringEngine {
     const totalMem = os.totalmem()
     const freeMem = os.freemem()
     const usedMem = totalMem - freeMem
-    const cpus = os.cpus()
-    const cpuPercent = cpus.reduce((acc: number, cpu: { times: { user: number; nice: number; sys: number; idle: number } }) => {
+    const cpus: { times: { user: number; nice: number; sys: number; idle: number } }[] = os.cpus()
+
+    // Calculate CPU percent using delta from previous sample
+    const currentTimes = cpus.map((cpu) => {
       const total = cpu.times.user + cpu.times.nice + cpu.times.sys + cpu.times.idle
-      const used = total - cpu.times.idle
-      return acc + (used / total) * 100
-    }, 0) / cpus.length
+      return { idle: cpu.times.idle, total }
+    })
+
+    let cpuPercent = 0
+    if (this.prevCpuTimes && this.prevCpuTimes.length === currentTimes.length) {
+      let totalDelta = 0
+      let idleDelta = 0
+      for (let i = 0; i < currentTimes.length; i++) {
+        totalDelta += currentTimes[i].total - this.prevCpuTimes[i].total
+        idleDelta += currentTimes[i].idle - this.prevCpuTimes[i].idle
+      }
+      cpuPercent = totalDelta > 0 ? ((totalDelta - idleDelta) / totalDelta) * 100 : 0
+    }
+    this.prevCpuTimes = currentTimes
 
     return {
       cpu_percent: Math.round(cpuPercent * 10) / 10,

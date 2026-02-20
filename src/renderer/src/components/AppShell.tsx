@@ -192,8 +192,8 @@ export function AppShell(): React.ReactElement {
             >
               <item.icon className="h-5 w-5 shrink-0" />
               <span className={cn(
-                'transition-[opacity,width] duration-300 overflow-hidden whitespace-nowrap',
-                expanded ? 'w-auto opacity-100' : 'w-0 opacity-0'
+                'transition-all duration-300 overflow-hidden whitespace-nowrap',
+                expanded ? 'max-w-[120px] opacity-100' : 'max-w-0 opacity-0'
               )}>
                 {item.label}
               </span>
@@ -323,7 +323,7 @@ export function AppShell(): React.ReactElement {
                           <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', notificationColor[n.type])} />
                           <div className="min-w-0 flex-1">
                             <p className="font-medium text-foreground">{n.title}</p>
-                            <p className="text-xs text-muted-foreground truncate">{n.body}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-3">{n.body}</p>
                             <p className="mt-0.5 text-[10px] text-muted-foreground">
                               {new Date(n.timestamp).toLocaleTimeString()}
                             </p>

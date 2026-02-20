@@ -8,6 +8,7 @@ export interface AppSettings {
   setup_completed: boolean
   start_on_login: boolean
   show_window_on_startup: boolean
+  auto_update_agents: boolean
   theme: 'light' | 'dark' | 'system'
   monthly_budget_usd: number
   budget_warning_percent: number

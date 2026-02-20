@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 import { join } from 'path'
-import { appendFileSync, existsSync, statSync, unlinkSync } from 'fs'
+import { appendFileSync, existsSync, statSync, unlinkSync, writeFileSync } from 'fs'
 import { watch } from 'fs'
 import type { AgentProcess, StaffConfig, StaffStatus, ErrorEntry } from '@shared/types'
 import { getDriver } from '../agent-driver/agent-registry'
@@ -254,6 +254,7 @@ export class StaffManager extends EventEmitter {
     await entry.process.kill()
     entry.process.dispose()
     this.running.delete(staffId)
+    this.intentionalStops.delete(staffId)
     this.failureHistory.delete(staffId)
 
     this.emit('staff:status', staffId, 'stopped')
@@ -277,6 +278,7 @@ export class StaffManager extends EventEmitter {
     await entry.process.kill()
     entry.process.dispose()
     this.running.delete(staffId)
+    this.intentionalStops.delete(staffId)
     this.failureHistory.delete(staffId)
 
     this.emit('staff:status', staffId, 'paused')
@@ -434,6 +436,14 @@ export class StaffManager extends EventEmitter {
     const dir = getStaffDir(staffId)
     const files = ['cycles.jsonl', 'kpi.jsonl', 'signals.jsonl', 'errors.jsonl']
 
+    // Ensure files exist before watching (fs.watch throws ENOENT on missing files)
+    for (const file of files) {
+      const path = join(dir, file)
+      if (!existsSync(path)) {
+        writeFileSync(path, '')
+      }
+    }
+
     for (const file of files) {
       const path = join(dir, file)
       try {
@@ -445,7 +455,7 @@ export class StaffManager extends EventEmitter {
         })
         entry.watchers.push(watcher)
       } catch {
-        // File might not exist yet
+        // File watch failed
       }
     }
   }

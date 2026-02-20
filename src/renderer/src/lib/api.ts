@@ -56,7 +56,9 @@ export const api = {
   getStaffMetrics: (id: string) => request<import('@shared/types').UsageEntry[]>(`/api/staffs/${id}/metrics`),
   getStaffKpi: (id: string) => request<import('@shared/types').KpiEntry[]>(`/api/staffs/${id}/kpi`),
   getStaffMemory: (id: string) => request<{ content: string }>(`/api/staffs/${id}/memory`),
-  getStaffErrors: (id: string) => request<import('@shared/types').ErrorEntry[]>(`/api/staffs/${id}/errors`),
+  getStaffErrors: (id: string) =>
+    request<{ items: import('@shared/types').ErrorEntry[]; total: number }>(`/api/staffs/${id}/errors`)
+      .then((r) => r.items),
   getStaffCycles: (id: string) => request<import('@shared/types').CycleEntry[]>(`/api/staffs/${id}/cycles`),
   getStaffLogs: (id: string) => request<{ lines: string[] }>(`/api/staffs/${id}/logs`),
 

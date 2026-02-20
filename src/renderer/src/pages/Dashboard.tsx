@@ -302,6 +302,10 @@ export function Dashboard(): React.ReactElement {
     refetchInterval: 10000
   })
 
+  const stats = statsQuery.data
+  const staffs = staffsQuery.data ?? []
+  const resources = resourcesQuery.data
+
   const handleAction = useCallback(async (action: string, staffId: string): Promise<void> => {
     try {
       switch (action) {
@@ -357,10 +361,6 @@ export function Dashboard(): React.ReactElement {
       })
     }
   }, [deleteTarget, staffsQuery, statsQuery])
-
-  const stats = statsQuery.data
-  const staffs = staffsQuery.data ?? []
-  const resources = resourcesQuery.data
 
   const filteredStaffs = useMemo(() => {
     let result = staffs
@@ -532,8 +532,17 @@ export function Dashboard(): React.ReactElement {
                 {filteredStaffs.map((staff) => (
                   <TableRow
                     key={staff.id}
-                    className="cursor-pointer"
+                    className="cursor-pointer hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
+                    tabIndex={0}
+                    role="link"
+                    aria-label={`View details for ${staff.name}`}
                     onClick={() => navigate(`/staffs/${staff.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        navigate(`/staffs/${staff.id}`)
+                      }
+                    }}
                   >
                     <TableCell>
                       <StatusDot status={staff.status} />
@@ -584,8 +593,17 @@ export function Dashboard(): React.ReactElement {
             {filteredStaffs.map((staff) => (
               <Card
                 key={staff.id}
-                className="cursor-pointer"
+                className="cursor-pointer transition-colors hover:border-foreground/20 active:scale-[0.99]"
+                tabIndex={0}
+                role="link"
+                aria-label={`View details for ${staff.name}`}
                 onClick={() => navigate(`/staffs/${staff.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    navigate(`/staffs/${staff.id}`)
+                  }
+                }}
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">

@@ -99,13 +99,16 @@ export async function startApiServer(
   })
 
   return new Promise((resolve) => {
-    httpServer.listen(0, () => {
+    httpServer.listen(0, '127.0.0.1', () => {
       const addr = httpServer.address()
       apiPort = typeof addr === 'object' && addr ? addr.port : 0
       console.log(`OpenStaff API server listening on port ${apiPort}`)
       resolve({
         port: apiPort,
-        close: () => httpServer.close()
+        close: () => {
+          io.close()
+          httpServer.close()
+        }
       })
     })
   })

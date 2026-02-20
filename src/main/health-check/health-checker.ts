@@ -14,6 +14,7 @@ export class HealthChecker {
   }
 
   start(): void {
+    if (this.interval) return
     this.interval = setInterval(() => {
       this.check()
     }, HEALTH_CHECK_INTERVAL_MS)

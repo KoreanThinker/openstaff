@@ -9,6 +9,9 @@ export function getStaffsDir(): string {
 }
 
 export function getStaffDir(staffId: string): string {
+  if (staffId.includes('/') || staffId.includes('\\') || staffId.includes('..') || staffId !== staffId.trim()) {
+    throw new Error(`Invalid staff ID: ${staffId}`)
+  }
   return join(STAFFS_DIR, staffId)
 }
 

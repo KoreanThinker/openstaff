@@ -66,6 +66,15 @@ describe('staff-data', () => {
     it('returns staff directory path', () => {
       expect(getStaffDir('my-staff')).toBe(join(tempDir, 'staffs', 'my-staff'))
     })
+
+    it('rejects path traversal attempts', () => {
+      expect(() => getStaffDir('../etc')).toThrow('Invalid staff ID')
+      expect(() => getStaffDir('../../passwd')).toThrow('Invalid staff ID')
+      expect(() => getStaffDir('foo/bar')).toThrow('Invalid staff ID')
+      expect(() => getStaffDir('foo\\bar')).toThrow('Invalid staff ID')
+      expect(() => getStaffDir(' leading-space')).toThrow('Invalid staff ID')
+      expect(() => getStaffDir('trailing-space ')).toThrow('Invalid staff ID')
+    })
   })
 
   describe('ensureStaffDir', () => {
