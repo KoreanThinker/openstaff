@@ -625,6 +625,8 @@ function ClaudeCodeCard({
                     </span>
                     <Input
                       type="number"
+                      min="0"
+                      step="1"
                       placeholder="No limit"
                       className="pl-7"
                       value={budget.monthly_limit ?? ''}
@@ -632,7 +634,7 @@ function ClaudeCodeCard({
                         saveBudget({
                           ...budget,
                           monthly_limit: e.target.value
-                            ? Number(e.target.value)
+                            ? Math.max(0, Number(e.target.value))
                             : null
                         })
                       }
@@ -646,11 +648,13 @@ function ClaudeCodeCard({
                   <div className="relative mt-1">
                     <Input
                       type="number"
+                      min="1"
+                      max="100"
                       value={budget.warning_threshold}
                       onChange={(e) =>
                         saveBudget({
                           ...budget,
-                          warning_threshold: Number(e.target.value)
+                          warning_threshold: Math.min(100, Math.max(1, Number(e.target.value)))
                         })
                       }
                       className="pr-7"
@@ -670,7 +674,7 @@ function ClaudeCodeCard({
                 <div className="mt-3">
                   {(() => {
                     const used = dashStats?.cost_month ?? 0
-                    const pct = Math.min(100, (used / budget.monthly_limit) * 100)
+                    const pct = budget.monthly_limit > 0 ? Math.min(100, (used / budget.monthly_limit) * 100) : 0
                     const isOverLimit = pct >= 100
                     const isWarning = pct >= budget.warning_threshold
                     return (

@@ -37,6 +37,7 @@ import {
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { toast } from '@/hooks/use-toast'
 import type { SkillInfo, SkillAuthStatus } from '@shared/types'
 
 type FilterStatus = 'all' | 'active' | 'needs_auth'
@@ -149,6 +150,9 @@ export function Skills(): React.ReactElement {
         setDetailOpen(false)
         setSelectedSkill(null)
       }
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Failed to delete skill', description: err.message, variant: 'destructive' })
     }
   })
 
@@ -157,6 +161,10 @@ export function Skills(): React.ReactElement {
       api.updateSkillAuth(name, envVars),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['skills'] })
+      toast({ title: 'Credentials saved' })
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Failed to save credentials', description: err.message, variant: 'destructive' })
     }
   })
 
