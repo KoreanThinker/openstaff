@@ -245,7 +245,7 @@ export function Skills(): React.ReactElement {
             placeholder="Search skills..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="rounded-full pl-9"
           />
         </div>
         <div className="flex gap-2">
