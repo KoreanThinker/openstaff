@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, createElement } from 'react'
+import Markdown from 'react-markdown'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Puzzle,
@@ -408,15 +409,8 @@ export function Skills(): React.ReactElement {
                   {selectedSkill.description}
                 </p>
                 {selectedSkill.content && (
-                  <div className="mt-3 prose prose-sm max-w-none text-muted-foreground">
-                    {selectedSkill.content.split('\n').map((line, i) => {
-                      if (line.startsWith('## ')) return <h3 key={i} className="text-sm font-semibold text-foreground mt-4 mb-1">{line.slice(3)}</h3>
-                      if (line.startsWith('# ')) return <h2 key={i} className="text-base font-semibold text-foreground mt-4 mb-1">{line.slice(2)}</h2>
-                      if (line.startsWith('- ')) return <li key={i} className="text-sm text-muted-foreground ml-4">{line.slice(2)}</li>
-                      if (line.startsWith('`') && line.endsWith('`')) return <code key={i} className="block text-xs bg-muted rounded px-2 py-1 my-1 font-mono">{line.slice(1, -1)}</code>
-                      if (line.trim() === '') return <br key={i} />
-                      return <p key={i} className="text-sm text-muted-foreground">{line}</p>
-                    })}
+                  <div className="mt-3 prose prose-sm dark:prose-invert max-w-none">
+                    <Markdown>{selectedSkill.content}</Markdown>
                   </div>
                 )}
               </div>

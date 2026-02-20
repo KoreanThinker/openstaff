@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { getDriver, getAllDrivers, registerDriver } from './agent-registry'
+import { ClaudeCodeDriver } from './claude-code-driver'
 
 describe('agent-registry', () => {
   it('has claude-code driver registered by default', () => {
@@ -34,5 +35,16 @@ describe('agent-registry', () => {
     }
     registerDriver(mockDriver)
     expect(getDriver('test-driver')).toBeDefined()
+  })
+})
+
+describe('ClaudeCodeDriver', () => {
+  it('resume() throws if sessionId is missing', () => {
+    const driver = new ClaudeCodeDriver()
+    expect(() => driver.resume({
+      workingDir: '/tmp',
+      claudeMdPath: '/tmp/CLAUDE.md',
+      env: {}
+    })).toThrow('sessionId is required for resume()')
   })
 })

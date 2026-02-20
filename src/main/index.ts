@@ -17,6 +17,7 @@ import { NgrokManager } from './ngrok/ngrok-manager'
 
 let mainWindow: BrowserWindow | null = null
 let _tray: Tray | null = null
+let apiServerRef: { port: number; close: () => void } | null = null
 
 const configStore = new ConfigStore()
 const staffManager = new StaffManager(configStore)
@@ -78,6 +79,7 @@ app.whenReady().then(async () => {
   })
 
   const apiServer = await startApiServer(staffManager, configStore, monitoringEngine, ngrokManager)
+  apiServerRef = apiServer
 
   setupIpcHandlers(ipcMain, configStore)
   _tray = createTray(staffManager)
@@ -134,6 +136,8 @@ app.on('before-quit', async () => {
   (app as Electron.App & { isQuitting: boolean }).isQuitting = true
   healthChecker.stop()
   monitoringEngine.stop()
+  await ngrokManager.stop()
+  if (apiServerRef) apiServerRef.close()
   await staffManager.stopAll()
 })
 

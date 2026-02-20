@@ -131,9 +131,12 @@ export class ClaudeCodeDriver implements AgentDriver {
   }
 
   resume(opts: SpawnOptions): AgentProcess {
+    if (!opts.sessionId) {
+      throw new Error('sessionId is required for resume()')
+    }
     const binPath = this.getBinaryPath()
     const args = [
-      '--resume', opts.sessionId!,
+      '--resume', opts.sessionId,
       '--dangerously-skip-permissions',
       '--setting-sources', 'project,local',
       '--strict-mcp-config', '--mcp-config', join(opts.workingDir, 'staff-mcp.json'),
