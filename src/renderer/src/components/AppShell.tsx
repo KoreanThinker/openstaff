@@ -67,6 +67,15 @@ const notificationColor = {
   info: 'text-muted-foreground'
 } as const
 
+function detectMacDesktop(): boolean {
+  if (typeof window !== 'undefined' && window.api?.platform) {
+    return window.api.platform === 'darwin'
+  }
+  if (typeof navigator === 'undefined') return false
+  const platform = navigator.userAgentData?.platform || navigator.platform || navigator.userAgent
+  return /mac|darwin/i.test(platform)
+}
+
 export function AppShell(): React.ReactElement {
   const { expanded, toggle } = useSidebarStore()
   const { theme, setTheme } = useSettingsStore()
@@ -79,17 +88,12 @@ export function AppShell(): React.ReactElement {
   const searchRef = React.useRef<HTMLInputElement>(null)
   const [searchOpen, setSearchOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
-  const [isMacDesktop, setIsMacDesktop] = React.useState(() => {
-    if (typeof navigator === 'undefined') return false
-    const platform = navigator.userAgentData?.platform || navigator.platform || navigator.userAgent
-    return /mac/i.test(platform)
-  })
+  const [isMacDesktop, setIsMacDesktop] = React.useState(detectMacDesktop)
 
   React.useEffect(() => {
     let active = true
     const fallbackDetect = (): void => {
-      const platform = navigator.userAgentData?.platform || navigator.platform || navigator.userAgent
-      if (active) setIsMacDesktop(/mac/i.test(platform))
+      if (active) setIsMacDesktop(detectMacDesktop())
     }
 
     if (typeof window === 'undefined' || !window.api?.getPlatform) {
@@ -230,7 +234,7 @@ export function AppShell(): React.ReactElement {
             isMacDesktop ? 'h-16 pt-2' : 'h-14',
             expanded
               ? isMacDesktop
-                ? 'justify-start pl-[6.5rem] pr-3'
+                ? 'justify-start pl-[7.25rem] pr-3'
                 : 'justify-start px-3'
               : isMacDesktop
                 ? 'justify-end pr-2'
