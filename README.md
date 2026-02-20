@@ -63,10 +63,12 @@ Full details: [SECURITY.md](SECURITY.md)
 ## Highlights
 
 - **Infinite operations loop**: every Staff continuously runs Gather -> Execute -> Evaluate.
+- **Multi-agent support**: run Staff with Claude Code, OpenAI Codex, or Google Gemini CLI.
 - **Multi-staff orchestration**: run specialized Staff in parallel for different business functions.
 - **Live monitoring**: track cycles, token usage, costs, logs, and KPIs in real time.
 - **Skill system**: install reusable `SKILL.md` skills from registry or local folders.
 - **Remote dashboard access**: connect securely through Ngrok with password protection.
+- **Slack alerts**: optional webhook alerts for staff errors, pauses, and budget warnings.
 - **Local-first storage**: data stays on your machine under `~/.openstaff`.
 
 ## How it works (short)
@@ -79,7 +81,7 @@ Full details: [SECURITY.md](SECURITY.md)
 │                      │                       │
 │                 Staff Manager                │
 │                      │                       │
-│          Agent Drivers (Claude Code)         │
+│   Agent Drivers (Claude/Codex/Gemini CLI)    │
 └──────────────────────────────────────────────┘
                        │
                  ~/.openstaff/
