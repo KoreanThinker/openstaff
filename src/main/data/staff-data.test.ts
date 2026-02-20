@@ -135,6 +135,14 @@ describe('staff-data', () => {
       expect(state.session_id).toBeNull()
       expect(state.last_started_at).toBeNull()
     })
+
+    it('returns default state when state.json is corrupt', () => {
+      const dir = ensureStaffDir('corrupt-state')
+      writeFileSync(join(dir, 'state.json'), '{not valid json}')
+      const state = readStaffState('corrupt-state')
+      expect(state.session_id).toBeNull()
+      expect(state.last_started_at).toBeNull()
+    })
   })
 
   describe('deleteStaffDir', () => {

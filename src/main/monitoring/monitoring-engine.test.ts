@@ -68,6 +68,16 @@ describe('MonitoringEngine', () => {
       expect(resources.memory_used_mb).toBeGreaterThan(0)
       expect(resources.memory_total_mb).toBeGreaterThan(0)
     })
+
+    it('calculates CPU delta on second call', async () => {
+      const engine = new MonitoringEngine(createMockStaffManager() as never)
+      // First call initializes prevCpuTimes
+      await engine.getSystemResources()
+      // Second call uses delta calculation (covers lines 65-72)
+      const resources = await engine.getSystemResources()
+      expect(resources.cpu_percent).toBeGreaterThanOrEqual(0)
+      expect(resources.cpu_percent).toBeLessThanOrEqual(100)
+    })
   })
 
   describe('start/stop', () => {
