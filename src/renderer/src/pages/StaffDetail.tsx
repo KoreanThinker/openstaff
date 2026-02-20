@@ -1062,14 +1062,33 @@ export function StaffDetail(): React.ReactElement {
 
   if (isLoading || !staff) {
     return (
-      <div className="space-y-6 p-6">
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-8 w-8" />
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-6 w-24" />
+      <div className="space-y-6">
+        {/* Header skeleton matching: Back button + Name + Status dot + label */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-9 rounded-lg" />
+            <Skeleton className="h-8 w-40" />
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-2 w-2 rounded-full" />
+              <Skeleton className="h-5 w-16" />
+            </div>
+          </div>
+          <div className="ml-12">
+            <Skeleton className="h-4 w-56" />
+          </div>
+          <div className="ml-12 flex gap-2">
+            <Skeleton className="h-9 w-20 rounded-lg" />
+            <Skeleton className="h-9 w-20 rounded-lg" />
+            <Skeleton className="h-9 w-16 rounded-lg" />
+          </div>
         </div>
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-96 w-full" />
+        {/* Tab bar skeleton */}
+        <Skeleton className="h-10 w-full rounded-lg" />
+        {/* Content area skeleton */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Skeleton className="h-48 rounded-lg" />
+          <Skeleton className="h-48 rounded-lg" />
+        </div>
       </div>
     )
   }

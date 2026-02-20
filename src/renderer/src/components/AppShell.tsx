@@ -107,7 +107,12 @@ export function AppShell(): React.ReactElement {
               }
             >
               <item.icon className="h-5 w-5 shrink-0" />
-              {expanded && <span>{item.label}</span>}
+              <span className={cn(
+                'transition-[opacity,width] duration-300 overflow-hidden whitespace-nowrap',
+                expanded ? 'w-auto opacity-100' : 'w-0 opacity-0'
+              )}>
+                {item.label}
+              </span>
             </NavLink>
           ))}
         </nav>

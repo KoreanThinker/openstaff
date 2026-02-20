@@ -14,7 +14,9 @@ import {
   Eye,
   Trash2,
   Search,
-  ArrowUpDown
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { cn, formatUptime, formatCost, formatTokens, formatTrend } from '@/lib/utils'
@@ -84,23 +86,25 @@ function SummaryCard({
   value,
   trend,
   icon: Icon,
-  subtitle
+  subtitle,
+  highlighted
 }: {
   title: string
   value: string | number
   trend: number | null
   icon: React.ElementType
   subtitle?: React.ReactNode
+  highlighted?: boolean
 }): React.ReactElement {
   return (
-    <Card>
+    <Card className={cn(highlighted && 'border-success/30 bg-success/5')}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <Icon className={cn('h-4 w-4', highlighted ? 'text-success' : 'text-muted-foreground')} />
       </CardHeader>
       <CardContent>
         <div className="flex items-baseline gap-2">
-          <div className="text-2xl font-bold">{value}</div>
+          <div className={cn('text-2xl font-bold', highlighted && 'text-3xl')}>{value}</div>
           <TrendBadge trend={trend} />
         </div>
         {subtitle && <p className="mt-1 text-xs">{subtitle}</p>}
@@ -193,21 +197,38 @@ function EmptyState(): React.ReactElement {
 function DashboardSkeleton(): React.ReactElement {
   return (
     <div className="space-y-6">
+      {/* Summary cards skeleton */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i}>
-            <CardHeader className="pb-2">
-              <Skeleton className="h-4 w-24" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-4 rounded" />
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-8 w-24" />
             </CardContent>
           </Card>
         ))}
       </div>
+      {/* Staff table skeleton */}
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-6 w-16" />
+        <Skeleton className="h-9 w-32 rounded-full" />
+      </div>
       <Card>
-        <CardContent className="p-6">
-          <Skeleton className="h-64 w-full" />
+        <CardContent className="p-0">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 border-b border-border px-4 py-3 last:border-0">
+              <Skeleton className="h-2 w-2 rounded-full" />
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-24" />
+              <div className="ml-auto flex gap-4">
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-4 w-12" />
+              </div>
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>
@@ -341,6 +362,7 @@ export function Dashboard(): React.ReactElement {
           value={`${stats?.active_staffs ?? 0} / ${stats?.total_staffs ?? 0}`}
           trend={null}
           icon={Users}
+          highlighted
           subtitle={stats?.error_staffs ? (
             <span className="text-destructive">{stats.error_staffs} error{stats.error_staffs > 1 ? 's' : ''}</span>
           ) : undefined}
@@ -444,11 +466,11 @@ export function Dashboard(): React.ReactElement {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className={cn('w-10 cursor-pointer select-none transition-colors hover:bg-muted', sortField === 'status' && 'text-foreground')} onClick={() => toggleSort('status')}>
-                    <span className="inline-flex items-center gap-1">Status{sortField === 'status' && <span className="text-xs">{sortDir === 'asc' ? '▲' : '▼'}</span>}</span>
+                  <TableHead className={cn('w-10 cursor-pointer select-none transition-colors hover:bg-muted/60', sortField === 'status' && 'bg-muted/40 text-foreground')} onClick={() => toggleSort('status')}>
+                    <span className="inline-flex items-center gap-1">Status{sortField === 'status' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-50" />}</span>
                   </TableHead>
-                  <TableHead className={cn('cursor-pointer select-none transition-colors hover:bg-muted', sortField === 'name' && 'text-foreground')} onClick={() => toggleSort('name')}>
-                    <span className="inline-flex items-center gap-1">Name{sortField === 'name' && <span className="text-xs">{sortDir === 'asc' ? '▲' : '▼'}</span>}</span>
+                  <TableHead className={cn('cursor-pointer select-none transition-colors hover:bg-muted/60', sortField === 'name' && 'bg-muted/40 text-foreground')} onClick={() => toggleSort('name')}>
+                    <span className="inline-flex items-center gap-1">Name{sortField === 'name' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-50" />}</span>
                   </TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Agent</TableHead>
@@ -456,11 +478,11 @@ export function Dashboard(): React.ReactElement {
                   <TableHead>Uptime</TableHead>
                   <TableHead className="text-right">Restarts</TableHead>
                   <TableHead className="text-right">Tokens</TableHead>
-                  <TableHead className={cn('cursor-pointer select-none text-right transition-colors hover:bg-muted', sortField === 'cost' && 'text-foreground')} onClick={() => toggleSort('cost')}>
-                    <span className="inline-flex items-center justify-end gap-1 w-full">Cost{sortField === 'cost' && <span className="text-xs">{sortDir === 'asc' ? '▲' : '▼'}</span>}</span>
+                  <TableHead className={cn('cursor-pointer select-none text-right transition-colors hover:bg-muted/60', sortField === 'cost' && 'bg-muted/40 text-foreground')} onClick={() => toggleSort('cost')}>
+                    <span className="inline-flex items-center justify-end gap-1 w-full">Cost{sortField === 'cost' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-50" />}</span>
                   </TableHead>
-                  <TableHead className={cn('cursor-pointer select-none text-right transition-colors hover:bg-muted', sortField === 'cycles' && 'text-foreground')} onClick={() => toggleSort('cycles')}>
-                    <span className="inline-flex items-center justify-end gap-1 w-full">Cycles{sortField === 'cycles' && <span className="text-xs">{sortDir === 'asc' ? '▲' : '▼'}</span>}</span>
+                  <TableHead className={cn('cursor-pointer select-none text-right transition-colors hover:bg-muted/60', sortField === 'cycles' && 'bg-muted/40 text-foreground')} onClick={() => toggleSort('cycles')}>
+                    <span className="inline-flex items-center justify-end gap-1 w-full">Cycles{sortField === 'cycles' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-50" />}</span>
                   </TableHead>
                   <TableHead>KPI</TableHead>
                   <TableHead className="w-10" />
