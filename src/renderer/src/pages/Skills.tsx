@@ -618,6 +618,13 @@ function AddSkillModal({
     }
   })
 
+  const installRegistryMutation = useMutation({
+    mutationFn: (name: string) => api.installRegistrySkill(name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['skills'] })
+    }
+  })
+
   const { data: registrySkills, isLoading: registryLoading } = useQuery({
     queryKey: ['registry-skills'],
     queryFn: api.getRegistrySkills,
@@ -738,8 +745,15 @@ function AddSkillModal({
                       <Button
                         size="sm"
                         variant={isInstalled ? 'outline' : 'default'}
-                        disabled={isInstalled}
+                        disabled={isInstalled || installRegistryMutation.isPending}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (!isInstalled) installRegistryMutation.mutate(skill.name)
+                        }}
                       >
+                        {installRegistryMutation.isPending ? (
+                          <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                        ) : null}
                         {isInstalled ? 'Installed' : 'Install'}
                       </Button>
                     </div>

@@ -476,8 +476,8 @@ export function StaffCreate(): React.ReactElement {
                 input.onchange = async () => {
                   const file = input.files?.[0]
                   if (!file) return
-                  const text = await file.text()
                   try {
+                    const text = await file.text()
                     const data = JSON.parse(text)
                     if (data.role) {
                       applyTemplate(data)
@@ -486,7 +486,7 @@ export function StaffCreate(): React.ReactElement {
                       toast({ title: 'Invalid template', description: 'File does not contain a valid staff template', variant: 'destructive' })
                     }
                   } catch {
-                    toast({ title: 'Import failed', description: 'Could not parse JSON file', variant: 'destructive' })
+                    toast({ title: 'Import failed', description: 'Could not read or parse file', variant: 'destructive' })
                   }
                 }
                 input.click()

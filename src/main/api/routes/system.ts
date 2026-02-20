@@ -82,8 +82,9 @@ export function systemRoutes(ctx: ApiContext): Router {
         return res.json({ ngrok_status: 'not_configured', ngrok_url: null })
       }
       res.json({
-        ngrok_status: ngrok.isActive() ? 'connected' : 'disconnected',
-        ngrok_url: ngrok.getUrl()
+        ngrok_status: ngrok.isActive() ? 'connected' : ngrok.getError() ? 'error' : 'disconnected',
+        ngrok_url: ngrok.getUrl(),
+        ngrok_error: ngrok.getError()
       })
     } catch (err) {
       res.status(500).json({ error: String(err) })

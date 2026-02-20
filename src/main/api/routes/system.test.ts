@@ -104,7 +104,8 @@ describe('system API routes with ngrok manager', () => {
 
     const mockNgrok = {
       isActive: () => true,
-      getUrl: () => 'https://abc123.ngrok.io'
+      getUrl: () => 'https://abc123.ngrok.io',
+      getError: () => null
     }
 
     const app = express()
@@ -138,6 +139,7 @@ describe('system API routes with ngrok manager', () => {
     expect(res.status).toBe(200)
     expect(data.ngrok_status).toBe('connected')
     expect(data.ngrok_url).toBe('https://abc123.ngrok.io')
+    expect(data.ngrok_error).toBeNull()
   })
 })
 
@@ -272,7 +274,8 @@ describe('system API routes: ngrok disconnected', () => {
 
     const mockNgrok = {
       isActive: () => false,
-      getUrl: () => null
+      getUrl: () => null,
+      getError: () => null
     }
 
     const app = express()
@@ -308,6 +311,7 @@ describe('system API routes: ngrok disconnected', () => {
     expect(res.status).toBe(200)
     expect(data.ngrok_status).toBe('disconnected')
     expect(data.ngrok_url).toBeNull()
+    expect(data.ngrok_error).toBeNull()
   })
 })
 

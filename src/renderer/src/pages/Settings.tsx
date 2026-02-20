@@ -112,9 +112,13 @@ export function Settings(): React.ReactElement {
   )
 
   const handleCopyUrl = useCallback(async (url: string) => {
-    await navigator.clipboard.writeText(url)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      console.warn('Clipboard access denied')
+    }
   }, [])
 
   const handleCheckUpdates = useCallback(async () => {
@@ -139,6 +143,7 @@ export function Settings(): React.ReactElement {
     queryFn: () => api.get('/api/system/ngrok') as Promise<{
       ngrok_status: string
       ngrok_url: string | null
+      ngrok_error: string | null
     }>,
     refetchInterval: 10_000
   })

@@ -84,6 +84,11 @@ export function registryRoutes(_ctx: ApiContext): Router {
       const skill = index.skills.find((s) => s.name === req.params.name)
       if (!skill) return res.status(404).json({ error: 'Skill not found in registry' })
 
+      // Validate skill name to prevent path traversal
+      if (skill.name.includes('/') || skill.name.includes('\\') || skill.name.includes('..')) {
+        return res.status(400).json({ error: 'Invalid skill name' })
+      }
+
       const skillDir = join(SKILLS_DIR, skill.name)
       mkdirSync(skillDir, { recursive: true })
 

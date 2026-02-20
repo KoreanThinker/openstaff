@@ -40,7 +40,7 @@ export async function startApiServer(
     cors: { origin: '*' }
   })
 
-  app.use(express.json())
+  app.use(express.json({ limit: '1mb' }))
 
   const ctx: ApiContext = { staffManager, configStore, monitoringEngine, io, ngrokManager }
 

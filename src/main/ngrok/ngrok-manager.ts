@@ -4,6 +4,7 @@ export class NgrokManager {
   private configStore: ConfigStore
   private tunnelUrl: string | null = null
   private tunnelActive = false
+  private lastError: string | null = null
 
   constructor(configStore: ConfigStore) {
     this.configStore = configStore
@@ -26,12 +27,14 @@ export class NgrokManager {
 
       this.tunnelUrl = listener.url() || null
       this.tunnelActive = this.tunnelUrl !== null
+      this.lastError = null
 
       console.log(`Ngrok tunnel active: ${this.tunnelUrl}`)
       return this.tunnelUrl
     } catch (err) {
       console.error('Failed to start ngrok tunnel:', err)
       this.tunnelActive = false
+      this.lastError = err instanceof Error ? err.message : String(err)
       return null
     }
   }
@@ -53,5 +56,9 @@ export class NgrokManager {
 
   isActive(): boolean {
     return this.tunnelActive
+  }
+
+  getError(): string | null {
+    return this.lastError
   }
 }

@@ -16,6 +16,9 @@ export class MonitoringEngine {
   }
 
   start(): void {
+    // Guard against double-start adding duplicate listeners
+    if (this.interval) return
+
     this.interval = setInterval(() => {
       this.collectMetrics()
     }, 60_000)
@@ -52,7 +55,7 @@ export class MonitoringEngine {
 
     return {
       cpu_percent: Math.round(cpuPercent * 10) / 10,
-      memory_percent: Math.round((usedMem / totalMem) * 1000) / 10,
+      memory_percent: Math.min(100, Math.round((usedMem / totalMem) * 1000) / 10),
       memory_used_mb: Math.round(usedMem / (1024 * 1024)),
       memory_total_mb: Math.round(totalMem / (1024 * 1024))
     }
