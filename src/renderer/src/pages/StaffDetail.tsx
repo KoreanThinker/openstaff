@@ -818,9 +818,11 @@ function MemoryTab({ staffId }: { staffId: string }): React.ReactElement {
   if (!memory?.content) {
     return (
       <Card className="border border-border">
-        <CardContent className="flex items-center justify-center py-16">
-          <p className="text-sm text-muted-foreground">
-            No learnings recorded yet. The agent will start writing here after its first Evaluate cycle.
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <Search className="h-10 w-10 mb-3 text-muted-foreground/40" />
+          <p className="text-sm font-medium text-foreground mb-1">No learnings yet</p>
+          <p className="text-sm text-muted-foreground text-center max-w-xs">
+            The agent will write learnings to memory.md after its first Evaluate cycle.
           </p>
         </CardContent>
       </Card>
