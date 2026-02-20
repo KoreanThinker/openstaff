@@ -218,6 +218,11 @@ export class StaffManager extends EventEmitter {
     await entry.process.kill()
     this.running.delete(staffId)
     this.failureHistory.delete(staffId)
+
+    // Clear last_started_at so recoverRunningStaffs won't restart this staff on reboot
+    const state = readStaffState(staffId)
+    writeStaffState(staffId, { ...state, last_started_at: null })
+
     this.emit('staff:status', staffId, 'stopped')
   }
 

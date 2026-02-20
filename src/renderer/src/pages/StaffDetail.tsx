@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo, type CSSProperties } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import Markdown from 'react-markdown'
 import { parseAnsi, stripAnsi } from '@shared/ansi-parser'
 import {
   ArrowLeft,
@@ -586,17 +587,21 @@ function LogsTab({ staffId }: { staffId: string }): React.ReactElement {
             <X className="h-3 w-3" />
           </Button>
         )}
-        <select
-          value={logFilter}
-          onChange={(e) => setLogFilter(e.target.value as typeof logFilter)}
-          className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground"
-        >
-          <option value="all">All</option>
-          <option value="gather">Gather</option>
-          <option value="execute">Execute</option>
-          <option value="evaluate">Evaluate</option>
-          <option value="errors">Errors</option>
-        </select>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 gap-1 text-xs">
+              <Filter className="h-3 w-3" />
+              {logFilter === 'all' ? 'All' : logFilter.charAt(0).toUpperCase() + logFilter.slice(1)}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {(['all', 'gather', 'execute', 'evaluate', 'errors'] as const).map((f) => (
+              <DropdownMenuItem key={f} onClick={() => setLogFilter(f)} className={cn(logFilter === f && 'bg-muted')}>
+                {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button variant="ghost" size="sm" onClick={() => setLines([])}>
           Clear
         </Button>
@@ -611,9 +616,22 @@ function LogsTab({ staffId }: { staffId: string }): React.ReactElement {
         <div className="space-y-0.5">
           {filteredLines.map((line, i) => (
             <div key={i} className="font-mono text-xs leading-5 text-foreground whitespace-pre-wrap">
-              {parseAnsi(line).map((seg, j) => (
-                <span key={j} style={seg.style as CSSProperties}>{seg.text}</span>
-              ))}
+              {parseAnsi(line).map((seg, j) => {
+                if (!searchQuery) {
+                  return <span key={j} style={seg.style as CSSProperties}>{seg.text}</span>
+                }
+                // Highlight search matches
+                const parts = seg.text.split(new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'))
+                return (
+                  <span key={j} style={seg.style as CSSProperties}>
+                    {parts.map((part, k) =>
+                      part.toLowerCase() === searchQuery.toLowerCase()
+                        ? <mark key={k} className="bg-warning/40 text-foreground rounded-sm px-0.5">{part}</mark>
+                        : part
+                    )}
+                  </span>
+                )
+              })}
             </div>
           ))}
         </div>
@@ -838,30 +856,7 @@ function MemoryTab({ staffId }: { staffId: string }): React.ReactElement {
       <CardContent>
         <ScrollArea className="h-[500px]">
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            {/* Simple markdown rendering - renders line-by-line without react-markdown */}
-            {memory.content.split('\n').map((line, i) => {
-              if (line.startsWith('### ')) {
-                return <h3 key={i} className="text-base font-semibold text-foreground mt-4 mb-2">{line.slice(4)}</h3>
-              }
-              if (line.startsWith('## ')) {
-                return <h2 key={i} className="text-lg font-semibold text-foreground mt-6 mb-3">{line.slice(3)}</h2>
-              }
-              if (line.startsWith('# ')) {
-                return <h1 key={i} className="text-xl font-bold text-foreground mt-6 mb-3">{line.slice(2)}</h1>
-              }
-              if (line.startsWith('- ')) {
-                return (
-                  <div key={i} className="flex gap-2 text-sm text-foreground ml-2">
-                    <span className="text-muted-foreground">-</span>
-                    <span>{line.slice(2)}</span>
-                  </div>
-                )
-              }
-              if (line.trim() === '') {
-                return <div key={i} className="h-2" />
-              }
-              return <p key={i} className="text-sm text-foreground">{line}</p>
-            })}
+            <Markdown>{memory.content}</Markdown>
           </div>
         </ScrollArea>
       </CardContent>
