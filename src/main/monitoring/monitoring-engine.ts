@@ -1,5 +1,5 @@
 import { join } from 'path'
-import { totalmem, freemem, cpus as osCpus } from 'os'
+import { platform, totalmem, freemem, cpus as osCpus } from 'os'
 import type { StaffManager } from '../staff-manager/staff-manager'
 import type { ConfigStore } from '../store/config-store'
 import type { SystemResources, UsageEntry } from '@shared/types'
@@ -7,6 +7,7 @@ import { PRICING } from '@shared/constants'
 import { parseTokensFromOutput, calculateCostFromTokens } from './token-parser'
 import { getStaffDir, listStaffIds } from '../data/staff-data'
 import { appendJsonl, readJsonl } from '../data/jsonl-reader'
+import { calculateMemoryMetrics, readLinuxMemAvailableBytes } from './memory-metrics'
 
 export class MonitoringEngine {
   private interval: ReturnType<typeof setInterval> | null = null
@@ -51,7 +52,8 @@ export class MonitoringEngine {
   async getSystemResources(): Promise<SystemResources> {
     const totalMem = totalmem()
     const freeMem = freemem()
-    const usedMem = totalMem - freeMem
+    const linuxMemAvailable = platform() === 'linux' ? readLinuxMemAvailableBytes() : null
+    const memoryMetrics = calculateMemoryMetrics(totalMem, freeMem, linuxMemAvailable)
     const cpus: { times: { user: number; nice: number; sys: number; idle: number } }[] = osCpus()
 
     // Calculate CPU percent using delta from previous sample
@@ -74,9 +76,9 @@ export class MonitoringEngine {
 
     return {
       cpu_percent: Math.round(cpuPercent * 10) / 10,
-      memory_percent: Math.min(100, Math.round((usedMem / totalMem) * 1000) / 10),
-      memory_used_mb: Math.round(usedMem / (1024 * 1024)),
-      memory_total_mb: Math.round(totalMem / (1024 * 1024))
+      memory_percent: memoryMetrics.memory_percent,
+      memory_used_mb: memoryMetrics.memory_used_mb,
+      memory_total_mb: memoryMetrics.memory_total_mb
     }
   }
 

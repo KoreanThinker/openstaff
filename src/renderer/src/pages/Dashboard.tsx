@@ -66,6 +66,8 @@ import { useHeaderActionStore } from '@/stores/header-action-store'
 import type { StaffSummary, DashboardStats, SystemResources, StaffStatus, StaffArtifact } from '@shared/types'
 import { clampPercent, formatResourcePercent, getResourceHealth } from '@shared/resource-health'
 
+const RESOURCE_HISTORY_LIMIT = 30
+
 function StatusDot({ status }: { status: StaffStatus }): React.ReactElement {
   return (
     <div
@@ -128,14 +130,59 @@ function SummaryCard({
   )
 }
 
+function ResourceSparkline({
+  history,
+  health
+}: {
+  history: number[]
+  health: ReturnType<typeof getResourceHealth>
+}): React.ReactElement {
+  if (history.length < 2) {
+    return <p className="text-[11px] text-muted-foreground">Collecting trend baseline...</p>
+  }
+
+  const width = 112
+  const height = 22
+  const points = history.map((value) => clampPercent(value))
+  const linePath = points
+    .map((value, index) => {
+      const x = (index / (points.length - 1)) * width
+      const y = height - (value / 100) * height
+      return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`
+    })
+    .join(' ')
+  const areaPath = `${linePath} L ${width} ${height} L 0 ${height} Z`
+
+  const first = points[0]
+  const last = points[points.length - 1]
+  const delta = last - first
+  const trendLabel =
+    Math.abs(delta) < 3 ? 'stable' : delta > 0 ? `rising +${Math.round(delta)}%` : `falling ${Math.round(delta)}%`
+
+  const colorClass =
+    health === 'critical' ? 'text-destructive' : health === 'warning' ? 'text-warning' : 'text-success'
+
+  return (
+    <div className="flex items-center justify-between gap-2 pt-0.5">
+      <svg viewBox={`0 0 ${width} ${height}`} className={cn('h-5 w-28', colorClass)} aria-hidden="true">
+        <path d={areaPath} fill="currentColor" className="opacity-20" />
+        <path d={linePath} fill="none" stroke="currentColor" strokeWidth="1.75" />
+      </svg>
+      <span className={cn('text-[11px] font-medium', colorClass)}>{trendLabel}</span>
+    </div>
+  )
+}
+
 function ResourceBar({
   label,
   percent,
-  kind
+  kind,
+  history
 }: {
   label: string
   percent: number
   kind: 'cpu' | 'memory'
+  history: number[]
 }): React.ReactElement {
   const safePercent = clampPercent(percent)
   const health = getResourceHealth(safePercent)
@@ -170,6 +217,7 @@ function ResourceBar({
           {hint}
         </p>
       )}
+      <ResourceSparkline history={history} health={health} />
     </div>
   )
 }
@@ -320,6 +368,7 @@ function DashboardSkeleton(): React.ReactElement {
 
 type SortField = 'name' | 'status' | 'cycles' | 'cost'
 type SortDir = 'asc' | 'desc'
+type ResourceSample = { cpu: number; memory: number }
 
 export function Dashboard(): React.ReactElement {
   const navigate = useNavigate()
@@ -331,6 +380,7 @@ export function Dashboard(): React.ReactElement {
   const [isDeleting, setIsDeleting] = useState(false)
   const [artifactTarget, setArtifactTarget] = useState<{ id: string; name: string } | null>(null)
   const [selectedArtifactPath, setSelectedArtifactPath] = useState<string | null>(null)
+  const [resourceHistory, setResourceHistory] = useState<ResourceSample[]>([])
   const setActionButton = useHeaderActionStore((s) => s.setActionButton)
 
   // Set header action button
@@ -392,6 +442,26 @@ export function Dashboard(): React.ReactElement {
   const stats = statsQuery.data
   const staffs = staffsQuery.data ?? []
   const resources = resourcesQuery.data
+  const cpuPercent = resources?.cpu_percent
+  const memoryPercent = resources?.memory_percent
+  const cpuHistory = useMemo(() => resourceHistory.map((sample) => sample.cpu), [resourceHistory])
+  const memoryHistory = useMemo(() => resourceHistory.map((sample) => sample.memory), [resourceHistory])
+
+  useEffect(() => {
+    if (cpuPercent === undefined || memoryPercent === undefined) return
+    const nextSample: ResourceSample = {
+      cpu: clampPercent(cpuPercent),
+      memory: clampPercent(memoryPercent)
+    }
+
+    setResourceHistory((prev) => {
+      const last = prev[prev.length - 1]
+      if (last && last.cpu === nextSample.cpu && last.memory === nextSample.memory) {
+        return prev
+      }
+      return [...prev, nextSample].slice(-RESOURCE_HISTORY_LIMIT)
+    })
+  }, [cpuPercent, memoryPercent])
 
   useEffect(() => {
     const artifacts = artifactsQuery.data ?? []
@@ -576,11 +646,12 @@ export function Dashboard(): React.ReactElement {
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <ResourceBar label="CPU" percent={resources.cpu_percent} kind="cpu" />
+            <ResourceBar label="CPU" percent={resources.cpu_percent} kind="cpu" history={cpuHistory} />
             <ResourceBar
               label={`Memory (${(resources.memory_used_mb / 1024).toFixed(1)} / ${(resources.memory_total_mb / 1024).toFixed(1)} GB)`}
               percent={resources.memory_percent}
               kind="memory"
+              history={memoryHistory}
             />
           </CardContent>
         </Card>
