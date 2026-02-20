@@ -363,8 +363,14 @@ function ClaudeCodeCard({
     onSuccess: (connected) => {
       setConnectionStatus(connected ? 'connected' : 'disconnected')
       queryClient.invalidateQueries({ queryKey: ['agents'] })
+      if (!connected) {
+        toast({ title: 'Connection failed', description: 'API key is invalid or missing.', variant: 'destructive' })
+      }
     },
-    onError: () => setConnectionStatus('disconnected')
+    onError: () => {
+      setConnectionStatus('disconnected')
+      toast({ title: 'Connection test failed', description: 'Could not reach the API.', variant: 'destructive' })
+    }
   })
 
   // Budget data from settings API
@@ -773,7 +779,6 @@ export function Agents(): React.ReactElement {
   })
 
   const claudeCode = agents?.find((a) => a.id === 'claude-code')
-  const _codex = agents?.find((a) => a.id === 'codex')
 
   const isFirstSetup =
     claudeCode &&

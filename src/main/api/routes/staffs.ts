@@ -9,6 +9,7 @@ import { readFileSync, existsSync } from 'fs'
 
 function sanitizeString(str: string, maxLength = 500): string {
   // Strip control characters, limit length
+  // eslint-disable-next-line no-control-regex
   return str.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '').slice(0, maxLength)
 }
 

@@ -303,10 +303,13 @@ export function Dashboard(): React.ReactElement {
         case 'view':
           navigate(`/staffs/${staffId}`)
           return
-        case 'delete':
+        case 'delete': {
+          const name = staffs.find((s) => s.id === staffId)?.name ?? 'this staff'
+          if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return
           await api.deleteStaff(staffId)
           toast({ title: 'Staff deleted' })
           break
+        }
       }
       await staffsQuery.refetch()
       await statsQuery.refetch()

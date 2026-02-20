@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { useSettingsStore } from '@/stores/settings-store'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import { toast } from '@/hooks/use-toast'
 
 const STEPS = ['Welcome', 'Remote Access', 'Complete'] as const
 
@@ -112,7 +113,11 @@ export function SetupWizard(): React.ReactElement {
       if (dashPassword) settings.ngrok_auth_password = dashPassword
       await api.updateSettings(settings)
     } catch {
-      // API may not be ready yet; proceed with local-only setup
+      toast({
+        title: 'Settings could not be saved',
+        description: 'Remote access settings will need to be configured in Settings.',
+        variant: 'destructive'
+      })
     }
     // Always mark complete - the wizard is a one-time flow
     setSetupCompleted(true)

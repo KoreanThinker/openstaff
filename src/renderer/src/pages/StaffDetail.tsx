@@ -43,6 +43,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { toast } from '@/hooks/use-toast'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1025,17 +1026,20 @@ export function StaffDetail(): React.ReactElement {
 
   const startMutation = useMutation({
     mutationFn: () => api.startStaff(staffId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff', staffId] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff', staffId] }),
+    onError: (err) => toast({ title: 'Failed to start', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' })
   })
 
   const stopMutation = useMutation({
     mutationFn: () => api.stopStaff(staffId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff', staffId] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff', staffId] }),
+    onError: (err) => toast({ title: 'Failed to stop', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' })
   })
 
   const restartMutation = useMutation({
     mutationFn: () => api.restartStaff(staffId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff', staffId] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff', staffId] }),
+    onError: (err) => toast({ title: 'Failed to restart', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' })
   })
 
   const deleteMutation = useMutation({
@@ -1043,7 +1047,8 @@ export function StaffDetail(): React.ReactElement {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staffs'] })
       navigate('/')
-    }
+    },
+    onError: (err) => toast({ title: 'Failed to delete', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' })
   })
 
   const handleTabChange = useCallback((tab: string) => {
@@ -1093,7 +1098,6 @@ export function StaffDetail(): React.ReactElement {
     )
   }
 
-  const _isRunning = staff.status === 'running'
   const isStopped = staff.status === 'stopped'
   const isActionLoading = startMutation.isPending || stopMutation.isPending || restartMutation.isPending
 
