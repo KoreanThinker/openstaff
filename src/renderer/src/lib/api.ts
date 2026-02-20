@@ -9,10 +9,14 @@ const getBaseUrl = (): string => {
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const base = getBaseUrl()
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 30_000)
   const res = await fetch(`${base}${path}`, {
     headers: { 'Content-Type': 'application/json', ...options?.headers },
+    signal: controller.signal,
     ...options
   })
+  clearTimeout(timeout)
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: res.statusText }))
     throw new Error((body as { error: string }).error || res.statusText)

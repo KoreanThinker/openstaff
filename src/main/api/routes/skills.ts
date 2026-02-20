@@ -42,6 +42,9 @@ export function skillRoutes(ctx: ApiContext): Router {
   router.post('/import', (req, res) => {
     try {
       const { path } = req.body as { path: string }
+      if (!path || typeof path !== 'string' || path.includes('..')) {
+        return res.status(400).json({ error: 'Invalid path' })
+      }
       const name = importSkill(path)
       res.status(201).json({ name })
     } catch (err) {

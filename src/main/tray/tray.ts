@@ -77,7 +77,7 @@ export function createTray(
   // Update tray menu on staff status changes
   staffManager.on('staff:status', () => updateMenu())
 
-  // Update periodically
+  // Update periodically (lives for app lifetime, cleaned up on process exit)
   setInterval(updateMenu, 30_000)
 
   tray.on('click', () => {

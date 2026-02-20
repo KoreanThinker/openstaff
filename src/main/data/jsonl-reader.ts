@@ -7,7 +7,14 @@ export function readJsonl<T>(filePath: string): T[] {
   return content
     .split('\n')
     .filter((line) => line.trim())
-    .map((line) => JSON.parse(line) as T)
+    .map((line) => {
+      try {
+        return JSON.parse(line) as T
+      } catch {
+        return null
+      }
+    })
+    .filter((entry): entry is T => entry !== null)
 }
 
 export function appendJsonl<T>(filePath: string, entry: T): void {

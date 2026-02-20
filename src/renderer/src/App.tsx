@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AppShell } from '@/components/AppShell'
@@ -23,6 +24,21 @@ const queryClient = new QueryClient({
 
 export function App(): React.ReactElement {
   const setupCompleted = useSettingsStore((s) => s.setupCompleted)
+  const theme = useSettingsStore((s) => s.theme)
+  const setTheme = useSettingsStore((s) => s.setTheme)
+
+  // Apply theme on mount and when it changes
+  useEffect(() => {
+    setTheme(theme)
+
+    // Listen for OS theme changes when using 'system' mode
+    if (theme === 'system') {
+      const media = window.matchMedia('(prefers-color-scheme: dark)')
+      const handler = (): void => setTheme('system')
+      media.addEventListener('change', handler)
+      return () => media.removeEventListener('change', handler)
+    }
+  }, [theme, setTheme])
 
   if (!setupCompleted) {
     return (

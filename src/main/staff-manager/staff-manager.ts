@@ -36,6 +36,7 @@ interface RunningStaff {
 
 export class StaffManager extends EventEmitter {
   private running: Map<string, RunningStaff> = new Map()
+  private starting: Set<string> = new Set()
   private configStore: ConfigStore
 
   constructor(configStore: ConfigStore) {
@@ -59,7 +60,10 @@ export class StaffManager extends EventEmitter {
 
   async startStaff(staffId: string): Promise<void> {
     if (this.running.has(staffId)) return
+    if (this.starting.has(staffId)) return
+    this.starting.add(staffId)
 
+    try {
     const config = readStaffConfig(staffId)
     if (!config) throw new Error(`Staff ${staffId} not found`)
 
@@ -145,7 +149,7 @@ export class StaffManager extends EventEmitter {
           unlinkSync(logPath)
         }
       }
-    } catch { /* ignore rotation errors */ }
+    } catch (err) { console.warn('Log rotation failed:', err) }
 
     // Capture output
     entry.logStream = (data: string) => {
@@ -162,13 +166,16 @@ export class StaffManager extends EventEmitter {
 
     // Idle detection
     entry.idleTimer = setInterval(() => {
-      this.checkIdle(staffId)
+      this.checkIdle(staffId).catch((err) => {
+        console.warn(`Idle check failed for ${staffId}:`, err)
+      })
     }, 30_000)
 
     // Watch JSONL files
     this.setupFileWatchers(staffId, entry)
 
     this.running.set(staffId, entry)
+    this.starting.delete(staffId)
 
     // Update state
     writeStaffState(staffId, {
@@ -184,6 +191,10 @@ export class StaffManager extends EventEmitter {
     }
 
     this.emit('staff:status', staffId, 'running')
+    } catch (err) {
+      this.starting.delete(staffId)
+      throw err
+    }
   }
 
   async stopStaff(staffId: string): Promise<void> {

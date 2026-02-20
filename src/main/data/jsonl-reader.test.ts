@@ -42,6 +42,12 @@ describe('jsonl-reader', () => {
       require('fs').writeFileSync(testFile, '  \n  \n  ')
       expect(readJsonl(testFile)).toEqual([])
     })
+
+    it('skips malformed JSON lines gracefully', () => {
+      require('fs').writeFileSync(testFile, '{"a":1}\nthis is not json\n{"b":2}\n')
+      const result = readJsonl<{ a?: number; b?: number }>(testFile)
+      expect(result).toEqual([{ a: 1 }, { b: 2 }])
+    })
   })
 
   describe('appendJsonl', () => {

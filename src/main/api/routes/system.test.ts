@@ -436,11 +436,12 @@ describe('system API routes: stats catch block', () => {
     rmSync(statsErrTempDir, { recursive: true, force: true })
   })
 
-  it('GET /api/system/stats returns 500 when readJsonl throws on corrupt data', async () => {
+  it('GET /api/system/stats gracefully handles corrupt JSONL data', async () => {
     const res = await fetch(`http://localhost:${statsErrPort}/api/system/stats`)
-    expect(res.status).toBe(500)
+    expect(res.status).toBe(200)
     const data = await res.json()
-    expect(data.error).toBeTruthy()
+    // Corrupt lines are skipped, so stats should still return with zero values
+    expect(data.total_staffs).toBe(1)
   })
 })
 
