@@ -558,6 +558,7 @@ export function Dashboard(): React.ReactElement {
                   <TableHead>Role</TableHead>
                   <TableHead>Agent</TableHead>
                   <TableHead>Model</TableHead>
+                  <TableHead>Memory</TableHead>
                   <TableHead>Uptime</TableHead>
                   <TableHead className="text-right">Restarts</TableHead>
                   <TableHead className="text-right">Tokens</TableHead>
@@ -598,6 +599,12 @@ export function Dashboard(): React.ReactElement {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">{staff.model}</TableCell>
+                    <TableCell
+                      className="max-w-[220px] truncate text-xs text-muted-foreground"
+                      title={staff.memory_preview ?? undefined}
+                    >
+                      {staff.memory_preview ?? '--'}
+                    </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatUptime(staff.uptime)}
                     </TableCell>
@@ -655,6 +662,11 @@ export function Dashboard(): React.ReactElement {
                       <div>
                         <div className="font-medium">{staff.name}</div>
                         <div className="text-xs text-muted-foreground">{staff.role}</div>
+                        {staff.memory_preview && (
+                          <div className="max-w-[220px] truncate text-xs text-muted-foreground/90">
+                            {staff.memory_preview}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div onClick={(e) => e.stopPropagation()}>

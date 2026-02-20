@@ -27,6 +27,7 @@ export interface StaffSummary {
   status: StaffStatus
   agent: string
   model: string
+  memory_preview: string | null
   uptime: number | null
   restarts: number
   tokens_today: number

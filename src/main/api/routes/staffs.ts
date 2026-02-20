@@ -13,6 +13,30 @@ function sanitizeString(str: string, maxLength = 500): string {
   return str.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '').slice(0, maxLength)
 }
 
+function toMemoryPreview(staffId: string): string | null {
+  try {
+    const content = readMemoryMd(staffId)
+    if (!content.trim()) return null
+
+    // Parse only the tail to keep preview extraction cheap for large memory files.
+    const tail = content.slice(-4000)
+    const lines = tail
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+
+    const preview =
+      [...lines].reverse().find((line) => !line.startsWith('#')) ??
+      lines.at(-1) ??
+      ''
+
+    if (!preview) return null
+    return sanitizeString(preview, 140)
+  } catch {
+    return null
+  }
+}
+
 function validateStringField(
   value: unknown,
   fieldName: string,
@@ -108,6 +132,7 @@ export function staffRoutes(ctx: ApiContext): Router {
           status,
           agent: config.agent,
           model: config.model,
+          memory_preview: toMemoryPreview(id),
           uptime,
           restarts,
           tokens_today: tokensToday,

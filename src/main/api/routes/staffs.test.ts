@@ -190,6 +190,45 @@ describe('staffs API routes', () => {
     expect(data.content).toBe('')
   })
 
+  it('GET /api/staffs includes memory preview from latest non-heading line', async () => {
+    const { data: list } = await apiGet('/api/staffs')
+    const id = list[0].id
+    const { getStaffDir } = await import('../../data/staff-data')
+    const { writeFileSync } = await import('fs')
+    const staffDir = getStaffDir(id)
+
+    writeFileSync(
+      join(staffDir, 'memory.md'),
+      '# Memory\n\n- started run\nLatest stable insight from evaluation\n'
+    )
+
+    const { status, data } = await apiGet('/api/staffs')
+    const target = data.find((s: { id: string }) => s.id === id)
+    expect(status).toBe(200)
+    expect(target.memory_preview).toBe('Latest stable insight from evaluation')
+  })
+
+  it('GET /api/staffs falls back to null memory preview when memory file is unreadable', async () => {
+    const { data: list } = await apiGet('/api/staffs')
+    const id = list[0].id
+    const { getStaffDir } = await import('../../data/staff-data')
+    const { mkdirSync, rmSync, writeFileSync } = await import('fs')
+    const staffDir = getStaffDir(id)
+    const memoryPath = join(staffDir, 'memory.md')
+
+    try { rmSync(memoryPath) } catch {}
+    mkdirSync(memoryPath, { recursive: true })
+
+    const { status, data } = await apiGet('/api/staffs')
+    const target = data.find((s: { id: string }) => s.id === id)
+    expect(status).toBe(200)
+    expect(target.memory_preview).toBeNull()
+
+    // Restore memory file for subsequent tests.
+    rmSync(memoryPath, { recursive: true, force: true })
+    writeFileSync(memoryPath, '')
+  })
+
   it('GET /api/staffs/:id returns 404 for non-existent', async () => {
     const { status } = await apiGet('/api/staffs/nonexistent')
     expect(status).toBe(404)
