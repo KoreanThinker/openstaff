@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Agents screen is the **central hub for AI agent lifecycle management**. OpenStaff installs and runs without any agents pre-installed. This screen is where users install agent runtimes (Claude Code, Codex), configure API keys, verify connections, view available models, monitor usage/costs, and set budgets — all without touching a terminal.
+The Agents screen is the **central hub for AI agent lifecycle management**. OpenStaff installs and runs without any agents pre-installed. This screen is where users install agent runtimes (Claude Code, Codex, Gemini CLI), configure API keys, verify connections, view available models, monitor usage/costs, and set budgets — all without touching a terminal.
 
 This screen is accessible from the sidebar navigation. It is distinct from individual Staff configuration; changes here affect all Staff that use a given agent.
 
@@ -207,6 +207,7 @@ A section within the agent card for API key management.
 - **Section Title**: "Connection" -- `text-foreground text-sm font-semibold uppercase tracking-wide`.
 - **API Key Input**: `<Input>` from shadcn/ui. `type="password"` by default.
   - Placeholder: `"Enter your Anthropic API key"` (Claude Code) or `"Enter your OpenAI API key"` (Codex).
+  - Claude supports multiple accounts: enter keys separated by commas or new lines.
   - The key is masked with dots/asterisks. Only last 4 characters shown when saved.
 - **Eye Toggle Button**: `<Button variant="ghost" size="icon">`. Toggles password visibility.
 - **Test Connection Button**: `<Button variant="outline">` with text "Test". Triggers an API validation call.
@@ -222,6 +223,7 @@ A section within the agent card for API key management.
 
 - On key input change, the status resets to "Not tested" until the user clicks Test.
 - Keys are stored encrypted via Electron's `safeStorage` in `config.json`.
+- Gemini CLI uses local Gemini auth (`gemini login`) and connection checks without API key storage.
 - The Test button sends the key to the Express API, which makes a lightweight model list call to validate.
 
 ---

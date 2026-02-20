@@ -9,6 +9,13 @@ function getApiKeyStoreKey(agentId: string): 'anthropic_api_key' | 'openai_api_k
   return null
 }
 
+function parseApiKeyList(raw: string): string[] {
+  return raw
+    .split(/[\n,]/)
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0)
+}
+
 function buildPlaceholderCodex(): AgentInfo {
   return {
     id: 'codex',
@@ -35,7 +42,7 @@ export function agentRoutes(ctx: ApiContext): Router {
           const version = installed ? await driver.getVersion() : null
           const apiKeyStoreKey = getApiKeyStoreKey(driver.id)
           const apiKey = apiKeyStoreKey ? ctx.configStore.get(apiKeyStoreKey) : ''
-          const apiKeyConfigured = apiKeyStoreKey ? !!apiKey && apiKey !== '' : true
+          const apiKeyConfigured = apiKeyStoreKey ? parseApiKeyList(apiKey).length > 0 : true
 
           let status: AgentInfo['status'] = 'not_installed'
           if (installed && apiKeyConfigured) status = 'connected'
@@ -80,7 +87,7 @@ export function agentRoutes(ctx: ApiContext): Router {
       const version = installed ? await driver.getVersion() : null
       const apiKeyStoreKey = getApiKeyStoreKey(driver.id)
       const apiKey = apiKeyStoreKey ? ctx.configStore.get(apiKeyStoreKey) : ''
-      const apiKeyConfigured = apiKeyStoreKey ? !!apiKey && apiKey !== '' : true
+      const apiKeyConfigured = apiKeyStoreKey ? parseApiKeyList(apiKey).length > 0 : true
 
       res.json({
         id: driver.id,
@@ -149,11 +156,12 @@ export function agentRoutes(ctx: ApiContext): Router {
 
       const apiKeyStoreKey = getApiKeyStoreKey(req.params.id!)
       const apiKey = apiKeyStoreKey ? ctx.configStore.get(apiKeyStoreKey) : ''
-      if (apiKeyStoreKey && !apiKey) {
+      const apiKeys = parseApiKeyList(apiKey)
+      if (apiKeyStoreKey && apiKeys.length === 0) {
         return res.json({ connected: false, error: 'No API key configured' })
       }
 
-      const connected = await driver.testConnection(apiKey)
+      const connected = await driver.testConnection(apiKeys[0] ?? '')
       res.json({ connected })
     } catch (err) {
       res.status(500).json({ error: String(err) })

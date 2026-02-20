@@ -36,6 +36,26 @@ interface RunningStaff {
   watchers: ReturnType<typeof watch>[]
 }
 
+function parseApiKeyList(raw: string): string[] {
+  return raw
+    .split(/[\n,]/)
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0)
+}
+
+function selectStableKey(raw: string, staffId: string): string | null {
+  const keys = parseApiKeyList(raw)
+  if (keys.length === 0) return null
+  if (keys.length === 1) return keys[0]!
+
+  let hash = 0
+  for (let i = 0; i < staffId.length; i += 1) {
+    hash = ((hash << 5) - hash + staffId.charCodeAt(i)) | 0
+  }
+  const index = Math.abs(hash) % keys.length
+  return keys[index]!
+}
+
 export class StaffManager extends EventEmitter {
   private running: Map<string, RunningStaff> = new Map()
   private starting: Set<string> = new Set()
@@ -112,8 +132,9 @@ export class StaffManager extends EventEmitter {
     // Build env vars
     const env: Record<string, string> = {}
     if (config.agent === 'claude-code') {
-      const anthropicApiKey = this.configStore.get('anthropic_api_key')
-      if (anthropicApiKey) env['ANTHROPIC_API_KEY'] = anthropicApiKey
+      const anthropicApiKeys = this.configStore.get('anthropic_api_key')
+      const selected = selectStableKey(anthropicApiKeys, staffId)
+      if (selected) env['ANTHROPIC_API_KEY'] = selected
     }
     if (config.agent === 'codex') {
       const openaiApiKey = this.configStore.get('openai_api_key')

@@ -193,6 +193,21 @@ describe('agents API routes', () => {
     })
   })
 
+  it('POST /api/agents/:id/test-connection supports multi-key values', async () => {
+    await fetch(`http://localhost:${port}/api/agents/claude-code/api-key`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: 'valid-key\nbackup-key' })
+    })
+
+    const res = await fetch(`http://localhost:${port}/api/agents/claude-code/test-connection`, {
+      method: 'POST'
+    })
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.connected).toBe(true)
+  })
+
   it('POST /api/agents/:id/install triggers installation', async () => {
     const res = await fetch(`http://localhost:${port}/api/agents/claude-code/install`, {
       method: 'POST'

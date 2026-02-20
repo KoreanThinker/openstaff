@@ -503,6 +503,9 @@ function ClaudeCodeCard({
                     Saved key detected. Leave this blank to test the existing key.
                   </p>
                 )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Multiple Claude accounts are supported. Enter keys separated by commas or new lines.
+                </p>
               </div>
               <ConnectionStatusDot status={connectionStatus} />
             </div>
