@@ -200,7 +200,7 @@ No explicit "Save" button. All settings auto-save on change.
 ### Empty/First Use
 - Ngrok fields empty. Status shows "Disconnected".
 - Defaults pre-populated: Claude Code + Claude Sonnet 4.5.
-- Start on Login: off. Show Window on Startup: on. Theme: System.
+- Start on Login: on. Show Window on Startup: on. Theme: System.
 
 ## Responsive
 
@@ -210,7 +210,7 @@ The settings page is rendered inside the Electron window and the Ngrok web UI. B
 |----------|--------|
 | Desktop (>1024px) | Defaults and App Behavior cards side by side (2-column grid). Remote Access and About cards full width. |
 | Tablet/Small window (768-1024px) | All cards stack vertically, full width. Sidebar collapses to icon-only. |
-| Mobile/Ngrok web (<768px) | All cards stack vertically, full width. Sidebar becomes bottom tab bar or hamburger menu. Inputs get larger touch targets. |
+| Mobile/Ngrok web (<768px) | All cards stack vertically, full width. Sidebar remains collapsed; no dedicated bottom tab bar/hamburger in current implementation. |
 
 Grid structure:
 ```

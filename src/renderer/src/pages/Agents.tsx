@@ -354,6 +354,10 @@ function ClaudeCodeCard({
   >(agent.connected ? 'connected' : agent.api_key_configured ? 'disconnected' : 'not_tested')
   const [autoUpdate, setAutoUpdate] = useState(false)
   const [updateChecking, setUpdateChecking] = useState(false)
+  const apiKeyPlaceholder =
+    agent.api_key_configured && !apiKey.trim()
+      ? 'API key is already saved. Enter a new key to replace.'
+      : 'Enter your Anthropic API key'
 
   const testMutation = useMutation({
     mutationFn: async () => {
@@ -462,7 +466,7 @@ function ClaudeCodeCard({
                   <div className="relative flex-1">
                     <Input
                       type={showKey ? 'text' : 'password'}
-                      placeholder="Enter your Anthropic API key"
+                      placeholder={apiKeyPlaceholder}
                       value={apiKey}
                       onChange={(e) => {
                         setApiKey(e.target.value)
@@ -494,6 +498,11 @@ function ClaudeCodeCard({
                     Test
                   </Button>
                 </div>
+                {agent.api_key_configured && !apiKey.trim() && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Saved key detected. Leave this blank to test the existing key.
+                  </p>
+                )}
               </div>
               <ConnectionStatusDot status={connectionStatus} />
             </div>

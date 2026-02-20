@@ -328,6 +328,12 @@ export function Settings(): React.ReactElement {
                   Set an auth password to enable remote access.
                 </p>
               )}
+              {ngrokKey && ngrokPassword && (
+                <p className="mt-1 text-xs text-warning">
+                  Remote access exposes your local dashboard to the internet. Use a strong password
+                  and rotate both Ngrok/API credentials regularly.
+                </p>
+              )}
             </div>
 
             {/* Status */}

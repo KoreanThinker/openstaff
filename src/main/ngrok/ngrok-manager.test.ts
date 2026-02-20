@@ -33,12 +33,23 @@ describe('NgrokManager', () => {
     expect(manager.isActive()).toBe(false)
   })
 
+  it('returns null and sets error when auth password is missing', async () => {
+    const manager = new NgrokManager(makeStore({ ngrok_api_key: 'test-key' }))
+    const result = await manager.start(3000)
+    expect(result).toBeNull()
+    expect(manager.isActive()).toBe(false)
+    expect(manager.getError()).toContain('auth password is required')
+  })
+
   it('starts tunnel with API key', async () => {
     const ngrok = await import('@ngrok/ngrok')
     const mockForward = vi.mocked(ngrok.forward)
     mockForward.mockResolvedValue({ url: () => 'https://abc123.ngrok.app' } as never)
 
-    const store = makeStore({ ngrok_api_key: 'test-key' })
+    const store = makeStore({
+      ngrok_api_key: 'test-key',
+      ngrok_auth_password: 'secret123'
+    })
     const manager = new NgrokManager(store)
     const result = await manager.start(3000)
 
@@ -48,7 +59,8 @@ describe('NgrokManager', () => {
     expect(mockForward).toHaveBeenCalledWith({
       addr: 3000,
       authtoken: 'test-key',
-      proto: 'http'
+      proto: 'http',
+      basic_auth: 'openstaff:secret123'
     })
   })
 
@@ -77,7 +89,10 @@ describe('NgrokManager', () => {
     const mockForward = vi.mocked(ngrok.forward)
     mockForward.mockRejectedValue(new Error('connection failed'))
 
-    const store = makeStore({ ngrok_api_key: 'test-key' })
+    const store = makeStore({
+      ngrok_api_key: 'test-key',
+      ngrok_auth_password: 'secret123'
+    })
     const manager = new NgrokManager(store)
     const result = await manager.start(3000)
 
@@ -91,7 +106,10 @@ describe('NgrokManager', () => {
     const mockClose = vi.fn().mockResolvedValue(undefined)
     mockForward.mockResolvedValue({ url: () => 'https://test.ngrok.app', close: mockClose } as never)
 
-    const store = makeStore({ ngrok_api_key: 'test-key' })
+    const store = makeStore({
+      ngrok_api_key: 'test-key',
+      ngrok_auth_password: 'secret123'
+    })
     const manager = new NgrokManager(store)
 
     await manager.start(3000)
@@ -122,7 +140,10 @@ describe('NgrokManager', () => {
       close: mockClose
     } as never)
 
-    const store = makeStore({ ngrok_api_key: 'test-key' })
+    const store = makeStore({
+      ngrok_api_key: 'test-key',
+      ngrok_auth_password: 'secret123'
+    })
     const manager = new NgrokManager(store)
     await manager.start(3000)
     expect(manager.isActive()).toBe(true)
@@ -138,7 +159,10 @@ describe('NgrokManager', () => {
     const ngrok = await import('@ngrok/ngrok')
     vi.mocked(ngrok.forward).mockResolvedValue({ url: () => null } as never)
 
-    const store = makeStore({ ngrok_api_key: 'test-key' })
+    const store = makeStore({
+      ngrok_api_key: 'test-key',
+      ngrok_auth_password: 'secret123'
+    })
     const manager = new NgrokManager(store)
     const result = await manager.start(3000)
 
@@ -150,7 +174,10 @@ describe('NgrokManager', () => {
     const ngrok = await import('@ngrok/ngrok')
     vi.mocked(ngrok.forward).mockResolvedValue({ url: () => 'https://a.ngrok.app' } as never)
 
-    const store = makeStore({ ngrok_api_key: 'test-key' })
+    const store = makeStore({
+      ngrok_api_key: 'test-key',
+      ngrok_auth_password: 'secret123'
+    })
     const manager1 = new NgrokManager(store)
     const manager2 = new NgrokManager(store)
 

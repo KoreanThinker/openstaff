@@ -192,7 +192,7 @@ Displays Skills from `registry/skills/*/SKILL.md`. Each skill directory contains
 - Desktop: 3-column grid (`grid-cols-3 gap-6`).
 - Tablet: 2-column grid (`grid-cols-2 gap-4`).
 - Compact: 1-column grid (`grid-cols-1 gap-4`).
-- Cards use `<Card>` from shadcn/ui with default `--radius` (1.5rem).
+- Cards use `<Card>` from shadcn/ui with default `--radius` (0.5rem).
 - No shadow on cards. Subtle `border border-border`.
 
 ### Card Hover State

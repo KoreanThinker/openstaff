@@ -13,6 +13,10 @@ export function setupIpcHandlers(
     return getApiPort()
   })
 
+  ipcMain.handle('get-platform', () => {
+    return process.platform
+  })
+
   ipcMain.handle('show-open-dialog', async (_event, options) => {
     return dialog.showOpenDialog(options)
   })

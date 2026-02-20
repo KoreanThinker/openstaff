@@ -55,6 +55,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Generate checksums
+        run: |
+          cd dist
+          shopt -s nullglob
+          files=( *.dmg *.deb )
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No release artifacts found"
+            exit 1
+          fi
+          shasum -a 256 "${files[@]}" > SHA256SUMS.txt
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -62,6 +73,7 @@ jobs:
           path: |
             dist/*.dmg
             dist/*.deb
+            dist/SHA256SUMS.txt
 
   release:
     needs: build
@@ -75,4 +87,5 @@ jobs:
           files: |
             **/*.dmg
             **/*.deb
+            **/SHA256SUMS.txt
           generate_release_notes: true

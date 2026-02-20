@@ -55,7 +55,7 @@ The main content area uses a responsive card grid. Each skill is a Bento-style c
 
 ### Card Design
 
-Each skill card follows the Bento Grid style: `<Card>` with default `--radius` (1.5rem), subtle `border-border`, no shadow.
+Each skill card follows the Bento Grid style: `<Card>` with default `--radius` (0.5rem), subtle `border-border`, no shadow.
 
 ```
 +-----------------------------------------------+

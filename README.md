@@ -23,7 +23,7 @@
 
 OpenStaff turns AI coding agents into autonomous employees. Each **Staff** runs an infinite feedback loop -- Gather, Execute, Evaluate -- cycling continuously until you stop it. Define a role in plain English, attach skills, and let your Staff work around the clock.
 
-No coding required. Built for non-developers.
+No coding required for daily operation. Built for non-developers, with one-time agent/API-key setup.
 
 ## Features
 
@@ -178,6 +178,10 @@ pnpm type-check
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Security
+
+Please report vulnerabilities through the private process in [SECURITY.md](SECURITY.md).
 
 ## License
 

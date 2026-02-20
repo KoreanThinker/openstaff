@@ -3,6 +3,7 @@ import { electronAPI } from '@electron-toolkit/preload'
 
 export const api = {
   getApiPort: (): Promise<number> => ipcRenderer.invoke('get-api-port'),
+  getPlatform: (): Promise<NodeJS.Platform> => ipcRenderer.invoke('get-platform'),
   showOpenDialog: (options: Electron.OpenDialogOptions): Promise<Electron.OpenDialogReturnValue> =>
     ipcRenderer.invoke('show-open-dialog', options),
   showSaveDialog: (options: Electron.SaveDialogOptions): Promise<Electron.SaveDialogReturnValue> =>

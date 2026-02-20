@@ -48,7 +48,6 @@ jobs:
 
       - name: E2E Tests (CI subset)
         if: matrix.os == 'ubuntu-latest'
-        continue-on-error: true
         run: |
           sudo apt-get install -y xvfb
           npx electron@33 --version || true
@@ -58,7 +57,6 @@ jobs:
 
       - name: E2E Tests (macOS)
         if: matrix.os == 'macos-latest'
-        continue-on-error: true
         run: |
           npx electron@33 --version || true
           pnpm test:e2e

@@ -13,7 +13,20 @@ export class NgrokManager {
 
   async start(port: number): Promise<string | null> {
     const apiKey = this.configStore.get('ngrok_api_key')
-    if (!apiKey) return null
+    if (!apiKey) {
+      this.tunnelUrl = null
+      this.tunnelActive = false
+      this.lastError = null
+      return null
+    }
+
+    const authPassword = this.configStore.get('ngrok_auth_password').trim()
+    if (!authPassword) {
+      this.tunnelUrl = null
+      this.tunnelActive = false
+      this.lastError = 'Ngrok auth password is required before starting remote access.'
+      return null
+    }
 
     // Stop existing tunnel before starting new one
     if (this.listener) {
@@ -23,12 +36,11 @@ export class NgrokManager {
     try {
       // Dynamic import to avoid bundling ngrok when not used
       const ngrok = await import('@ngrok/ngrok')
-      const authPassword = this.configStore.get('ngrok_auth_password')
       const listener = await ngrok.forward({
         addr: port,
         authtoken: apiKey,
         proto: 'http',
-        ...(authPassword ? { basic_auth: `openstaff:${authPassword}` } : {})
+        basic_auth: `openstaff:${authPassword}`
       })
 
       this.listener = listener

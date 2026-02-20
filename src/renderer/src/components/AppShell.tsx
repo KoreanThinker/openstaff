@@ -79,10 +79,27 @@ export function AppShell(): React.ReactElement {
   const searchRef = React.useRef<HTMLInputElement>(null)
   const [searchOpen, setSearchOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
-  const isMacDesktop = React.useMemo(() => {
-    if (typeof window === 'undefined' || !window.api) return false
-    const platform = navigator.userAgentData?.platform || navigator.platform || navigator.userAgent
-    return /mac/i.test(platform)
+  const [isMacDesktop, setIsMacDesktop] = React.useState(false)
+
+  React.useEffect(() => {
+    let active = true
+    const fallbackDetect = (): void => {
+      const platform = navigator.userAgentData?.platform || navigator.platform || navigator.userAgent
+      if (active) setIsMacDesktop(/mac/i.test(platform))
+    }
+
+    if (typeof window === 'undefined' || !window.api?.getPlatform) {
+      fallbackDetect()
+      return () => { active = false }
+    }
+
+    window.api.getPlatform()
+      .then((platform) => {
+        if (active) setIsMacDesktop(platform === 'darwin')
+      })
+      .catch(() => fallbackDetect())
+
+    return () => { active = false }
   }, [])
 
   // IPC navigate listener (tray Settings click)

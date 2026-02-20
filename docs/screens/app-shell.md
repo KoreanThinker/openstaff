@@ -192,20 +192,13 @@ Quit OpenStaff
 
 ### Tray Click Behavior
 
-- **macOS**: Left-click shows the menu (standard macOS behavior).
-- **Linux**: Left-click toggles window visibility (show/hide). Right-click shows the menu.
+- **macOS/Linux**: Tray click focuses and shows the main window.
 
 ### IPC Events
 
-| Event (main -> renderer)    | Payload              | Purpose                               |
-|-----------------------------|----------------------|---------------------------------------|
-| `tray:open-dashboard`       | none                 | Open/focus main window                |
-| `tray:open-settings`        | none                 | Navigate to settings page             |
-| `tray:open-staff`           | `{ staffId: string }`| Navigate to specific staff detail     |
-
-| Event (renderer -> main)    | Payload              | Purpose                               |
-|-----------------------------|----------------------|---------------------------------------|
-| `tray:update-staff-list`    | `StaffSummary[]`     | Update tray menu with latest statuses |
+| Event (main -> renderer) | Payload | Purpose |
+|--------------------------|---------|---------|
+| `navigate`               | `path: string` | Navigate to a target page (used by tray Settings action) |
 
 The tray menu is rebuilt whenever Staff statuses change, triggered by the StaffManager in the main process.
 
@@ -343,35 +336,30 @@ Cycle order on click: Light -> Dark -> System -> Light.
 
 ### Electron Desktop (Primary)
 
-- **>= 1024px**: Sidebar expanded (240px). Full header with search bar.
-- **768px - 1023px**: Sidebar auto-collapses to icon-only mode (64px). Search bar shrinks.
-- **< 768px**: Sidebar hidden. Hamburger menu icon appears in the header to toggle a slide-over sidebar.
+- **>= 1024px**: Sidebar supports expanded/collapsed desktop modes. Full header with search bar.
+- **< 768px**: Sidebar remains present in compact mode and the search bar is hidden.
 
 ### Ngrok Web UI (Phone/Tablet)
 
 When accessed via Ngrok on a mobile browser:
 
-- Sidebar is hidden by default.
-- A hamburger icon in the top-left of the header toggles a full-screen overlay navigation.
-- Search is accessible via the Cmd+K shortcut or a search icon that expands the input.
-- Toast notifications stack at the top of the viewport.
+- Sidebar remains in compact icon mode.
 - Header action buttons remain visible.
+- Search input is currently desktop-only (`md` breakpoint and up).
+- Toast notifications stack at the top of the viewport.
 
 ### Implementation
 
 ```typescript
 // useSidebarStore.ts
 interface SidebarState {
-  expanded: boolean;
-  mobileOpen: boolean;
-  toggle: () => void;
-  setMobileOpen: (open: boolean) => void;
+  expanded: boolean
+  toggle: () => void
 }
 ```
 
 - `expanded`: Controls desktop expanded/collapsed.
-- `mobileOpen`: Controls mobile slide-over visibility.
-- On window resize (via `useMediaQuery` hook), auto-collapse/expand based on breakpoints.
+- Persisted in localStorage and reused on app relaunch.
 
 ---
 
@@ -381,49 +369,43 @@ interface SidebarState {
 
 Per the architecture, IPC is used ONLY for native features. All data operations go through the Express API.
 
-| IPC Channel                  | Direction        | Purpose                                      |
-|------------------------------|------------------|----------------------------------------------|
-| `window:close`               | renderer -> main | Request hide-to-tray                         |
-| `window:minimize`            | renderer -> main | Minimize to taskbar                          |
-| `window:maximize`            | renderer -> main | Toggle maximize                              |
-| `theme:changed`              | renderer -> main | Sync theme to native tray/notifications      |
-| `tray:open-dashboard`        | main -> renderer | Navigate to dashboard                        |
-| `tray:open-settings`         | main -> renderer | Navigate to settings                         |
-| `tray:open-staff`            | main -> renderer | Navigate to staff detail                     |
-| `notification:click`         | main -> renderer | User clicked a native notification           |
-| `dialog:open-file`           | renderer -> main | Open native file picker (skill import, etc.) |
+| IPC Channel          | Direction        | Purpose                                      |
+|----------------------|------------------|----------------------------------------------|
+| `get-api-port`       | renderer -> main | Resolve local API port                        |
+| `get-platform`       | renderer -> main | Resolve OS platform (`darwin`, `linux`, etc.) |
+| `show-open-dialog`   | renderer -> main | Open native file/folder picker                |
+| `show-save-dialog`   | renderer -> main | Open native save dialog                       |
+| `set-auto-start`     | renderer -> main | Configure OS login-item behavior              |
+| `check-for-updates`  | renderer -> main | Check updater feed                            |
+| `download-update`    | renderer -> main | Download update payload                       |
+| `install-update`     | renderer -> main | Trigger quit-and-install                      |
+| `navigate`           | main -> renderer | Navigate to route from tray actions           |
+| `update-downloaded`  | main -> renderer | Notify renderer when update payload is ready  |
 
 ### Preload Script
 
-Exposes a typed `window.electronAPI` object via contextBridge:
+Exposes typed `window.electron` and `window.api` objects via contextBridge:
 
 ```typescript
 // preload/index.ts
-contextBridge.exposeInMainWorld('electronAPI', {
-  window: {
-    close: () => ipcRenderer.send('window:close'),
-    minimize: () => ipcRenderer.send('window:minimize'),
-    maximize: () => ipcRenderer.send('window:maximize'),
-  },
-  theme: {
-    onChange: (cb: (theme: string) => void) =>
-      ipcRenderer.on('theme:changed', (_, theme) => cb(theme)),
-  },
-  notification: {
-    onClick: (cb: (staffId: string) => void) =>
-      ipcRenderer.on('notification:click', (_, staffId) => cb(staffId)),
-  },
-  dialog: {
-    openFile: (opts: OpenDialogOptions) =>
-      ipcRenderer.invoke('dialog:open-file', opts),
-  },
-  isElectron: true,
-});
+contextBridge.exposeInMainWorld('electron', electronAPI)
+contextBridge.exposeInMainWorld('api', {
+  getApiPort: () => ipcRenderer.invoke('get-api-port'),
+  getPlatform: () => ipcRenderer.invoke('get-platform'),
+  showOpenDialog: (opts) => ipcRenderer.invoke('show-open-dialog', opts),
+  showSaveDialog: (opts) => ipcRenderer.invoke('show-save-dialog', opts),
+  setAutoStart: (enabled) => ipcRenderer.invoke('set-auto-start', enabled),
+  onNavigate: (cb) => {
+    const handler = (_event, path) => cb(path)
+    ipcRenderer.on('navigate', handler)
+    return () => ipcRenderer.removeListener('navigate', handler)
+  }
+})
 ```
 
 ### Ngrok Web Compatibility
 
-The renderer detects the environment via `window.electronAPI?.isElectron`:
+The renderer detects desktop capabilities via `window.api`:
 - **Electron**: Uses IPC for window controls, native notifications, file dialogs.
 - **Web (Ngrok)**: Hides window control buttons, uses browser Notification API (if permitted), uses `<input type="file">` for file selection.
 

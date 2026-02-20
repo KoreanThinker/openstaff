@@ -8,7 +8,7 @@ OpenStaff is an Electron desktop app that manages multiple AI coding agents (Sta
 
 ### Prerequisites
 
-- **Node.js** >= 18
+- **Node.js** >= 20
 - **pnpm** (package manager) -- install with `npm install -g pnpm`
 - **macOS** or **Linux** (Ubuntu). Windows is not currently supported.
 
@@ -174,7 +174,7 @@ We aim for **90%+ code coverage**. Run `pnpm test:coverage` to check.
 
 ## Design System
 
-OpenStaff uses a **Bento Grid** style with heavily rounded cards.
+OpenStaff uses a **Bento Grid** style with compact rounded cards.
 
 ### Rules
 
@@ -191,7 +191,7 @@ OpenStaff uses a **Bento Grid** style with heavily rounded cards.
    <div className="bg-white rounded-lg">
    ```
 
-3. **Use the design system radius** (`--radius: 1.5rem`). Cards should use `rounded-3xl` or the equivalent CSS variable.
+3. **Use the design system radius** (`--radius: 0.5rem`). Cards should use semantic radius tokens (`rounded-lg`, `rounded-md`, `rounded-sm`) or the equivalent CSS variable.
 
 4. **Component library**: We use [shadcn/ui](https://ui.shadcn.com/) components built on Radix UI primitives. Prefer using existing components from `src/renderer/src/components/ui/` before creating new ones.
 
