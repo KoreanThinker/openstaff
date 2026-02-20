@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'fs'
+import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs'
+import { dirname } from 'path'
 
 export function readJsonl<T>(filePath: string): T[] {
   if (!existsSync(filePath)) return []
@@ -18,7 +19,13 @@ export function readJsonl<T>(filePath: string): T[] {
 }
 
 export function appendJsonl<T>(filePath: string, entry: T): void {
-  appendFileSync(filePath, JSON.stringify(entry) + '\n')
+  try {
+    const dir = dirname(filePath)
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+    appendFileSync(filePath, JSON.stringify(entry) + '\n')
+  } catch (err) {
+    console.warn('appendJsonl failed:', filePath, err)
+  }
 }
 
 export function writeJsonl<T>(filePath: string, entries: T[]): void {

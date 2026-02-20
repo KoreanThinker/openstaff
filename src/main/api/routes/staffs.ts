@@ -7,6 +7,23 @@ import { readStaffConfig, readStaffState, listStaffIds, readMemoryMd, getStaffDi
 import { readJsonl, countJsonlLines } from '../../data/jsonl-reader'
 import { readFileSync, existsSync } from 'fs'
 
+function sanitizeString(str: string, maxLength = 500): string {
+  // Strip control characters, limit length
+  return str.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '').slice(0, maxLength)
+}
+
+function validateStaffInput(body: Partial<StaffConfig>): string | null {
+  if (body.name !== undefined) {
+    if (typeof body.name !== 'string') return 'name must be a string'
+    if (body.name.trim().length === 0) return 'name is required'
+    if (body.name.length > 100) return 'name must be 100 characters or less'
+  }
+  if (body.skills !== undefined && !Array.isArray(body.skills)) {
+    return 'skills must be an array'
+  }
+  return null
+}
+
 export function staffRoutes(ctx: ApiContext): Router {
   const router = Router()
 
@@ -121,17 +138,20 @@ export function staffRoutes(ctx: ApiContext): Router {
   router.post('/', (req, res) => {
     try {
       const body = req.body as Partial<StaffConfig>
+      const validationError = validateStaffInput(body)
+      if (validationError) return res.status(400).json({ error: validationError })
+
       const config: StaffConfig = {
-        id: body.id || uuidv4(),
-        name: body.name || '',
-        role: body.role || '',
-        gather: body.gather || '',
-        execute: body.execute || '',
-        evaluate: body.evaluate || '',
-        kpi: body.kpi || '',
+        id: uuidv4(),
+        name: sanitizeString(body.name || '', 100),
+        role: sanitizeString(body.role || '', 200),
+        gather: sanitizeString(body.gather || '', 2000),
+        execute: sanitizeString(body.execute || '', 2000),
+        evaluate: sanitizeString(body.evaluate || '', 2000),
+        kpi: sanitizeString(body.kpi || '', 1000),
         agent: body.agent || ctx.configStore.get('default_agent'),
         model: body.model || ctx.configStore.get('default_model'),
-        skills: body.skills || [],
+        skills: (body.skills || []).map((s) => sanitizeString(s, 100)),
         created_at: new Date().toISOString()
       }
 
@@ -148,7 +168,23 @@ export function staffRoutes(ctx: ApiContext): Router {
       const existing = readStaffConfig(req.params.id!)
       if (!existing) return res.status(404).json({ error: 'Staff not found' })
 
-      const updated: StaffConfig = { ...existing, ...req.body, id: existing.id }
+      const body = req.body as Partial<StaffConfig>
+      const validationError = validateStaffInput(body)
+      if (validationError) return res.status(400).json({ error: validationError })
+
+      const updated: StaffConfig = {
+        ...existing,
+        ...body,
+        id: existing.id,
+        name: body.name !== undefined ? sanitizeString(body.name, 100) : existing.name,
+        role: body.role !== undefined ? sanitizeString(body.role, 200) : existing.role,
+        gather: body.gather !== undefined ? sanitizeString(body.gather, 2000) : existing.gather,
+        execute: body.execute !== undefined ? sanitizeString(body.execute, 2000) : existing.execute,
+        evaluate: body.evaluate !== undefined ? sanitizeString(body.evaluate, 2000) : existing.evaluate,
+        kpi: body.kpi !== undefined ? sanitizeString(body.kpi, 1000) : existing.kpi,
+        skills: body.skills !== undefined ? body.skills.map((s) => sanitizeString(s, 100)) : existing.skills,
+        created_at: existing.created_at
+      }
       ctx.staffManager.updateStaff(updated)
 
       // Restart if running so changes take effect immediately
@@ -301,15 +337,15 @@ export function staffRoutes(ctx: ApiContext): Router {
 
       const config: StaffConfig = {
         id: uuidv4(),
-        name: body.name || '',
-        role: body.role || '',
-        gather: body.gather || '',
-        execute: body.execute || '',
-        evaluate: body.evaluate || '',
-        kpi: body.kpi || '',
+        name: sanitizeString(body.name || '', 100),
+        role: sanitizeString(body.role || '', 200),
+        gather: sanitizeString(body.gather || '', 2000),
+        execute: sanitizeString(body.execute || '', 2000),
+        evaluate: sanitizeString(body.evaluate || '', 2000),
+        kpi: sanitizeString(body.kpi || '', 1000),
         agent: body.recommended_agent || ctx.configStore.get('default_agent'),
         model: body.recommended_model || ctx.configStore.get('default_model'),
-        skills: body.required_skills || [],
+        skills: (body.required_skills || []).map((s) => sanitizeString(s, 100)),
         created_at: new Date().toISOString()
       }
 

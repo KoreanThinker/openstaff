@@ -25,7 +25,7 @@ export class NgrokManager {
       })
 
       this.tunnelUrl = listener.url() || null
-      this.tunnelActive = true
+      this.tunnelActive = this.tunnelUrl !== null
 
       console.log(`Ngrok tunnel active: ${this.tunnelUrl}`)
       return this.tunnelUrl

@@ -637,7 +637,7 @@ describe('staffs API routes', () => {
     await apiDelete(`/api/staffs/${created.id}`)
   })
 
-  it('POST /api/staffs with explicit id uses provided id', async () => {
+  it('POST /api/staffs ignores explicit id (always generates UUID)', async () => {
     const { status, data } = await apiPost('/api/staffs', {
       id: 'custom-id-123',
       name: 'Custom ID Staff',
@@ -651,7 +651,9 @@ describe('staffs API routes', () => {
       skills: ['openstaff']
     })
     expect(status).toBe(201)
-    expect(data.id).toBe('custom-id-123')
+    // Should NOT use the user-provided id (security: prevents directory traversal)
+    expect(data.id).not.toBe('custom-id-123')
+    expect(data.id).toMatch(/^[0-9a-f-]{36}$/)
     expect(data.kpi).toBe('My KPI')
     expect(data.skills).toEqual(['openstaff'])
 
@@ -1068,6 +1070,63 @@ describe('staffs API routes', () => {
     expect(staff.uptime).toBeGreaterThan(0)
 
     mockManager.getStatus = originalGetStatus
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('POST /api/staffs rejects empty name', async () => {
+    const { status, data } = await apiPost('/api/staffs', {
+      name: '',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+    expect(status).toBe(400)
+    expect(data.error).toContain('name is required')
+  })
+
+  it('POST /api/staffs rejects name over 100 chars', async () => {
+    const { status, data } = await apiPost('/api/staffs', {
+      name: 'A'.repeat(101),
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+    expect(status).toBe(400)
+    expect(data.error).toContain('100 characters')
+  })
+
+  it('POST /api/staffs sanitizes control characters', async () => {
+    const { status, data } = await apiPost('/api/staffs', {
+      name: 'Test\x00\x01Staff',
+      role: 'Role\x7f',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+    expect(status).toBe(201)
+    expect(data.name).toBe('TestStaff')
+    expect(data.role).toBe('Role')
+
+    await apiDelete(`/api/staffs/${data.id}`)
+  })
+
+  it('PUT /api/staffs/:id rejects invalid skills type', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Skills Validation Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const { status, data } = await apiPut(`/api/staffs/${created.id}`, {
+      skills: 'not-an-array'
+    })
+    expect(status).toBe(400)
+    expect(data.error).toContain('skills must be an array')
+
     await apiDelete(`/api/staffs/${created.id}`)
   })
 })

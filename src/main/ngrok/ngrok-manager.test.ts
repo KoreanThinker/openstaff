@@ -124,7 +124,7 @@ describe('NgrokManager', () => {
     const result = await manager.start(3000)
 
     expect(result).toBeNull()
-    expect(manager.isActive()).toBe(true)
+    expect(manager.isActive()).toBe(false)
   })
 
   it('instances do not share state', async () => {

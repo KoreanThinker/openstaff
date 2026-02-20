@@ -156,7 +156,7 @@ export class ClaudeCodeDriver implements AgentDriver {
   }
 
   private wrapPty(pty: ReturnType<typeof ptySpawn>): AgentProcess {
-    return {
+    const agentProc: AgentProcess = {
       pid: pty.pid,
       sessionId: null,
       write(message: string): void {
@@ -194,5 +194,20 @@ export class ClaudeCodeDriver implements AgentDriver {
         })
       }
     }
+
+    // Extract session ID from Claude Code output (printed during startup)
+    // Pattern: "Session: <uuid>" or "session_id: <uuid>"
+    const sessionIdRegex = /(?:Session|session_id|Session ID)[:\s]+([a-f0-9-]{36})/i
+    let parsed = false
+    pty.onData((data: string) => {
+      if (parsed) return
+      const match = data.match(sessionIdRegex)
+      if (match) {
+        agentProc.sessionId = match[1]!
+        parsed = true
+      }
+    })
+
+    return agentProc
   }
 }

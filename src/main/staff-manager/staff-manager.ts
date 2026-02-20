@@ -151,11 +151,21 @@ export class StaffManager extends EventEmitter {
       }
     } catch (err) { console.warn('Log rotation failed:', err) }
 
-    // Capture output
+    // Capture output + persist session ID once extracted
+    let sessionIdPersisted = !!proc.sessionId
     entry.logStream = (data: string) => {
       entry.lastOutputAt = Date.now()
       try { appendFileSync(logPath, data) } catch { /* ignore */ }
       this.emit('staff:log', staffId, data)
+
+      // Persist session ID once the driver extracts it from output
+      if (!sessionIdPersisted && proc.sessionId) {
+        sessionIdPersisted = true
+        writeStaffState(staffId, {
+          session_id: proc.sessionId,
+          last_started_at: new Date().toISOString()
+        })
+      }
     }
     proc.onData(entry.logStream)
 
@@ -317,16 +327,17 @@ export class StaffManager extends EventEmitter {
       return
     }
 
-    const backoffIdx = Math.min(recentFailures.length - 1, BACKOFF_DELAYS_MS.length - 1)
-    const delay = BACKOFF_DELAYS_MS[backoffIdx] || 30_000
+    const backoffIdx = Math.min(
+      Math.max(recentFailures.length - 1, 0),
+      Math.max(BACKOFF_DELAYS_MS.length - 1, 0)
+    )
+    const delay = BACKOFF_DELAYS_MS[backoffIdx] ?? 30_000
 
-    setTimeout(async () => {
-      try {
-        await this.startStaff(staffId)
-      } catch (err) {
+    setTimeout(() => {
+      this.startStaff(staffId).catch((err) => {
         console.error(`Failed to restart staff ${staffId}:`, err)
         this.emit('staff:status', staffId, 'error')
-      }
+      })
     }, delay)
   }
 
