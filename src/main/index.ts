@@ -24,6 +24,8 @@ const staffManager = new StaffManager(configStore)
 const healthChecker = new HealthChecker(staffManager)
 const monitoringEngine = new MonitoringEngine(staffManager, configStore)
 const ngrokManager = new NgrokManager(configStore)
+const hideWindowForE2E =
+  process.env.NODE_ENV === 'test' && process.env.OPENSTAFF_E2E_SHOW_WINDOW !== '1'
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -42,6 +44,7 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
+    if (hideWindowForE2E) return
     const showOnStartup = configStore.get('show_window_on_startup', true)
     if (showOnStartup) {
       mainWindow?.show()
@@ -143,6 +146,7 @@ app.whenReady().then(async () => {
   })
 
   app.on('activate', () => {
+    if (hideWindowForE2E) return
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
     } else {

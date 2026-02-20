@@ -150,13 +150,13 @@ pnpm test:watch
 # Coverage report
 pnpm test:coverage
 
-# E2E tests (requires built app, default: headless)
+# E2E tests (requires built app, default: headless + hidden Electron window)
 pnpm test:e2e
 
-# E2E tests in headed mode (visual debugging)
+# E2E tests in headed mode (visual debugging, shows Electron window)
 pnpm test:e2e:headed
 
-# Playwright UI mode
+# Playwright UI mode (shows Electron window)
 pnpm test:e2e:ui
 ```
 

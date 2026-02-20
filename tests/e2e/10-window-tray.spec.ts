@@ -2,7 +2,21 @@ import { test, expect } from '@playwright/test'
 import { launchApp, waitForText } from './helpers'
 
 test.describe('Window and Tray behavior', () => {
-  test('app launches with window and sidebar navigation works', async () => {
+  test('default e2e launch keeps Electron window hidden', async () => {
+    const { app, cleanup } = await launchApp()
+
+    try {
+      const isVisible = await app.evaluate(({ BrowserWindow }) => {
+        const win = BrowserWindow.getAllWindows()[0]
+        return win ? win.isVisible() : false
+      })
+      expect(isVisible).toBe(false)
+    } finally {
+      await cleanup()
+    }
+  })
+
+  test('app launches and sidebar navigation works', async () => {
     const { app, page, cleanup } = await launchApp()
 
     page.on('pageerror', (err) => console.log('[PAGE_ERROR]', err.message))
