@@ -15,9 +15,16 @@ export async function launchApp(): Promise<{
   const testHome = mkdtempSync(join(tmpdir(), 'openstaff-e2e-'))
   const userDataDir = mkdtempSync(join(tmpdir(), 'openstaff-e2e-userdata-'))
   const showWindow = process.env.OPENSTAFF_E2E_SHOW_WINDOW === '1' ? '1' : '0'
+  const launchArgs = [join(__dirname, '../../out/main/index.js')]
+
+  // GitHub-hosted Linux runners require sandbox flags for Electron launch.
+  if (process.platform === 'linux') {
+    launchArgs.unshift('--disable-setuid-sandbox')
+    launchArgs.unshift('--no-sandbox')
+  }
 
   const app = await electron.launch({
-    args: [join(__dirname, '../../out/main/index.js')],
+    args: launchArgs,
     env: {
       ...process.env,
       OPENSTAFF_HOME: testHome,
