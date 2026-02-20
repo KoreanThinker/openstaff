@@ -116,6 +116,27 @@ describe('settings API routes', () => {
     mockConfigStore.set('ngrok_auth_password', '')
   })
 
+  it('PATCH /api/settings rejects unknown keys', async () => {
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invalid_key: 'value' })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('Unknown setting')
+  })
+
+  it('PATCH /api/settings accepts skill_env_ prefixed keys', async () => {
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ skill_env_GITHUB_TOKEN: 'test-token' })
+    })
+    expect(res.status).toBe(200)
+    expect(mockConfigStore.get('skill_env_GITHUB_TOKEN')).toBe('test-token')
+  })
+
   it('PATCH /api/settings updates multiple keys at once', async () => {
     const res = await fetch(`http://localhost:${port}/api/settings`, {
       method: 'PATCH',
