@@ -34,6 +34,9 @@ jobs:
 
       - run: pnpm install
 
+      - name: Audit Production Dependencies
+        run: pnpm audit:prod
+
       - name: Type Check
         run: pnpm type-check
 
@@ -50,7 +53,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get install -y xvfb
-          npx electron@33 --version || true
+          npx electron@35 --version || true
           xvfb-run --auto-servernum pnpm test:e2e
         env:
           CI: true
@@ -58,7 +61,7 @@ jobs:
       - name: E2E Tests (macOS)
         if: matrix.os == 'macos-latest'
         run: |
-          npx electron@33 --version || true
+          npx electron@35 --version || true
           pnpm test:e2e
         env:
           CI: true
