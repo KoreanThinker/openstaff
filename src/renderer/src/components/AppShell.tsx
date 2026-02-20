@@ -230,7 +230,7 @@ export function AppShell(): React.ReactElement {
             isMacDesktop ? 'h-16 pt-2' : 'h-14',
             expanded
               ? isMacDesktop
-                ? 'justify-start pl-[5.5rem] pr-3'
+                ? 'justify-start pl-[6.5rem] pr-3'
                 : 'justify-start px-3'
               : isMacDesktop
                 ? 'justify-end pr-2'
