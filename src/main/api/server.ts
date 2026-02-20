@@ -1,8 +1,9 @@
 import express from 'express'
 import { createServer } from 'http'
-import { join } from 'path'
+import { dirname, join } from 'path'
 import { existsSync } from 'fs'
 import { Server as SocketIOServer } from 'socket.io'
+import { fileURLToPath } from 'url'
 import { staffRoutes } from './routes/staffs'
 import { skillRoutes } from './routes/skills'
 import { agentRoutes } from './routes/agents'
@@ -23,6 +24,7 @@ export interface ApiContext {
 }
 
 let apiPort = 0
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export function getApiPort(): number {
   return apiPort

@@ -4,7 +4,6 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
     resolve: {
       alias: {
         '@shared': resolve('src/shared')
@@ -12,7 +11,8 @@ export default defineConfig({
     },
     build: {
       rollupOptions: {
-        external: ['node-pty', 'electron-store', 'tree-kill', 'pidusage', '@ngrok/ngrok']
+        // Keep only native/runtime-bound modules external.
+        external: ['node-pty', '@ngrok/ngrok']
       }
     }
   },

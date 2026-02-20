@@ -1,10 +1,13 @@
 import { Tray, Menu, nativeImage, app, BrowserWindow } from 'electron'
-import { join } from 'path'
+import { dirname, join } from 'path'
 import { existsSync } from 'fs'
+import { fileURLToPath } from 'url'
 import type { StaffManager } from '../staff-manager/staff-manager'
 import { listStaffIds, readStaffConfig } from '../data/staff-data'
 import { countJsonlLines } from '../data/jsonl-reader'
 import { getStaffDir } from '../data/staff-data'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 function resolveTrayIconPath(): string | null {
   const candidatePaths = [

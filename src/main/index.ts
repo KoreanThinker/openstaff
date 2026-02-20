@@ -1,5 +1,6 @@
 import { app, shell, BrowserWindow, ipcMain, Tray, Notification } from 'electron'
-import { join } from 'path'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 
 // Isolate user data per test run (for E2E tests)
@@ -15,6 +16,8 @@ import { HealthChecker } from './health-check/health-checker'
 import { MonitoringEngine } from './monitoring/monitoring-engine'
 import { NgrokManager } from './ngrok/ngrok-manager'
 import { SlackNotifier } from './integrations/slack-notifier'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 let mainWindow: BrowserWindow | null = null
 let _tray: Tray | null = null
