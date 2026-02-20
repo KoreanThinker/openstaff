@@ -33,6 +33,18 @@ Download the latest app package from [Releases](https://github.com/KoreanThinker
 - macOS: `.dmg`
 - Linux: `.AppImage` / `.deb`
 
+## Install via curl
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/KoreanThinker/openstaff/main/scripts/install.sh | bash
+```
+
+Optional flags:
+
+- Download only (skip install/open): `OPENSTAFF_DOWNLOAD_ONLY=1`
+- Install to a custom directory: `OPENSTAFF_INSTALL_DIR=/path/to/dir`
+- Pin a specific release: `OPENSTAFF_VERSION=v1.1.0`
+
 ## Quick start (TL;DR)
 
 Runtime: **Node >= 22**, **pnpm >= 9**.
