@@ -106,12 +106,15 @@ describe('staff-data', () => {
       expect(read).toEqual(testConfig)
     })
 
-    it('generates CLAUDE.md alongside staff.json', () => {
+    it('generates CLAUDE.md and AGENTS.md alongside staff.json', () => {
       writeStaffConfig(testConfig)
       const dir = ensureStaffDir('test-staff-1')
       const claudeMd = readFileSync(join(dir, 'CLAUDE.md'), 'utf-8')
+      const agentsMd = readFileSync(join(dir, 'AGENTS.md'), 'utf-8')
       expect(claudeMd).toContain('Test Staff')
       expect(claudeMd).toContain('Gather data')
+      expect(agentsMd).toContain('Test Staff')
+      expect(agentsMd).toContain('Gather data')
     })
 
     it('returns null for non-existent staff', () => {

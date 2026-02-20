@@ -571,7 +571,7 @@ Skills declare required credentials in their SKILL.md `compatibility` field. Ope
 
 Supported agents:
 - Claude Code (MVP): Full lifecycle management.
-- Codex (future): Placeholder card with "Coming soon" message.
+- Codex: Install, API key auth, model selection, and Staff execution support.
 
 ### 5.6 Settings
 

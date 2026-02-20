@@ -42,8 +42,10 @@ export function readStaffConfig(staffId: string): StaffConfig | null {
 export function writeStaffConfig(config: StaffConfig): void {
   const dir = ensureStaffDir(config.id)
   writeFileSync(join(dir, 'staff.json'), JSON.stringify(config, null, 2))
-  const claudeMd = generateClaudeMd(config)
-  writeFileSync(join(dir, 'CLAUDE.md'), claudeMd)
+  const promptFile = generateClaudeMd(config)
+  // Keep both files in sync so Claude Code and Codex can use the same staff instructions.
+  writeFileSync(join(dir, 'CLAUDE.md'), promptFile)
+  writeFileSync(join(dir, 'AGENTS.md'), promptFile)
 }
 
 export function readStaffState(staffId: string): StaffState {

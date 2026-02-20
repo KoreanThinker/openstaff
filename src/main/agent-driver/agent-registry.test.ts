@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { getDriver, getAllDrivers, registerDriver } from './agent-registry'
 import { ClaudeCodeDriver } from './claude-code-driver'
+import { CodexDriver } from './codex-driver'
 
 describe('agent-registry', () => {
   it('has claude-code driver registered by default', () => {
@@ -18,6 +19,7 @@ describe('agent-registry', () => {
     const drivers = getAllDrivers()
     expect(drivers.length).toBeGreaterThanOrEqual(1)
     expect(drivers.some((d) => d.id === 'claude-code')).toBe(true)
+    expect(drivers.some((d) => d.id === 'codex')).toBe(true)
   })
 
   it('can register a new driver', () => {
@@ -46,5 +48,21 @@ describe('ClaudeCodeDriver', () => {
       claudeMdPath: '/tmp/CLAUDE.md',
       env: {}
     })).toThrow('sessionId is required for resume()')
+  })
+})
+
+describe('CodexDriver', () => {
+  it('resume() throws if sessionId is missing', () => {
+    const driver = new CodexDriver()
+    expect(() => driver.resume({
+      workingDir: '/tmp',
+      claudeMdPath: '/tmp/AGENTS.md',
+      env: {}
+    })).toThrow('sessionId is required for resume()')
+  })
+
+  it('provides built-in model list', () => {
+    const driver = new CodexDriver()
+    expect(driver.getAvailableModels().length).toBeGreaterThan(0)
   })
 })

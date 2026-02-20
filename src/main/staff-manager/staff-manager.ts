@@ -111,8 +111,14 @@ export class StaffManager extends EventEmitter {
 
     // Build env vars
     const env: Record<string, string> = {}
-    const apiKey = this.configStore.get('anthropic_api_key')
-    if (apiKey) env['ANTHROPIC_API_KEY'] = apiKey
+    if (config.agent === 'claude-code') {
+      const anthropicApiKey = this.configStore.get('anthropic_api_key')
+      if (anthropicApiKey) env['ANTHROPIC_API_KEY'] = anthropicApiKey
+    }
+    if (config.agent === 'codex') {
+      const openaiApiKey = this.configStore.get('openai_api_key')
+      if (openaiApiKey) env['OPENAI_API_KEY'] = openaiApiKey
+    }
 
     // Add skill env vars from configStore
     for (const skillName of config.skills) {

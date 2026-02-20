@@ -1,5 +1,6 @@
 import type { AgentDriver } from '@shared/types'
 import { ClaudeCodeDriver } from './claude-code-driver'
+import { CodexDriver } from './codex-driver'
 
 const drivers: Map<string, AgentDriver> = new Map()
 
@@ -17,3 +18,4 @@ export function getAllDrivers(): AgentDriver[] {
 
 // Register built-in drivers
 registerDriver(new ClaudeCodeDriver())
+registerDriver(new CodexDriver())

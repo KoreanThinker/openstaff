@@ -47,6 +47,24 @@ const FALLBACK_CLAUDE_MODELS: AgentModel[] = [
   }
 ]
 
+const FALLBACK_CODEX_MODELS: AgentModel[] = [
+  {
+    id: 'gpt-5',
+    name: 'GPT-5',
+    description: 'Most capable'
+  },
+  {
+    id: 'gpt-5-mini',
+    name: 'GPT-5 mini',
+    description: 'Balanced speed and cost'
+  },
+  {
+    id: 'gpt-5-nano',
+    name: 'GPT-5 nano',
+    description: 'Fastest and lowest cost'
+  }
+]
+
 const FALLBACK_AGENTS: AgentInfo[] = [
   {
     id: 'claude-code',
@@ -65,7 +83,7 @@ const FALLBACK_AGENTS: AgentInfo[] = [
     version: null,
     connected: false,
     api_key_configured: false,
-    models: [],
+    models: FALLBACK_CODEX_MODELS,
     status: 'not_installed'
   }
 ]
@@ -148,7 +166,7 @@ export function Settings(): React.ReactElement {
         modelsForAgent[0]?.id ||
         (nextAgent === 'claude-code'
           ? FALLBACK_CLAUDE_MODELS[0].id
-          : 'claude-sonnet-4-5')
+          : FALLBACK_CODEX_MODELS[0].id)
       const requestedModel = settings.default_model || modelFallback
       const hasRequestedModel = modelsForAgent.some((model) => model.id === requestedModel)
       setDefaultAgent(nextAgent)
@@ -201,7 +219,7 @@ export function Settings(): React.ReactElement {
       ? selectedAgent.models
       : selectedAgent?.id === 'claude-code'
         ? FALLBACK_CLAUDE_MODELS
-        : []
+        : FALLBACK_CODEX_MODELS
 
   // Query ngrok status from system API
   const { data: ngrokStatus } = useQuery({
@@ -417,7 +435,9 @@ export function Settings(): React.ReactElement {
                     setDefaultAgent(value)
                     const firstModel =
                       agentOptions.find((agent) => agent.id === value)?.models[0]?.id ||
-                      (value === 'claude-code' ? FALLBACK_CLAUDE_MODELS[0].id : '')
+                      (value === 'claude-code'
+                        ? FALLBACK_CLAUDE_MODELS[0].id
+                        : FALLBACK_CODEX_MODELS[0].id)
                     if (!firstModel) return
                     setDefaultModel(firstModel)
                     handleImmediateSave({
@@ -432,10 +452,9 @@ export function Settings(): React.ReactElement {
                   <SelectContent>
                     {agentOptions.map((agent) => {
                       const isUnavailable = agent.models.length === 0
-                      const isCodexComingSoon = agent.id === 'codex' && !agent.installed
                       return (
                         <SelectItem key={agent.id} value={agent.id} disabled={isUnavailable}>
-                          {isCodexComingSoon ? 'OpenAI Codex (Coming soon)' : agent.name}
+                          {agent.name}
                         </SelectItem>
                       )
                     })}

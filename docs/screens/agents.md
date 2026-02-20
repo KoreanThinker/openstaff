@@ -39,7 +39,8 @@ When a user first visits the Agents screen (or arrives via the Dashboard banner 
 |           |  +--------------------------------------------------+ |
 |           |                                                       |
 |           |  +--------------------------------------------------+ |
-|           |  |  CODEX  --  Coming soon                          | |
+|           |  |  OPENAI CODEX                                    | |
+|           |  |  Install / API key / models management card      | |
 |           |  +--------------------------------------------------+ |
 +------------------------------------------------------------------+
 ```
@@ -132,14 +133,14 @@ Breadcrumb: `Agents`
 |           |                                                       |
 |           |  +--------------------------------------------------+ |
 |           |  |  CODEX AGENT CARD                                | |
-|           |  |  Logo  "Codex"   --   [Not Installed] pill       | |
-|           |  |  "Coming soon. Codex support is planned."        | |
+|           |  |  Logo  "OpenAI Codex" -- [Status pill]           | |
+|           |  |  Connection / Installation / Models sections      | |
 |           |  +--------------------------------------------------+ |
 |           |                                                       |
 +------------------------------------------------------------------+
 ```
 
-The page scrolls vertically. Each agent is a full-width `<Card>` stacked top to bottom. Claude Code is first (MVP-supported), Codex second (future placeholder).
+The page scrolls vertically. Each agent is a full-width `<Card>` stacked top to bottom. Claude Code is first, Codex second.
 
 ---
 

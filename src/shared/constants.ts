@@ -31,6 +31,12 @@ export const CLAUDE_CODE_MODELS = [
   { id: 'claude-haiku-4-5', name: 'Haiku 4.5', description: 'Fastest' }
 ] as const
 
+export const CODEX_MODELS = [
+  { id: 'gpt-5', name: 'GPT-5', description: 'Most capable' },
+  { id: 'gpt-5-mini', name: 'GPT-5 mini', description: 'Balanced speed and cost' },
+  { id: 'gpt-5-nano', name: 'GPT-5 nano', description: 'Fastest and lowest cost' }
+] as const
+
 export const PRICING: Record<string, { input: number; output: number; cache_read: number; cache_write: number }> = {
   'claude-opus-4-6': { input: 15, output: 75, cache_read: 1.5, cache_write: 18.75 },
   'claude-sonnet-4-5': { input: 3, output: 15, cache_read: 0.3, cache_write: 3.75 },

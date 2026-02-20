@@ -22,6 +22,13 @@ test.describe('Staff Create Validation + Discard', () => {
       await page.waitForURL(/#\/staffs\/new/, { timeout: 10000 })
       await waitForText(page, 'Create Staff', 15000)
 
+      // Agent selector includes Codex and allows switching.
+      const comboBoxes = page.locator('[role="combobox"]')
+      await comboBoxes.nth(0).click()
+      await expect(page.getByRole('option', { name: /OpenAI Codex/ })).toBeVisible()
+      await page.getByRole('option', { name: /OpenAI Codex/ }).click()
+      await expect(comboBoxes.nth(1)).toContainText('GPT-5')
+
       const submitButton = page.locator('button:has-text("Create & Start")')
 
       // Initially disabled because required fields are empty

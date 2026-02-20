@@ -744,6 +744,202 @@ function ClaudeCodeCard({
   )
 }
 
+function CodexCard({
+  agent
+}: {
+  agent: AgentInfo
+}): React.ReactElement {
+  const queryClient = useQueryClient()
+  const [apiKey, setApiKey] = useState('')
+  const [showKey, setShowKey] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState<
+    'connected' | 'disconnected' | 'not_tested'
+  >(agent.connected ? 'connected' : agent.api_key_configured ? 'disconnected' : 'not_tested')
+  const [installing, setInstalling] = useState(false)
+
+  const apiKeyPlaceholder =
+    agent.api_key_configured && !apiKey.trim()
+      ? 'API key is already saved. Enter a new key to replace.'
+      : 'Enter your OpenAI API key'
+
+  const testMutation = useMutation({
+    mutationFn: async () => {
+      if (apiKey.trim()) {
+        await api.updateAgentApiKey(agent.id, apiKey)
+      }
+      const result = await api.testAgentConnection(agent.id)
+      return result.connected
+    },
+    onSuccess: (connected) => {
+      setConnectionStatus(connected ? 'connected' : 'disconnected')
+      queryClient.invalidateQueries({ queryKey: ['agents'] })
+      if (!connected) {
+        toast({ title: 'Connection failed', description: 'API key is invalid or missing.', variant: 'destructive' })
+      }
+    },
+    onError: () => {
+      setConnectionStatus('disconnected')
+      toast({ title: 'Connection test failed', description: 'Could not reach Codex.', variant: 'destructive' })
+    }
+  })
+
+  const installLabel = agent.installed ? 'Check for Updates' : 'Install'
+
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+              <Cpu className="h-5 w-5 text-foreground" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                OpenAI Codex
+              </h2>
+            </div>
+            <span className="font-mono text-sm text-muted-foreground">
+              {agent.version ?? '--'}
+            </span>
+          </div>
+          <AgentStatusPill status={agent.status} />
+        </div>
+
+        <div className="mt-6 space-y-6">
+          <div className="rounded-lg bg-muted/50 p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+              Connection
+            </h3>
+            <div className="mt-3 space-y-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">API Key</Label>
+                <div className="mt-1 flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      type={showKey ? 'text' : 'password'}
+                      placeholder={apiKeyPlaceholder}
+                      value={apiKey}
+                      onChange={(e) => {
+                        setApiKey(e.target.value)
+                        setConnectionStatus('not_tested')
+                      }}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                      onClick={() => setShowKey(!showKey)}
+                      aria-label={showKey ? 'Hide API key' : 'Show API key'}
+                    >
+                      {showKey ? (
+                        <EyeOff className="h-3.5 w-3.5" />
+                      ) : (
+                        <Eye className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </div>
+                  <Button
+                    variant="outline"
+                    disabled={testMutation.isPending}
+                    onClick={() => testMutation.mutate()}
+                  >
+                    {testMutation.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    Test
+                  </Button>
+                </div>
+                {agent.api_key_configured && !apiKey.trim() && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Saved key detected. Leave this blank to test the existing key.
+                  </p>
+                )}
+              </div>
+              <ConnectionStatusDot status={connectionStatus} />
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-muted/50 p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+              Installation
+            </h3>
+            <div className="mt-3 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-foreground">
+                  Status:{' '}
+                  <span className="font-medium">
+                    {agent.installed ? 'Installed' : 'Not Installed'}
+                  </span>
+                </p>
+                {agent.version && (
+                  <p className="font-mono text-sm text-muted-foreground">
+                    v{agent.version}
+                  </p>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={installing}
+                onClick={async () => {
+                  setInstalling(true)
+                  try {
+                    await api.installAgent(agent.id)
+                    await queryClient.invalidateQueries({ queryKey: ['agents'] })
+                    toast({ title: agent.installed ? 'Codex is up to date' : 'Codex installed' })
+                  } catch (err) {
+                    toast({
+                      title: 'Codex install failed',
+                      description: err instanceof Error ? err.message : 'Unknown error',
+                      variant: 'destructive'
+                    })
+                  } finally {
+                    setInstalling(false)
+                  }
+                }}
+              >
+                {installing ? (
+                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                )}
+                {installLabel}
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-muted/50 p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+              Available Models
+            </h3>
+            {agent.models.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">
+                No models available.
+              </p>
+            ) : (
+              <div className="mt-3 flex flex-wrap gap-3">
+                {agent.models.map((model) => (
+                  <div
+                    key={model.id}
+                    className="rounded-lg bg-muted px-4 py-2"
+                  >
+                    <p className="text-sm font-medium text-foreground">
+                      {model.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {model.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 function UsageCard({
   label,
   tokens,
@@ -797,6 +993,7 @@ export function Agents(): React.ReactElement {
   })
 
   const claudeCode = agents?.find((a) => a.id === 'claude-code')
+  const codex = agents?.find((a) => a.id === 'codex')
 
   const isFirstSetup =
     claudeCode &&
@@ -844,30 +1041,9 @@ export function Agents(): React.ReactElement {
           </>
         )}
 
-        {/* Codex Placeholder */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                  <Cpu className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <h2 className="text-lg font-semibold text-foreground">
-                  Codex
-                </h2>
-                <span className="font-mono text-sm text-muted-foreground">
-                  --
-                </span>
-              </div>
-              <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-                Coming Soon
-              </span>
-            </div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Coming soon. Codex support is planned for a future release.
-            </p>
-          </CardContent>
-        </Card>
+        {!isLoading && !isError && codex && (
+          <CodexCard agent={codex} />
+        )}
       </div>
     </div>
   )

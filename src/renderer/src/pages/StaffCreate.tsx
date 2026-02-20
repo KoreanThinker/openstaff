@@ -768,16 +768,12 @@ export function StaffCreate(): React.ReactElement {
                 </SelectTrigger>
                 <SelectContent>
                   {agents?.map((agent) => (
-                    <SelectItem
-                      key={agent.id}
-                      value={agent.id}
-                      disabled={agent.id !== 'claude-code'}
-                    >
+                    <SelectItem key={agent.id} value={agent.id}>
                       <div className="flex items-center gap-2">
                         {agent.name}
-                        {agent.id !== 'claude-code' && (
+                        {!agent.installed && (
                           <Badge variant="outline" className="rounded-full text-xs">
-                            Coming Soon
+                            Not Installed
                           </Badge>
                         )}
                       </div>
@@ -808,11 +804,9 @@ export function StaffCreate(): React.ReactElement {
                       </SelectItem>
                     ))
                   ) : (
-                    <>
-                      <SelectItem value="claude-opus-4-6">Opus 4.6 - Most capable</SelectItem>
-                      <SelectItem value="claude-sonnet-4-5">Sonnet 4.5 - Balanced</SelectItem>
-                      <SelectItem value="claude-haiku-4-5">Haiku 4.5 - Fastest</SelectItem>
-                    </>
+                    <SelectItem value="__no_models" disabled>
+                      No models available for selected agent
+                    </SelectItem>
                   )}
                 </SelectContent>
               </Select>
