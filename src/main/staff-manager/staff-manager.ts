@@ -254,7 +254,10 @@ export class StaffManager extends EventEmitter {
       await waitForStart()
     }
     const entry = this.running.get(staffId)
-    if (!entry) return
+    if (!entry) {
+      this.intentionalStops.delete(staffId)
+      return
+    }
 
     this.intentionalStops.add(staffId)
     this.paused.delete(staffId)

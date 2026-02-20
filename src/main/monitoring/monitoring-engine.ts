@@ -26,7 +26,7 @@ export class MonitoringEngine {
     if (this.interval) return
 
     this.interval = setInterval(() => {
-      this.collectMetrics()
+      this.collectMetrics().catch(() => {})
     }, 60_000)
 
     // Listen for pty output to parse token usage

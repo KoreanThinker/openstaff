@@ -158,8 +158,8 @@ app.on('before-quit', (event) => {
     healthChecker.stop()
     monitoringEngine.stop()
     Promise.all([
-      ngrokManager.stop(),
-      staffManager.stopAll()
+      ngrokManager.stop().catch(() => {}),
+      staffManager.stopAll().catch(() => {})
     ]).finally(() => {
       if (apiServerRef) apiServerRef.close()
       app.quit()
