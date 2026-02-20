@@ -55,6 +55,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Verify packaged runtime dependencies
+        run: pnpm verify:packaged
+
       - name: Generate checksums
         run: |
           cd dist
