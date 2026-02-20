@@ -64,6 +64,7 @@ import {
 import { toast } from '@/hooks/use-toast'
 import { useHeaderActionStore } from '@/stores/header-action-store'
 import type { StaffSummary, DashboardStats, SystemResources, StaffStatus, StaffArtifact } from '@shared/types'
+import { clampPercent, formatResourcePercent, getResourceHealth } from '@shared/resource-health'
 
 function StatusDot({ status }: { status: StaffStatus }): React.ReactElement {
   return (
@@ -127,14 +128,48 @@ function SummaryCard({
   )
 }
 
-function ResourceBar({ label, percent }: { label: string; percent: number }): React.ReactElement {
+function ResourceBar({
+  label,
+  percent,
+  kind
+}: {
+  label: string
+  percent: number
+  kind: 'cpu' | 'memory'
+}): React.ReactElement {
+  const safePercent = clampPercent(percent)
+  const health = getResourceHealth(safePercent)
+  const indicatorClass =
+    health === 'critical' ? 'bg-destructive' : health === 'warning' ? 'bg-warning' : 'bg-success'
+  const percentClass =
+    health === 'critical'
+      ? 'text-destructive'
+      : health === 'warning'
+        ? 'text-warning'
+        : 'text-success'
+  const hint =
+    health === 'critical'
+      ? kind === 'memory'
+        ? 'Memory is near system limit. Reduce concurrent staffs or close heavy apps.'
+        : 'CPU usage is critical. Expect slower cycles until load drops.'
+      : health === 'warning'
+        ? kind === 'memory'
+          ? 'Memory usage is elevated. Monitor for swap or performance degradation.'
+          : 'CPU usage is elevated. Background jobs may run slower.'
+        : null
+
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <div className="flex items-center justify-between text-xs">
         <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium">{percent.toFixed(0)}%</span>
+        <span className={cn('font-medium', percentClass)}>{formatResourcePercent(safePercent)}</span>
       </div>
-      <Progress value={percent} className="h-2" />
+      <Progress value={safePercent} className="h-2" indicatorClassName={indicatorClass} />
+      {hint && (
+        <p className={cn('text-[11px]', health === 'critical' ? 'text-destructive' : 'text-warning')}>
+          {hint}
+        </p>
+      )}
     </div>
   )
 }
@@ -541,10 +576,11 @@ export function Dashboard(): React.ReactElement {
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <ResourceBar label="CPU" percent={resources.cpu_percent} />
+            <ResourceBar label="CPU" percent={resources.cpu_percent} kind="cpu" />
             <ResourceBar
               label={`Memory (${(resources.memory_used_mb / 1024).toFixed(1)} / ${(resources.memory_total_mb / 1024).toFixed(1)} GB)`}
               percent={resources.memory_percent}
+              kind="memory"
             />
           </CardContent>
         </Card>
