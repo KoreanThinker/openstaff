@@ -64,7 +64,7 @@ jobs:
             echo "No release artifacts found"
             exit 1
           fi
-          shasum -a 256 "${files[@]}" > SHA256SUMS.txt
+          shasum -a 256 "${files[@]}" > "SHA256SUMS-${{ matrix.target }}.txt"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -73,7 +73,7 @@ jobs:
           path: |
             dist/*.dmg
             dist/*.deb
-            dist/SHA256SUMS.txt
+            dist/SHA256SUMS-${{ matrix.target }}.txt
 
   release:
     needs: build
@@ -87,5 +87,5 @@ jobs:
           files: |
             **/*.dmg
             **/*.deb
-            **/SHA256SUMS.txt
+            **/SHA256SUMS-*.txt
           generate_release_notes: true

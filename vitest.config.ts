@@ -21,6 +21,8 @@ export default defineConfig({
         'src/main/ngrok/**',
         'src/main/store/config-store.ts',
         'src/main/agent-driver/claude-code-driver.ts',
+        'src/main/agent-driver/codex-driver.ts',
+        'src/main/agent-driver/gemini-cli-driver.ts',
         'src/main/staff-manager/staff-manager.ts',
         'src/main/api/server.ts'
       ],
