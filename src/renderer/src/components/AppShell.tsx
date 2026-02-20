@@ -17,11 +17,13 @@ import {
   XCircle,
   Info
 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { useSidebarStore } from '@/stores/sidebar-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { useHeaderActionStore } from '@/stores/header-action-store'
 import { useNotificationStore } from '@/stores/notification-store'
 import { getSocket } from '@/lib/socket'
+import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -75,6 +77,7 @@ export function AppShell(): React.ReactElement {
   const pageTitle = pageTitleFromPath(location.pathname)
   const searchRef = React.useRef<HTMLInputElement>(null)
   const [searchOpen, setSearchOpen] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState('')
 
   // IPC navigate listener (tray Settings click)
   React.useEffect(() => {
@@ -147,11 +150,40 @@ export function AppShell(): React.ReactElement {
       }
       if (e.key === 'Escape' && searchOpen) {
         setSearchOpen(false)
+        setSearchQuery('')
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [searchOpen])
+
+  // Search data
+  const { data: searchStaffs } = useQuery({
+    queryKey: ['staffs'],
+    queryFn: () => api.getStaffs(),
+    enabled: searchOpen
+  })
+  const { data: searchSkills } = useQuery({
+    queryKey: ['skills'],
+    queryFn: () => api.getSkills(),
+    enabled: searchOpen
+  })
+
+  const searchResults = React.useMemo(() => {
+    if (!searchQuery.trim()) return { staffs: [], skills: [], pages: [] }
+    const q = searchQuery.toLowerCase()
+    const staffs = (searchStaffs ?? [])
+      .filter((s) => s.name.toLowerCase().includes(q) || s.role.toLowerCase().includes(q))
+      .slice(0, 5)
+    const skills = (searchSkills ?? [])
+      .filter((s) => s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q))
+      .slice(0, 3)
+    const pages = navItems
+      .filter((n) => n.label.toLowerCase().includes(q))
+    return { staffs, skills, pages }
+  }, [searchQuery, searchStaffs, searchSkills])
+
+  const hasResults = searchResults.staffs.length > 0 || searchResults.skills.length > 0 || searchResults.pages.length > 0
 
   const themeIcon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor
 
@@ -232,9 +264,91 @@ export function AppShell(): React.ReactElement {
               ref={searchRef}
               placeholder="Search staffs, skills...  ⌘K"
               className="w-80 rounded-full border-none bg-muted pl-9 pr-4 py-2"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setSearchOpen(true)}
               onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchResults.staffs.length > 0) {
+                  navigate(`/staffs/${searchResults.staffs[0].id}`)
+                  setSearchOpen(false)
+                  setSearchQuery('')
+                }
+              }}
             />
+            {searchOpen && searchQuery.trim() && (
+              <div className="absolute left-0 top-full mt-2 w-80 rounded-xl border border-border bg-popover p-2 shadow-md z-50">
+                {!hasResults && (
+                  <p className="px-3 py-4 text-center text-sm text-muted-foreground">No results found</p>
+                )}
+                {searchResults.staffs.length > 0 && (
+                  <div>
+                    <p className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase">Staff</p>
+                    {searchResults.staffs.map((s) => (
+                      <button
+                        key={s.id}
+                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors text-left"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          navigate(`/staffs/${s.id}`)
+                          setSearchOpen(false)
+                          setSearchQuery('')
+                        }}
+                      >
+                        <Bot className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{s.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{s.role}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {searchResults.skills.length > 0 && (
+                  <div className="mt-1">
+                    <p className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase">Skills</p>
+                    {searchResults.skills.map((s) => (
+                      <button
+                        key={s.name}
+                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors text-left"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          navigate('/skills')
+                          setSearchOpen(false)
+                          setSearchQuery('')
+                        }}
+                      >
+                        <Puzzle className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{s.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{s.description}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {searchResults.pages.length > 0 && (
+                  <div className="mt-1">
+                    <p className="px-3 py-1 text-xs font-medium text-muted-foreground uppercase">Pages</p>
+                    {searchResults.pages.map((p) => (
+                      <button
+                        key={p.to}
+                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors text-left"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          navigate(p.to)
+                          setSearchOpen(false)
+                          setSearchQuery('')
+                        }}
+                      >
+                        <p.icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <p className="font-medium">{p.label}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">

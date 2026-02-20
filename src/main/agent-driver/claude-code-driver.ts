@@ -190,7 +190,12 @@ export class ClaudeCodeDriver implements AgentDriver {
             setTimeout(() => {
               try {
                 process.kill(pty.pid, 0) // Check if still alive
-                treeKill(pty.pid, 'SIGKILL', () => resolve())
+                // Safety timeout: resolve after 10s even if SIGKILL callback never fires
+                const safetyTimeout = setTimeout(() => resolve(), 10_000)
+                treeKill(pty.pid, 'SIGKILL', () => {
+                  clearTimeout(safetyTimeout)
+                  resolve()
+                })
               } catch {
                 resolve() // Already dead
               }
