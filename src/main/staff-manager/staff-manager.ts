@@ -316,10 +316,11 @@ export class StaffManager extends EventEmitter {
     // Auto-recovery with backoff (tracked at class level so it persists across restarts)
     const failures = this.failureHistory.get(staffId) || []
     failures.push(Date.now())
-    this.failureHistory.set(staffId, failures)
+    // Prune old failures to prevent unbounded growth
     const recentFailures = failures.filter(
       (t) => Date.now() - t < FAILURE_WINDOW_MS
     )
+    this.failureHistory.set(staffId, recentFailures)
 
     if (recentFailures.length >= MAX_CONSECUTIVE_FAILURES) {
       this.emit('staff:status', staffId, 'error')
