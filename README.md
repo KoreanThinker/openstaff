@@ -2,8 +2,9 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/KoreanThinker/openstaff/main/build/logo-wordmark.svg">
-    <img src="https://raw.githubusercontent.com/KoreanThinker/openstaff/main/build/logo-wordmark-dark.svg" alt="OpenStaff" width="460">
+    <source media="(prefers-color-scheme: dark)" srcset="./build/logo-wordmark-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="./build/logo-wordmark.svg">
+    <img src="./build/logo-wordmark.svg" alt="OpenStaff" width="460">
   </picture>
 </p>
 
