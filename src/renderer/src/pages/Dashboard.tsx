@@ -829,25 +829,46 @@ export function Dashboard(): React.ReactElement {
                 <div className="h-full space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-xs text-muted-foreground">{selectedArtifact.path}</p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 rounded-full px-3 text-xs"
-                      onClick={() => {
-                        if (!artifactTarget) return
-                        api.openStaffArtifact(artifactTarget.id, selectedArtifact.path)
-                          .then(() => toast({ title: 'Opened in default app' }))
-                          .catch((err) => {
-                            toast({
-                              title: 'Failed to open artifact',
-                              description: err instanceof Error ? err.message : 'Unknown error',
-                              variant: 'destructive'
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 rounded-md px-3 text-xs"
+                        onClick={() => {
+                          if (!artifactTarget) return
+                          api.revealStaffArtifact(artifactTarget.id, selectedArtifact.path)
+                            .then(() => toast({ title: 'Revealed in Finder/Explorer' }))
+                            .catch((err) => {
+                              toast({
+                                title: 'Failed to reveal artifact',
+                                description: err instanceof Error ? err.message : 'Unknown error',
+                                variant: 'destructive'
+                              })
                             })
-                          })
-                      }}
-                    >
-                      Open
-                    </Button>
+                        }}
+                      >
+                        Reveal
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 rounded-md px-3 text-xs"
+                        onClick={() => {
+                          if (!artifactTarget) return
+                          api.openStaffArtifact(artifactTarget.id, selectedArtifact.path)
+                            .then(() => toast({ title: 'Opened in default app' }))
+                            .catch((err) => {
+                              toast({
+                                title: 'Failed to open artifact',
+                                description: err instanceof Error ? err.message : 'Unknown error',
+                                variant: 'destructive'
+                              })
+                            })
+                        }}
+                      >
+                        Open
+                      </Button>
+                    </div>
                   </div>
                   {selectedArtifact.type === 'text' ? (
                     <div className="h-full">

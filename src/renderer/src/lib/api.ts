@@ -64,6 +64,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ path })
     }),
+  revealStaffArtifact: (id: string, path: string) =>
+    request<{ status: string }>(`/api/staffs/${id}/artifacts/reveal`, {
+      method: 'POST',
+      body: JSON.stringify({ path })
+    }),
   getStaffErrors: (id: string) =>
     request<{ items: import('@shared/types').ErrorEntry[]; total: number }>(`/api/staffs/${id}/errors`)
       .then((r) => r.items),

@@ -282,6 +282,16 @@ describe('staffs API routes', () => {
     expect(data.error).toContain('Invalid artifact path')
   })
 
+  it('POST /api/staffs/:id/artifacts/reveal rejects traversal path', async () => {
+    const { data: list } = await apiGet('/api/staffs')
+    const id = list[0].id
+    const { status, data } = await apiPost(`/api/staffs/${id}/artifacts/reveal`, {
+      path: '../../etc/passwd'
+    })
+    expect(status).toBe(400)
+    expect(data.error).toContain('Invalid artifact path')
+  })
+
   it('GET /api/staffs/:id returns 404 for non-existent', async () => {
     const { status } = await apiGet('/api/staffs/nonexistent')
     expect(status).toBe(404)
