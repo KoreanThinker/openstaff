@@ -1,188 +1,90 @@
-<p align="center">
-  <img src="build/logo-wordmark.svg" width="360" alt="OpenStaff logo" />
-</p>
-
-<h1 align="center">OpenStaff</h1>
+# 👥 OpenStaff — AI Staff Operations
 
 <p align="center">
-  <strong>Hire your AI staff. Let them work 24/7.</strong><br/>
-  An open-source desktop app that manages multiple AI coding agents running in an infinite loop.<br/>
-  Like PM2 for AI agents.
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="build/logo-wordmark.svg">
+    <img src="build/logo-wordmark-dark.svg" alt="OpenStaff" width="460">
+  </picture>
 </p>
 
 <p align="center">
-  <a href="https://github.com/koreanthinker/openstaff/releases"><img src="https://img.shields.io/github/v/release/koreanthinker/openstaff" alt="Release" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/koreanthinker/openstaff" alt="License" /></a>
+  <strong>Hire your AI staff. Let them work 24/7.</strong>
 </p>
 
-<!-- screenshot -->
+<p align="center">
+  <a href="https://github.com/KoreanThinker/openstaff/actions/workflows/ci.yml?branch=main"><img src="https://img.shields.io/github/actions/workflow/status/KoreanThinker/openstaff/ci.yml?branch=main&style=for-the-badge" alt="CI status"></a>
+  <a href="https://github.com/KoreanThinker/openstaff/releases"><img src="https://img.shields.io/github/v/release/KoreanThinker/openstaff?include_prereleases&style=for-the-badge" alt="GitHub release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/KoreanThinker/openstaff?style=for-the-badge" alt="MIT License"></a>
+</p>
 
----
+**OpenStaff** is a local-first desktop app for operating multiple AI coding agents like a real team.
+Each Staff runs a continuous loop: **Gather → Execute → Evaluate**.
+You define each role in plain language, attach skills, and monitor outcomes from one dashboard.
 
-## What is OpenStaff?
+[Releases](https://github.com/KoreanThinker/openstaff/releases) · [Product Docs](docs/PRD.md) · [Security](SECURITY.md)
 
-OpenStaff turns AI coding agents into autonomous employees. Each **Staff** runs an infinite feedback loop -- Gather, Execute, Evaluate -- cycling continuously until you stop it. Define a role in plain English, attach skills, and let your Staff work around the clock.
+## Install (recommended)
 
-No coding required for daily operation. Built for non-developers, with one-time agent/API-key setup.
+Download the latest app package from [Releases](https://github.com/KoreanThinker/openstaff/releases).
 
-## Features
+- macOS: `.dmg`
+- Linux: `.AppImage` / `.deb`
 
-:infinity: **Infinite Feedback Loop** -- Every Staff runs Gather > Execute > Evaluate on repeat. Autonomous learning and improvement, 24/7.
+## Quick start (from source)
 
-:busts_in_silhouette: **Multiple Staff** -- Run N specialized AI employees in parallel. Marketing, pSEO, ad creatives, community outreach -- each with their own role.
-
-:bar_chart: **Real-Time Monitoring** -- Track token usage, costs, cycle counts, and custom KPIs from a single dashboard.
-
-:jigsaw: **Skills System** -- Attach modular SKILL.md files to give Staff new capabilities. Browse the built-in template registry or create your own.
-
-:globe_with_meridians: **Remote Access** -- Expose your local API via Ngrok tunnel and monitor Staff from anywhere.
-
-:computer: **Tray App** -- Lives in your macOS menu bar. Quick status checks and controls without opening the full window.
-
-:electric_plug: **Agent Drivers** -- Claude Code support out of the box. Extensible AgentDriver interface for future agents (Codex and beyond).
-
-:package: **Template Registry** -- Pre-built Staff templates for common roles. One-click setup to get started fast.
-
-## Quick Start
-
-**Prerequisites**
-
-- [Node.js](https://nodejs.org/) >= 20
-- [pnpm](https://pnpm.io/) >= 9
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed and authenticated
-
-**Install**
+Runtime: **Node >= 22**, **pnpm >= 9**
 
 ```bash
-git clone https://github.com/koreanthinker/openstaff.git
+git clone https://github.com/KoreanThinker/openstaff.git
 cd openstaff
 pnpm install
-```
-
-**Development**
-
-```bash
 pnpm dev
 ```
 
-**Build**
+Build packages:
 
 ```bash
-# macOS
 pnpm build:mac
-
-# Linux
 pnpm build:linux
 ```
 
-## Architecture
+## Highlights
 
-OpenStaff is an **API-first** Electron app. The main process runs an Express REST API + WebSocket server. Both the Electron renderer and the optional Ngrok web UI consume the same API.
+- **Infinite operations loop**: every Staff continuously runs Gather → Execute → Evaluate.
+- **Multi-staff orchestration**: run specialized Staff in parallel for different business functions.
+- **Live monitoring**: track cycles, token usage, costs, logs, and KPIs in real time.
+- **Skill system**: install reusable `SKILL.md` skills from registry or local folders.
+- **Remote dashboard access**: connect securely through Ngrok with password protection.
+- **Local-first storage**: data stays in your machine under `~/.openstaff`.
 
-```
-┌─────────────────────────────────────────────────┐
-│                  Electron App                   │
-│                                                 │
-│  ┌──────────┐    ┌──────────────────────────┐   │
-│  │ Renderer │    │      Main Process        │   │
-│  │ (React)  │───>│  Express API + WebSocket │   │
-│  └──────────┘    │                          │   │
-│                  │  ┌────────────────────┐   │   │
-│                  │  │   Staff Manager    │   │   │
-│                  │  │  ┌──────────────┐  │   │   │
-│                  │  │  │ AgentDriver  │  │   │   │
-│                  │  │  │ (node-pty)   │  │   │   │
-│                  │  │  └──────────────┘  │   │   │
-│                  │  └────────────────────┘   │   │
-│                  └──────────────────────────┘   │
-└─────────────────────────────────────────────────┘
-                         │
-                    ~/.openstaff/
-              (JSON config, JSONL logs)
-```
+## Security defaults (remote access)
 
-- **No database.** All data lives on the filesystem under `~/.openstaff/`.
-- **node-pty** spawns Claude Code CLI sessions as real PTY processes.
-- **Electron IPC** is used only for native features (tray, notifications, file dialogs).
+- Remote access is **off** by default.
+- Ngrok tunnel requires both API key and auth password.
+- Sensitive values are encrypted in local config (`electron-store` + `safeStorage`).
 
-## Brand Assets
+Full details: [SECURITY.md](SECURITY.md)
 
-- Logo system docs: [`docs/brand-logo.md`](docs/brand-logo.md)
-- App icon source: `build/icon.svg`
-- Tray icon source: `build/trayTemplate.svg`
+## How it works (short)
 
-## Project Structure
-
-```
-src/
-├── main/                  # Electron main process
-│   ├── agent-driver/      # AgentDriver interface + Claude Code implementation
-│   ├── api/               # Express REST API server + routes
-│   ├── data/              # Filesystem data layer (JSON, JSONL)
-│   ├── health-check/      # Staff health monitoring
-│   ├── monitoring/        # Token usage parsing + metrics engine
-│   ├── ngrok/             # Remote access tunnel
-│   ├── staff-manager/     # Process lifecycle management
-│   ├── store/             # electron-store config
-│   └── tray/              # macOS menu bar tray
-├── preload/               # Electron preload scripts
-├── renderer/              # React frontend
-│   └── src/
-│       ├── components/    # UI components (shadcn/ui)
-│       ├── pages/         # Route pages
-│       ├── hooks/         # React hooks
-│       ├── stores/        # Zustand stores
-│       └── lib/           # Utilities
-└── shared/                # Types shared between main + renderer
+```text
+┌──────────────────────────────────────────────┐
+│                OpenStaff App                 │
+│                                              │
+│  React UI  <-->  Main Process API/WebSocket  │
+│                      │                       │
+│                 Staff Manager                │
+│                      │                       │
+│          Agent Drivers (Claude Code)         │
+└──────────────────────────────────────────────┘
+                       │
+                 ~/.openstaff/
 ```
 
-## Development
+## Star History
 
-**Run tests**
-
-```bash
-# Unit + integration tests
-pnpm test
-
-# Watch mode
-pnpm test:watch
-
-# Coverage report
-pnpm test:coverage
-
-# E2E tests (requires built app, default: headless + hidden Electron window)
-pnpm test:e2e
-
-# E2E tests in headed mode (visual debugging, shows Electron window)
-pnpm test:e2e:headed
-
-# Playwright UI mode (shows Electron window)
-pnpm test:e2e:ui
-```
-
-**Lint and type check**
-
-```bash
-pnpm lint
-pnpm type-check
-```
-
-**Code style**
-
-- TypeScript strict mode
-- Named exports only (no default exports)
-- ES modules (no CommonJS)
-- 2-space indentation
-- Path alias: `@/` maps to `src/renderer/src/`
-
-## Contributing
-
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## Security
-
-Please report vulnerabilities through the private process in [SECURITY.md](SECURITY.md).
+[![Star History Chart](https://api.star-history.com/svg?repos=KoreanThinker/openstaff&type=Date)](https://www.star-history.com/#KoreanThinker/openstaff&Date)
 
 ## License
 
-[MIT](LICENSE) -- Copyright (c) 2026 Hyun Namgung
+[MIT](LICENSE)
