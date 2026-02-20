@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#16213e"/>
+    </linearGradient>
+    <linearGradient id="loop1" x1="128" y1="128" x2="384" y2="384" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#50fa7b"/>
+      <stop offset="50%" stop-color="#8be9fd"/>
+      <stop offset="100%" stop-color="#ff79c6"/>
+    </linearGradient>
+    <linearGradient id="loop2" x1="384" y1="128" x2="128" y2="384" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ff79c6"/>
+      <stop offset="50%" stop-color="#f1fa8c"/>
+      <stop offset="100%" stop-color="#50fa7b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="url(#bg)"/>
+
+  <!-- Infinity loop / continuous cycle -->
+  <!-- Left loop -->
+  <path d="M 160 256 C 160 200, 220 160, 256 200 C 292 240, 292 272, 256 312 C 220 352, 160 312, 160 256 Z"
+        stroke="url(#loop1)" stroke-width="28" stroke-linecap="round" fill="none"/>
+  <!-- Right loop -->
+  <path d="M 352 256 C 352 312, 292 352, 256 312 C 220 272, 220 240, 256 200 C 292 160, 352 200, 352 256 Z"
+        stroke="url(#loop2)" stroke-width="28" stroke-linecap="round" fill="none"/>
+
+  <!-- Three dots representing the 3 phases (Gather, Execute, Evaluate) -->
+  <circle cx="160" cy="256" r="16" fill="#50fa7b"/>
+  <circle cx="256" cy="200" r="16" fill="#8be9fd"/>
+  <circle cx="352" cy="256" r="16" fill="#ff79c6"/>
+
+  <!-- Small arrow indicators on the loop -->
+  <polygon points="240,195 255,185 250,205" fill="#8be9fd"/>
+  <polygon points="272,315 257,325 262,305" fill="#f1fa8c"/>
+</svg>

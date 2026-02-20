@@ -9,7 +9,15 @@ export function createTray(
   staffManager: StaffManager,
   mainWindow: BrowserWindow | null
 ): Tray {
-  const icon = nativeImage.createEmpty()
+  // Use template tray icon (macOS renders as monochrome menu bar icon)
+  const iconPath = join(process.resourcesPath || join(__dirname, '../../resources'), 'trayTemplate.png')
+  let icon: Electron.NativeImage
+  try {
+    icon = nativeImage.createFromPath(iconPath)
+    icon.setTemplateImage(true)
+  } catch {
+    icon = nativeImage.createEmpty()
+  }
   const tray = new Tray(icon)
   tray.setToolTip('OpenStaff')
 
