@@ -16,19 +16,6 @@ function parseApiKeyList(raw: string): string[] {
     .filter((entry) => entry.length > 0)
 }
 
-function buildPlaceholderCodex(): AgentInfo {
-  return {
-    id: 'codex',
-    name: 'OpenAI Codex',
-    installed: false,
-    version: null,
-    connected: false,
-    api_key_configured: false,
-    models: [],
-    status: 'not_installed'
-  }
-}
-
 export function agentRoutes(ctx: ApiContext): Router {
   const router = Router()
 
@@ -61,11 +48,6 @@ export function agentRoutes(ctx: ApiContext): Router {
         })
       )
 
-      // Add Codex placeholder only when no concrete driver exists yet.
-      if (!agents.some((agent) => agent.id === 'codex')) {
-        agents.push(buildPlaceholderCodex())
-      }
-
       res.json(agents)
     } catch (err) {
       res.status(500).json({ error: String(err) })
@@ -77,9 +59,6 @@ export function agentRoutes(ctx: ApiContext): Router {
     try {
       const driver = getDriver(req.params.id!)
       if (!driver) {
-        if (req.params.id === 'codex') {
-          return res.json(buildPlaceholderCodex())
-        }
         return res.status(404).json({ error: 'Agent not found' })
       }
 

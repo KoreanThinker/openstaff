@@ -74,16 +74,14 @@ describe('agents API routes', () => {
 
   afterAll(() => server.close())
 
-  it('GET /api/agents lists all agents including Codex placeholder', async () => {
+  it('GET /api/agents lists registered agents only', async () => {
     const res = await fetch(`http://localhost:${port}/api/agents`)
     const data = await res.json()
     expect(res.status).toBe(200)
-    expect(data.length).toBe(2)
+    expect(data.length).toBe(1)
     expect(data[0].id).toBe('claude-code')
     expect(data[0].installed).toBe(true)
     expect(data[0].status).toBe('connected')
-    expect(data[1].id).toBe('codex')
-    expect(data[1].status).toBe('not_installed')
   })
 
   it('GET /api/agents/:id returns single agent', async () => {
@@ -94,13 +92,9 @@ describe('agents API routes', () => {
     expect(data.connected).toBe(true)
   })
 
-  it('GET /api/agents/codex returns placeholder instead of 404', async () => {
+  it('GET /api/agents/codex returns 404 when driver is unavailable', async () => {
     const res = await fetch(`http://localhost:${port}/api/agents/codex`)
-    const data = await res.json()
-    expect(res.status).toBe(200)
-    expect(data.id).toBe('codex')
-    expect(data.status).toBe('not_installed')
-    expect(data.installed).toBe(false)
+    expect(res.status).toBe(404)
   })
 
   it('GET /api/agents/:id returns 404 for unknown agent', async () => {
