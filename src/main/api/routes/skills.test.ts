@@ -149,15 +149,27 @@ compatibility: Requires TEST_API_KEY
     expect(res.status).toBe(404)
   })
 
-  it('POST /api/skills/import rejects path traversal', async () => {
+  it('POST /api/skills/import rejects path traversal (no SKILL.md)', async () => {
     const res = await fetch(`http://localhost:${port}/api/skills/import`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ path: '../../etc/passwd' })
     })
     expect(res.status).toBe(400)
+  })
+
+  it('POST /api/skills/import rejects directory without SKILL.md', async () => {
+    const { mkdirSync } = await import('fs')
+    const emptyDir = join(tempDir, 'empty-dir')
+    mkdirSync(emptyDir, { recursive: true })
+    const res = await fetch(`http://localhost:${port}/api/skills/import`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: emptyDir })
+    })
+    expect(res.status).toBe(400)
     const data = await res.json()
-    expect(data.error).toBe('Invalid path')
+    expect(data.error).toBe('Not a valid skill directory (SKILL.md not found)')
   })
 
   it('POST /api/skills/import rejects missing path', async () => {
@@ -169,15 +181,15 @@ compatibility: Requires TEST_API_KEY
     expect(res.status).toBe(400)
   })
 
-  it('POST /api/skills/import returns 500 for invalid path', async () => {
+  it('POST /api/skills/import rejects nonexistent path', async () => {
     const res = await fetch(`http://localhost:${port}/api/skills/import`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ path: '/nonexistent/path/to/skill' })
+      body: JSON.stringify({ path: '/tmp/nonexistent-skill-path-12345' })
     })
-    expect(res.status).toBe(500)
+    expect(res.status).toBe(400)
     const data = await res.json()
-    expect(data.error).toBeTruthy()
+    expect(data.error).toBe('Path does not exist')
   })
 
   it('DELETE /api/skills/:name deletes skill', async () => {

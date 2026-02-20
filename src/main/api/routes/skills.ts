@@ -1,4 +1,6 @@
 import { Router } from 'express'
+import { resolve, join as pathJoin } from 'path'
+import { existsSync } from 'fs'
 import type { ApiContext } from '../server'
 import { listSkillNames, getSkillInfo, importSkill, deleteSkill } from '../../data/skill-data'
 import { listStaffIds, readStaffConfig, symlinkSkills, writeStaffConfig } from '../../data/staff-data'
@@ -41,11 +43,19 @@ export function skillRoutes(ctx: ApiContext): Router {
   // Import skill from local path
   router.post('/import', (req, res) => {
     try {
-      const { path } = req.body as { path: string }
-      if (!path || typeof path !== 'string' || path.includes('..')) {
+      const { path: skillPath } = req.body as { path: string }
+      if (!skillPath || typeof skillPath !== 'string') {
         return res.status(400).json({ error: 'Invalid path' })
       }
-      const name = importSkill(path)
+      const resolvedPath = resolve(skillPath)
+      if (!existsSync(resolvedPath)) {
+        return res.status(400).json({ error: 'Path does not exist' })
+      }
+      // Must be a valid skill directory (contains SKILL.md)
+      if (!existsSync(pathJoin(resolvedPath, 'SKILL.md'))) {
+        return res.status(400).json({ error: 'Not a valid skill directory (SKILL.md not found)' })
+      }
+      const name = importSkill(resolvedPath)
       res.status(201).json({ name })
     } catch (err) {
       res.status(500).json({ error: String(err) })
