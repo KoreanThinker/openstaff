@@ -825,42 +825,68 @@ export function Dashboard(): React.ReactElement {
                 <div className="text-sm text-muted-foreground">
                   Select an artifact to preview.
                 </div>
-              ) : selectedArtifact.type === 'text' ? (
-                <div className="h-full">
-                  {textPreviewQuery.isLoading ? (
-                    <Skeleton className="h-full w-full rounded-md" />
-                  ) : textPreviewQuery.isError ? (
-                    <div className="text-sm text-destructive">
-                      Failed to load text preview.
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <pre className="max-h-[360px] overflow-auto whitespace-pre-wrap rounded-md bg-background p-3 text-xs">
-                        {textPreviewQuery.data?.content || '(empty file)'}
-                      </pre>
-                      {textPreviewQuery.data?.truncated && (
-                        <p className="text-xs text-muted-foreground">
-                          Preview truncated to the first 20,000 characters.
-                        </p>
+              ) : (
+                <div className="h-full space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-xs text-muted-foreground">{selectedArtifact.path}</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 rounded-full px-3 text-xs"
+                      onClick={() => {
+                        if (!artifactTarget) return
+                        api.openStaffArtifact(artifactTarget.id, selectedArtifact.path)
+                          .then(() => toast({ title: 'Opened in default app' }))
+                          .catch((err) => {
+                            toast({
+                              title: 'Failed to open artifact',
+                              description: err instanceof Error ? err.message : 'Unknown error',
+                              variant: 'destructive'
+                            })
+                          })
+                      }}
+                    >
+                      Open
+                    </Button>
+                  </div>
+                  {selectedArtifact.type === 'text' ? (
+                    <div className="h-full">
+                      {textPreviewQuery.isLoading ? (
+                        <Skeleton className="h-full w-full rounded-md" />
+                      ) : textPreviewQuery.isError ? (
+                        <div className="text-sm text-destructive">
+                          Failed to load text preview.
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <pre className="max-h-[360px] overflow-auto whitespace-pre-wrap rounded-md bg-background p-3 text-xs">
+                            {textPreviewQuery.data?.content || '(empty file)'}
+                          </pre>
+                          {textPreviewQuery.data?.truncated && (
+                            <p className="text-xs text-muted-foreground">
+                              Preview truncated to the first 20,000 characters.
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
+                  ) : selectedArtifact.type === 'image' ? (
+                    <img
+                      src={artifactFileUrl(selectedArtifact.path)}
+                      alt={selectedArtifact.name}
+                      className="max-h-[380px] max-w-full rounded-md object-contain"
+                    />
+                  ) : selectedArtifact.type === 'video' ? (
+                    <video
+                      controls
+                      className="max-h-[380px] w-full rounded-md bg-black"
+                      src={artifactFileUrl(selectedArtifact.path)}
+                    />
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      This file type is not previewable in-app yet.
+                    </div>
                   )}
-                </div>
-              ) : selectedArtifact.type === 'image' ? (
-                <img
-                  src={artifactFileUrl(selectedArtifact.path)}
-                  alt={selectedArtifact.name}
-                  className="max-h-[380px] max-w-full rounded-md object-contain"
-                />
-              ) : selectedArtifact.type === 'video' ? (
-                <video
-                  controls
-                  className="max-h-[380px] w-full rounded-md bg-black"
-                  src={artifactFileUrl(selectedArtifact.path)}
-                />
-              ) : (
-                <div className="text-sm text-muted-foreground">
-                  This file type is not previewable in-app yet.
                 </div>
               )}
             </div>

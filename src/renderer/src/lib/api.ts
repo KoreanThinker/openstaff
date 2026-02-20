@@ -59,6 +59,11 @@ export const api = {
   getStaffArtifacts: (id: string) => request<import('@shared/types').StaffArtifact[]>(`/api/staffs/${id}/artifacts`),
   getStaffArtifactTextPreview: (id: string, path: string) =>
     request<{ content: string; truncated: boolean }>(`/api/staffs/${id}/artifacts/text?path=${encodeURIComponent(path)}`),
+  openStaffArtifact: (id: string, path: string) =>
+    request<{ status: string }>(`/api/staffs/${id}/artifacts/open`, {
+      method: 'POST',
+      body: JSON.stringify({ path })
+    }),
   getStaffErrors: (id: string) =>
     request<{ items: import('@shared/types').ErrorEntry[]; total: number }>(`/api/staffs/${id}/errors`)
       .then((r) => r.items),

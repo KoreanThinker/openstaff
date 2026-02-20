@@ -511,6 +511,28 @@ export function staffRoutes(ctx: ApiContext): Router {
     }
   })
 
+  // Open artifact with the OS default handler (Finder/Explorer integration)
+  router.post('/:id/artifacts/open', async (req, res) => {
+    try {
+      const config = readStaffConfig(req.params.id!)
+      if (!config) return res.status(404).json({ error: 'Staff not found' })
+
+      const relativePath = String((req.body as { path?: string } | undefined)?.path || '')
+      const staffDir = getStaffDir(req.params.id!)
+      const absolute = isAllowedArtifactPath(staffDir, relativePath)
+      if (!absolute) return res.status(400).json({ error: 'Invalid artifact path' })
+      if (!existsSync(absolute)) return res.status(404).json({ error: 'Artifact not found' })
+      if (!statSync(absolute).isFile()) return res.status(400).json({ error: 'Artifact must be a file' })
+
+      const { shell } = await import('electron')
+      const result = await shell.openPath(absolute)
+      if (result) return res.status(500).json({ error: result })
+      res.json({ status: 'opened' })
+    } catch (err) {
+      res.status(500).json({ error: String(err) })
+    }
+  })
+
   // Get errors (returns last 50 by default, configurable via ?limit=N&offset=M)
   router.get('/:id/errors', (req, res) => {
     try {
