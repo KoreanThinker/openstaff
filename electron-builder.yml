@@ -23,6 +23,10 @@ mac:
       arch:
         - arm64
         - x64
+  # Unsinged public artifacts must not opt into hardened runtime,
+  # otherwise macOS library validation rejects Electron Framework.
+  hardenedRuntime: false
+  gatekeeperAssess: false
   entitlementsInherit: build/entitlements.mac.plist
   notarize: false
 linux:
