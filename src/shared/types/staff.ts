@@ -42,6 +42,16 @@ export interface KpiSummaryEntry {
   trend: number | null
 }
 
+export type StaffArtifactType = 'text' | 'image' | 'video' | 'other'
+
+export interface StaffArtifact {
+  path: string
+  name: string
+  type: StaffArtifactType
+  size_bytes: number
+  modified_at: string
+}
+
 export interface StaffDetail extends StaffConfig {
   status: StaffStatus
   state: StaffState

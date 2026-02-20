@@ -17,7 +17,11 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Loader2
+  Loader2,
+  FolderSearch,
+  FileText,
+  Image as ImageIcon,
+  Film
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { cn, formatUptime, formatCost, formatTokens, formatTrend } from '@/lib/utils'
@@ -59,7 +63,7 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
 import { useHeaderActionStore } from '@/stores/header-action-store'
-import type { StaffSummary, DashboardStats, SystemResources, StaffStatus } from '@shared/types'
+import type { StaffSummary, DashboardStats, SystemResources, StaffStatus, StaffArtifact } from '@shared/types'
 
 function StatusDot({ status }: { status: StaffStatus }): React.ReactElement {
   return (
@@ -135,6 +139,13 @@ function ResourceBar({ label, percent }: { label: string; percent: number }): Re
   )
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
+}
+
 function StaffActions({
   staff,
   onAction
@@ -176,6 +187,10 @@ function StaffActions({
         <DropdownMenuItem onClick={() => onAction('view', staff.id)}>
           <Eye className="mr-2 h-4 w-4" />
           View Details
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onAction('outputs', staff.id)}>
+          <FolderSearch className="mr-2 h-4 w-4" />
+          View Outputs
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -279,6 +294,8 @@ export function Dashboard(): React.ReactElement {
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [artifactTarget, setArtifactTarget] = useState<{ id: string; name: string } | null>(null)
+  const [selectedArtifactPath, setSelectedArtifactPath] = useState<string | null>(null)
   const setActionButton = useHeaderActionStore((s) => s.setActionButton)
 
   // Set header action button
@@ -320,9 +337,49 @@ export function Dashboard(): React.ReactElement {
     refetchInterval: 10000
   })
 
+  const artifactsQuery = useQuery<StaffArtifact[]>({
+    queryKey: ['staff-artifacts', artifactTarget?.id],
+    queryFn: () => api.getStaffArtifacts(artifactTarget!.id),
+    enabled: !!artifactTarget
+  })
+
+  const selectedArtifact = useMemo(
+    () => (artifactsQuery.data ?? []).find((artifact) => artifact.path === selectedArtifactPath) ?? null,
+    [artifactsQuery.data, selectedArtifactPath]
+  )
+
+  const textPreviewQuery = useQuery<{ content: string; truncated: boolean }>({
+    queryKey: ['staff-artifact-text-preview', artifactTarget?.id, selectedArtifactPath],
+    queryFn: () => api.getStaffArtifactTextPreview(artifactTarget!.id, selectedArtifactPath!),
+    enabled: !!artifactTarget && !!selectedArtifactPath && selectedArtifact?.type === 'text'
+  })
+
   const stats = statsQuery.data
   const staffs = staffsQuery.data ?? []
   const resources = resourcesQuery.data
+
+  useEffect(() => {
+    const artifacts = artifactsQuery.data ?? []
+    if (!artifactTarget || artifacts.length === 0) {
+      setSelectedArtifactPath(null)
+      return
+    }
+    const stillExists = selectedArtifactPath
+      ? artifacts.some((artifact) => artifact.path === selectedArtifactPath)
+      : false
+    if (!stillExists) {
+      setSelectedArtifactPath(artifacts[0]?.path ?? null)
+    }
+  }, [artifactTarget, artifactsQuery.data, selectedArtifactPath])
+
+  const artifactFileUrl = useCallback((path: string): string => {
+    const base =
+      typeof window !== 'undefined' && window.api
+        ? `http://localhost:${(window as Window & { __apiPort?: number }).__apiPort || 19836}`
+        : ''
+    if (!artifactTarget) return ''
+    return `${base}/api/staffs/${artifactTarget.id}/artifacts/file?path=${encodeURIComponent(path)}`
+  }, [artifactTarget])
 
   const handleAction = useCallback(async (action: string, staffId: string): Promise<void> => {
     try {
@@ -346,6 +403,11 @@ export function Dashboard(): React.ReactElement {
         case 'view':
           navigate(`/staffs/${staffId}`)
           return
+        case 'outputs': {
+          const name = staffs.find((s) => s.id === staffId)?.name ?? 'Staff'
+          setArtifactTarget({ id: staffId, name })
+          return
+        }
         case 'delete': {
           const name = staffs.find((s) => s.id === staffId)?.name ?? 'this staff'
           setDeleteTarget({ id: staffId, name })
@@ -693,6 +755,118 @@ export function Dashboard(): React.ReactElement {
           </div>
         </>
       )}
+
+      {/* Outputs Dialog */}
+      <Dialog
+        open={!!artifactTarget}
+        onOpenChange={(open) => {
+          if (!open) {
+            setArtifactTarget(null)
+            setSelectedArtifactPath(null)
+          }
+        }}
+      >
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>Outputs - {artifactTarget?.name}</DialogTitle>
+            <DialogDescription>
+              Browse generated output files and preview text/image/video artifacts.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 md:grid-cols-[260px_1fr]">
+            <div className="max-h-[440px] overflow-y-auto rounded-md border border-border">
+              {artifactsQuery.isLoading ? (
+                <div className="space-y-2 p-3">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full rounded-md" />
+                  ))}
+                </div>
+              ) : (artifactsQuery.data ?? []).length === 0 ? (
+                <div className="p-4 text-sm text-muted-foreground">No output artifacts found yet.</div>
+              ) : (
+                <div className="p-1">
+                  {(artifactsQuery.data ?? []).map((artifact) => {
+                    const Icon = artifact.type === 'text'
+                      ? FileText
+                      : artifact.type === 'image'
+                        ? ImageIcon
+                        : artifact.type === 'video'
+                          ? Film
+                          : FolderSearch
+                    const isSelected = selectedArtifactPath === artifact.path
+                    return (
+                      <button
+                        key={artifact.path}
+                        type="button"
+                        className={cn(
+                          'mb-1 w-full rounded-md px-2 py-2 text-left transition-colors',
+                          isSelected ? 'bg-muted' : 'hover:bg-muted/60'
+                        )}
+                        onClick={() => setSelectedArtifactPath(artifact.path)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4 text-muted-foreground" />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm font-medium">{artifact.name}</div>
+                            <div className="truncate text-[11px] text-muted-foreground">{artifact.path}</div>
+                          </div>
+                        </div>
+                        <div className="mt-1 text-[11px] text-muted-foreground">
+                          {formatBytes(artifact.size_bytes)} • {new Date(artifact.modified_at).toLocaleString()}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+            <div className="min-h-[320px] rounded-md border border-border bg-muted/20 p-3">
+              {!selectedArtifact ? (
+                <div className="text-sm text-muted-foreground">
+                  Select an artifact to preview.
+                </div>
+              ) : selectedArtifact.type === 'text' ? (
+                <div className="h-full">
+                  {textPreviewQuery.isLoading ? (
+                    <Skeleton className="h-full w-full rounded-md" />
+                  ) : textPreviewQuery.isError ? (
+                    <div className="text-sm text-destructive">
+                      Failed to load text preview.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <pre className="max-h-[360px] overflow-auto whitespace-pre-wrap rounded-md bg-background p-3 text-xs">
+                        {textPreviewQuery.data?.content || '(empty file)'}
+                      </pre>
+                      {textPreviewQuery.data?.truncated && (
+                        <p className="text-xs text-muted-foreground">
+                          Preview truncated to the first 20,000 characters.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : selectedArtifact.type === 'image' ? (
+                <img
+                  src={artifactFileUrl(selectedArtifact.path)}
+                  alt={selectedArtifact.name}
+                  className="max-h-[380px] max-w-full rounded-md object-contain"
+                />
+              ) : selectedArtifact.type === 'video' ? (
+                <video
+                  controls
+                  className="max-h-[380px] w-full rounded-md bg-black"
+                  src={artifactFileUrl(selectedArtifact.path)}
+                />
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  This file type is not previewable in-app yet.
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>

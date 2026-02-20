@@ -56,6 +56,9 @@ export const api = {
   getStaffMetrics: (id: string) => request<import('@shared/types').UsageEntry[]>(`/api/staffs/${id}/metrics`),
   getStaffKpi: (id: string) => request<import('@shared/types').KpiEntry[]>(`/api/staffs/${id}/kpi`),
   getStaffMemory: (id: string) => request<{ content: string }>(`/api/staffs/${id}/memory`),
+  getStaffArtifacts: (id: string) => request<import('@shared/types').StaffArtifact[]>(`/api/staffs/${id}/artifacts`),
+  getStaffArtifactTextPreview: (id: string, path: string) =>
+    request<{ content: string; truncated: boolean }>(`/api/staffs/${id}/artifacts/text?path=${encodeURIComponent(path)}`),
   getStaffErrors: (id: string) =>
     request<{ items: import('@shared/types').ErrorEntry[]; total: number }>(`/api/staffs/${id}/errors`)
       .then((r) => r.items),

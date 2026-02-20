@@ -1,11 +1,21 @@
 import { Router } from 'express'
 import { v4 as uuidv4 } from 'uuid'
-import { join } from 'path'
+import { extname, join, relative, resolve, sep } from 'path'
 import type { ApiContext } from '../server'
-import type { StaffConfig, StaffSummary, StaffDetail, CycleEntry, KpiEntry, ErrorEntry, UsageEntry } from '@shared/types'
+import type {
+  StaffConfig,
+  StaffSummary,
+  StaffDetail,
+  CycleEntry,
+  KpiEntry,
+  ErrorEntry,
+  UsageEntry,
+  StaffArtifact,
+  StaffArtifactType
+} from '@shared/types'
 import { readStaffConfig, readStaffState, listStaffIds, readMemoryMd, getStaffDir } from '../../data/staff-data'
 import { readJsonl, countJsonlLines } from '../../data/jsonl-reader'
-import { readFileSync, existsSync } from 'fs'
+import { existsSync, readFileSync, readdirSync, statSync } from 'fs'
 
 function sanitizeString(str: string, maxLength = 500): string {
   // Strip control characters, limit length
@@ -35,6 +45,99 @@ function toMemoryPreview(staffId: string): string | null {
   } catch {
     return null
   }
+}
+
+const ARTIFACT_IGNORE_FILES = new Set([
+  'staff.json',
+  'state.json',
+  'memory.md',
+  'output.log',
+  'usage.jsonl',
+  'cycles.jsonl',
+  'kpi.jsonl',
+  'errors.jsonl',
+  'signals.jsonl',
+  'staff-mcp.json'
+])
+
+const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico'])
+const VIDEO_EXTENSIONS = new Set(['.mp4', '.webm', '.mov', '.m4v', '.avi', '.mkv'])
+const TEXT_EXTENSIONS = new Set([
+  '.txt',
+  '.md',
+  '.json',
+  '.jsonl',
+  '.csv',
+  '.tsv',
+  '.yml',
+  '.yaml',
+  '.log',
+  '.html',
+  '.css',
+  '.js',
+  '.ts',
+  '.tsx',
+  '.jsx',
+  '.xml'
+])
+
+function classifyArtifactType(fileName: string): StaffArtifactType {
+  const ext = extname(fileName).toLowerCase()
+  if (IMAGE_EXTENSIONS.has(ext)) return 'image'
+  if (VIDEO_EXTENSIONS.has(ext)) return 'video'
+  if (TEXT_EXTENSIONS.has(ext)) return 'text'
+  return 'other'
+}
+
+function isAllowedArtifactPath(staffDir: string, rawPath: string): string | null {
+  if (!rawPath || typeof rawPath !== 'string') return null
+  if (rawPath.includes('\0')) return null
+
+  const normalized = rawPath.replace(/\\/g, '/').replace(/^\/+/, '')
+  const absolute = resolve(staffDir, normalized)
+  const rel = relative(staffDir, absolute)
+  if (!rel || rel.startsWith('..') || rel.includes(`..${sep}`)) return null
+  return absolute
+}
+
+function listStaffArtifacts(staffId: string): StaffArtifact[] {
+  const staffDir = getStaffDir(staffId)
+  if (!existsSync(staffDir)) return []
+
+  const artifacts: StaffArtifact[] = []
+  const maxDepth = 3
+  const maxItems = 300
+
+  const walk = (dir: string, depth: number): void => {
+    if (depth > maxDepth || artifacts.length >= maxItems) return
+    const entries = readdirSync(dir, { withFileTypes: true })
+
+    for (const entry of entries) {
+      if (entry.name.startsWith('.')) continue
+      if (ARTIFACT_IGNORE_FILES.has(entry.name)) continue
+
+      const absolute = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        walk(absolute, depth + 1)
+        continue
+      }
+      if (!entry.isFile()) continue
+
+      const relPath = relative(staffDir, absolute).split(sep).join('/')
+      const stat = statSync(absolute)
+      artifacts.push({
+        path: relPath,
+        name: entry.name,
+        type: classifyArtifactType(entry.name),
+        size_bytes: stat.size,
+        modified_at: stat.mtime.toISOString()
+      })
+      if (artifacts.length >= maxItems) return
+    }
+  }
+
+  walk(staffDir, 0)
+  return artifacts.sort((a, b) => b.modified_at.localeCompare(a.modified_at))
 }
 
 function validateStringField(
@@ -345,6 +448,64 @@ export function staffRoutes(ctx: ApiContext): Router {
     try {
       const content = readMemoryMd(req.params.id!)
       res.json({ content })
+    } catch (err) {
+      res.status(500).json({ error: String(err) })
+    }
+  })
+
+  // List output artifacts under the staff workspace
+  router.get('/:id/artifacts', (req, res) => {
+    try {
+      const config = readStaffConfig(req.params.id!)
+      if (!config) return res.status(404).json({ error: 'Staff not found' })
+      res.json(listStaffArtifacts(req.params.id!))
+    } catch (err) {
+      res.status(500).json({ error: String(err) })
+    }
+  })
+
+  // Read text artifact preview
+  router.get('/:id/artifacts/text', (req, res) => {
+    try {
+      const config = readStaffConfig(req.params.id!)
+      if (!config) return res.status(404).json({ error: 'Staff not found' })
+
+      const relativePath = String(req.query.path || '')
+      const staffDir = getStaffDir(req.params.id!)
+      const absolute = isAllowedArtifactPath(staffDir, relativePath)
+      if (!absolute) return res.status(400).json({ error: 'Invalid artifact path' })
+      if (!existsSync(absolute)) return res.status(404).json({ error: 'Artifact not found' })
+      if (!statSync(absolute).isFile()) return res.status(400).json({ error: 'Artifact must be a file' })
+      if (classifyArtifactType(absolute) !== 'text') {
+        return res.status(400).json({ error: 'Artifact is not a text file' })
+      }
+
+      const raw = readFileSync(absolute, 'utf-8')
+      const maxChars = 20_000
+      const sliced = raw.slice(0, maxChars)
+      res.json({
+        content: sanitizeString(sliced, maxChars),
+        truncated: raw.length > maxChars
+      })
+    } catch (err) {
+      res.status(500).json({ error: String(err) })
+    }
+  })
+
+  // Stream artifact file content (for image/video preview)
+  router.get('/:id/artifacts/file', (req, res) => {
+    try {
+      const config = readStaffConfig(req.params.id!)
+      if (!config) return res.status(404).json({ error: 'Staff not found' })
+
+      const relativePath = String(req.query.path || '')
+      const staffDir = getStaffDir(req.params.id!)
+      const absolute = isAllowedArtifactPath(staffDir, relativePath)
+      if (!absolute) return res.status(400).json({ error: 'Invalid artifact path' })
+      if (!existsSync(absolute)) return res.status(404).json({ error: 'Artifact not found' })
+      if (!statSync(absolute).isFile()) return res.status(400).json({ error: 'Artifact must be a file' })
+
+      res.sendFile(absolute)
     } catch (err) {
       res.status(500).json({ error: String(err) })
     }

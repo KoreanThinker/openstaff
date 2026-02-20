@@ -5,6 +5,8 @@ export type {
   StaffSummary,
   StaffDetail,
   KpiSummaryEntry,
+  StaffArtifactType,
+  StaffArtifact,
   CycleEntry,
   KpiEntry,
   ErrorEntry,

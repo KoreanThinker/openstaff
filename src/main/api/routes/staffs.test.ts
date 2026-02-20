@@ -229,6 +229,49 @@ describe('staffs API routes', () => {
     writeFileSync(memoryPath, '')
   })
 
+  it('GET /api/staffs/:id/artifacts returns discovered output files', async () => {
+    const { data: list } = await apiGet('/api/staffs')
+    const id = list[0].id
+    const { getStaffDir } = await import('../../data/staff-data')
+    const { mkdirSync, writeFileSync } = await import('fs')
+    const staffDir = getStaffDir(id)
+
+    mkdirSync(join(staffDir, 'outputs'), { recursive: true })
+    writeFileSync(join(staffDir, 'outputs', 'report.txt'), 'hello output')
+
+    const { status, data } = await apiGet(`/api/staffs/${id}/artifacts`)
+    const artifact = data.find((a: { path: string }) => a.path === 'outputs/report.txt')
+    expect(status).toBe(200)
+    expect(artifact).toBeTruthy()
+    expect(artifact.type).toBe('text')
+  })
+
+  it('GET /api/staffs/:id/artifacts/text returns text preview', async () => {
+    const { data: list } = await apiGet('/api/staffs')
+    const id = list[0].id
+    const { status, data } = await apiGet(`/api/staffs/${id}/artifacts/text?path=outputs%2Freport.txt`)
+    expect(status).toBe(200)
+    expect(data.content).toContain('hello output')
+    expect(data.truncated).toBe(false)
+  })
+
+  it('GET /api/staffs/:id/artifacts/file streams artifact bytes', async () => {
+    const { data: list } = await apiGet('/api/staffs')
+    const id = list[0].id
+    const res = await fetch(`http://localhost:${port}/api/staffs/${id}/artifacts/file?path=outputs%2Freport.txt`)
+    const body = await res.text()
+    expect(res.status).toBe(200)
+    expect(body).toContain('hello output')
+  })
+
+  it('GET /api/staffs/:id/artifacts/text rejects traversal path', async () => {
+    const { data: list } = await apiGet('/api/staffs')
+    const id = list[0].id
+    const { status, data } = await apiGet(`/api/staffs/${id}/artifacts/text?path=..%2F..%2Fetc%2Fpasswd`)
+    expect(status).toBe(400)
+    expect(data.error).toContain('Invalid artifact path')
+  })
+
   it('GET /api/staffs/:id returns 404 for non-existent', async () => {
     const { status } = await apiGet('/api/staffs/nonexistent')
     expect(status).toBe(404)
