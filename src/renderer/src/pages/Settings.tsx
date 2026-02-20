@@ -425,7 +425,7 @@ export function Settings(): React.ReactElement {
                     setStartOnLogin(checked)
                     handleImmediateSave({ start_on_login: checked })
                     // Set OS login item via Electron IPC
-                    window.api?.setAutoStart?.(checked).catch(() => {})
+                    window.api?.setAutoStart?.(checked).catch((err) => console.warn('setAutoStart failed:', err))
                   }}
                 />
               </div>

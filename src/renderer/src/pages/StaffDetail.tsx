@@ -460,10 +460,10 @@ function MetricsTab({ staffId }: { staffId: string }): React.ReactElement {
           </CardHeader>
           <CardContent className="space-y-3">
             {[
-              { label: 'Input Tokens', value: totals.cost > 0 ? (totals.input / (totals.input + totals.output + totals.cacheRead + totals.cacheWrite || 1)) * totals.cost : 0, color: 'bg-chart-1' },
-              { label: 'Output Tokens', value: totals.cost > 0 ? (totals.output / (totals.input + totals.output + totals.cacheRead + totals.cacheWrite || 1)) * totals.cost : 0, color: 'bg-chart-2' },
-              { label: 'Cache Read', value: totals.cost > 0 ? (totals.cacheRead / (totals.input + totals.output + totals.cacheRead + totals.cacheWrite || 1)) * totals.cost : 0, color: 'bg-chart-3' },
-              { label: 'Cache Write', value: totals.cost > 0 ? (totals.cacheWrite / (totals.input + totals.output + totals.cacheRead + totals.cacheWrite || 1)) * totals.cost : 0, color: 'bg-chart-4' }
+              { label: 'Input Tokens', value: totals.cost > 0 ? (totals.input / ((totals.input + totals.output + totals.cacheRead + totals.cacheWrite) || 1)) * totals.cost : 0, color: 'bg-chart-1' },
+              { label: 'Output Tokens', value: totals.cost > 0 ? (totals.output / ((totals.input + totals.output + totals.cacheRead + totals.cacheWrite) || 1)) * totals.cost : 0, color: 'bg-chart-2' },
+              { label: 'Cache Read', value: totals.cost > 0 ? (totals.cacheRead / ((totals.input + totals.output + totals.cacheRead + totals.cacheWrite) || 1)) * totals.cost : 0, color: 'bg-chart-3' },
+              { label: 'Cache Write', value: totals.cost > 0 ? (totals.cacheWrite / ((totals.input + totals.output + totals.cacheRead + totals.cacheWrite) || 1)) * totals.cost : 0, color: 'bg-chart-4' }
             ].map((item) => (
               <div key={item.label} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

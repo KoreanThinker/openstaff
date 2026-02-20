@@ -7,6 +7,19 @@ export const api = {
     ipcRenderer.invoke('show-open-dialog', options),
   showSaveDialog: (options: Electron.SaveDialogOptions): Promise<Electron.SaveDialogReturnValue> =>
     ipcRenderer.invoke('show-save-dialog', options),
+  selectDirectory: async (): Promise<string | null> => {
+    const result = await ipcRenderer.invoke('show-open-dialog', {
+      properties: ['openDirectory']
+    })
+    return result.canceled ? null : result.filePaths[0] || null
+  },
+  selectFile: async (opts?: { filters?: { name: string; extensions: string[] }[] }): Promise<string | null> => {
+    const result = await ipcRenderer.invoke('show-open-dialog', {
+      properties: ['openFile'],
+      filters: opts?.filters
+    })
+    return result.canceled ? null : result.filePaths[0] || null
+  },
   onNotification: (callback: (data: { title: string; body: string }) => void): void => {
     ipcRenderer.on('notification', (_, data) => callback(data))
   },

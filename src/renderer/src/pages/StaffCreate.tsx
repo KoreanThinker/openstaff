@@ -468,30 +468,20 @@ export function StaffCreate(): React.ReactElement {
                 Browse Registry
               </DropdownMenuItem>
               <DropdownMenuItem onClick={async () => {
-                try {
-                  const filePath = await window.api?.selectFile?.({
-                    filters: [{ name: 'JSON', extensions: ['json'] }]
-                  })
-                  if (!filePath) return
-                  const res = await fetch(filePath)
-                  const data = await res.json()
-                  if (data.role) applyTemplate(data)
-                } catch {
-                  // If Electron API not available, use native file input fallback
-                  const input = document.createElement('input')
-                  input.type = 'file'
-                  input.accept = '.json'
-                  input.onchange = async () => {
-                    const file = input.files?.[0]
-                    if (!file) return
-                    const text = await file.text()
-                    try {
-                      const data = JSON.parse(text)
-                      if (data.role) applyTemplate(data)
-                    } catch { /* ignore parse errors */ }
-                  }
-                  input.click()
+                // Use native file input (works in both Electron and web)
+                const input = document.createElement('input')
+                input.type = 'file'
+                input.accept = '.json'
+                input.onchange = async () => {
+                  const file = input.files?.[0]
+                  if (!file) return
+                  const text = await file.text()
+                  try {
+                    const data = JSON.parse(text)
+                    if (data.role) applyTemplate(data)
+                  } catch { /* ignore parse errors */ }
                 }
+                input.click()
               }}>Import File</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
