@@ -13,6 +13,7 @@ import { Registry } from '@/pages/Registry'
 import { Settings } from '@/pages/Settings'
 import { useSettingsStore } from '@/stores/settings-store'
 import { Toaster } from '@/components/ui/toaster'
+import { api } from '@/lib/api'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,8 +32,7 @@ export function App(): React.ReactElement {
 
   // Sync setup_completed from API on mount (source of truth is config.json)
   useEffect(() => {
-    fetch('/api/settings')
-      .then((r) => r.json())
+    api.getSettings()
       .then((data) => {
         if (data.setup_completed === true) setSetupCompleted(true)
       })

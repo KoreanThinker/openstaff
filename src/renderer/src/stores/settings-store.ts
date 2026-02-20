@@ -1,5 +1,21 @@
 import { create } from 'zustand'
 
+function safeGetItem(key: string): string | null {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function safeSetItem(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // localStorage may be unavailable or full
+  }
+}
+
 interface SettingsStore {
   setupCompleted: boolean
   theme: 'light' | 'dark' | 'system'
@@ -8,16 +24,16 @@ interface SettingsStore {
 }
 
 export const useSettingsStore = create<SettingsStore>((set) => ({
-  setupCompleted: localStorage.getItem('setup_completed') === 'true',
-  theme: (localStorage.getItem('theme') as 'light' | 'dark' | 'system') || 'system',
+  setupCompleted: safeGetItem('setup_completed') === 'true',
+  theme: (safeGetItem('theme') as 'light' | 'dark' | 'system') || 'system',
 
   setSetupCompleted: (completed) => {
-    localStorage.setItem('setup_completed', String(completed))
+    safeSetItem('setup_completed', String(completed))
     set({ setupCompleted: completed })
   },
 
   setTheme: (theme) => {
-    localStorage.setItem('theme', theme)
+    safeSetItem('theme', theme)
     const root = document.documentElement
     root.classList.remove('light', 'dark')
     if (theme === 'system') {
