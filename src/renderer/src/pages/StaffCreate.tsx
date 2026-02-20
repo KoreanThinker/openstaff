@@ -50,6 +50,8 @@ function LoopVisualization({ activePhase }: LoopVisualizationProps): React.React
               viewBox="0 0 500 180"
               className="w-full h-auto"
               xmlns="http://www.w3.org/2000/svg"
+              role="img"
+              aria-label="Staff loop visualization: Gather, Execute, Evaluate cycle"
             >
               {/* Forward arrows: Gather -> Execute -> Evaluate */}
               <line
@@ -820,8 +822,8 @@ export function StaffCreate(): React.ReactElement {
       </div>
 
       {/* Sticky Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/80 backdrop-blur-sm shadow-soft-float">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+      <div className="sticky bottom-0 z-50 -mx-6 border-t border-border bg-background/80 backdrop-blur-sm">
+        <div className="flex items-center justify-between px-6 py-4">
           {submitState !== 'submitting' && (
             <Button
               variant="ghost"

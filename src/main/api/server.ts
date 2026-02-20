@@ -69,32 +69,38 @@ export async function startApiServer(
     })
   })
 
-  // Forward StaffManager events to WebSocket
-  staffManager.on('staff:status', (staffId, status) => {
+  // Forward StaffManager events to WebSocket (store refs for cleanup)
+  const listeners: Array<{ event: string; handler: (...args: unknown[]) => void }> = []
+  const fwd = (event: string, handler: (...args: unknown[]) => void): void => {
+    staffManager.on(event, handler)
+    listeners.push({ event, handler })
+  }
+
+  fwd('staff:status', (staffId, status) => {
     io.emit('staff:status', { staffId, status })
   })
-  staffManager.on('staff:log', (staffId, data) => {
+  fwd('staff:log', (staffId, data) => {
     io.emit('staff:log', { staffId, data })
   })
-  staffManager.on('staff:error', (staffId, error) => {
+  fwd('staff:error', (staffId, error) => {
     io.emit('staff:error', { staffId, error })
   })
-  staffManager.on('staff:file_change', (staffId, file) => {
+  fwd('staff:file_change', (staffId, file) => {
     io.emit('staff:file_change', { staffId, file })
   })
-  staffManager.on('staff:giveup', (staffId) => {
+  fwd('staff:giveup', (staffId) => {
     io.emit('staff:giveup', { staffId })
   })
-  staffManager.on('staff:metrics', (staffId) => {
+  fwd('staff:metrics', (staffId) => {
     io.emit('staff:metrics', { staffId })
   })
-  staffManager.on('staff:stopped_backoff', (staffId) => {
+  fwd('staff:stopped_backoff', (staffId) => {
     io.emit('staff:stopped_backoff', { staffId })
   })
-  staffManager.on('staff:health_check_fail', (staffId) => {
+  fwd('staff:health_check_fail', (staffId) => {
     io.emit('staff:error', { staffId, error: 'Health check failed: process unresponsive' })
   })
-  staffManager.on('budget:warning', (data) => {
+  fwd('budget:warning', (data) => {
     io.emit('budget:warning', data)
   })
 
@@ -106,6 +112,9 @@ export async function startApiServer(
       resolve({
         port: apiPort,
         close: () => {
+          for (const { event, handler } of listeners) {
+            staffManager.removeListener(event, handler)
+          }
           io.close()
           httpServer.close()
         }

@@ -93,6 +93,8 @@ function OverviewLoopVisualization({ isRunning }: { isRunning: boolean }): React
           viewBox="0 0 300 160"
           className="w-full max-w-xs h-auto"
           xmlns="http://www.w3.org/2000/svg"
+          role="img"
+          aria-label="Staff loop: Gather, Execute, Evaluate cycle"
         >
           {/* Arrows */}
           <line x1="95" y1="50" x2="120" y2="50" className="stroke-border" strokeWidth="2" markerEnd="url(#arrowOv)" />
@@ -1246,17 +1248,16 @@ export function StaffDetail(): React.ReactElement {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setShowDeleteDialog(false)}>
+            <Button variant="ghost" onClick={() => setShowDeleteDialog(false)} disabled={deleteMutation.isPending}>
               Cancel
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
-                setShowDeleteDialog(false)
-                deleteMutation.mutate()
-              }}
+              disabled={deleteMutation.isPending}
+              onClick={() => deleteMutation.mutate()}
             >
-              Delete
+              {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>

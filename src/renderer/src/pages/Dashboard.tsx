@@ -16,7 +16,8 @@ import {
   Search,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Loader2
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { cn, formatUptime, formatCost, formatTokens, formatTrend } from '@/lib/utils'
@@ -261,6 +262,7 @@ export function Dashboard(): React.ReactElement {
   const [sortField, setSortField] = useState<SortField>('name')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const setActionButton = useHeaderActionStore((s) => s.setActionButton)
 
   // Set header action button
@@ -347,6 +349,7 @@ export function Dashboard(): React.ReactElement {
 
   const handleConfirmDelete = useCallback(async () => {
     if (!deleteTarget) return
+    setIsDeleting(true)
     try {
       await api.deleteStaff(deleteTarget.id)
       toast({ title: 'Staff deleted' })
@@ -359,6 +362,8 @@ export function Dashboard(): React.ReactElement {
         description: err instanceof Error ? err.message : 'Unknown error',
         variant: 'destructive'
       })
+    } finally {
+      setIsDeleting(false)
     }
   }, [deleteTarget, staffsQuery, statsQuery])
 
@@ -447,14 +452,6 @@ export function Dashboard(): React.ReactElement {
       {/* Staff List */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Staff</h2>
-        <Button
-          className="rounded-full"
-          size="sm"
-          onClick={() => navigate('/staffs/new')}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Create Staff
-        </Button>
       </div>
 
       {/* Search, Filter, Sort */}
@@ -649,8 +646,11 @@ export function Dashboard(): React.ReactElement {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleConfirmDelete}>Delete</Button>
+            <Button variant="ghost" onClick={() => setDeleteTarget(null)} disabled={isDeleting}>Cancel</Button>
+            <Button variant="destructive" onClick={handleConfirmDelete} disabled={isDeleting}>
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

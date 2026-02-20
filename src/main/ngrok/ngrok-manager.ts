@@ -5,6 +5,7 @@ export class NgrokManager {
   private tunnelUrl: string | null = null
   private tunnelActive = false
   private lastError: string | null = null
+  private listener: { close: () => Promise<void>; url: () => string | null } | null = null
 
   constructor(configStore: ConfigStore) {
     this.configStore = configStore
@@ -13,6 +14,11 @@ export class NgrokManager {
   async start(port: number): Promise<string | null> {
     const apiKey = this.configStore.get('ngrok_api_key')
     if (!apiKey) return null
+
+    // Stop existing tunnel before starting new one
+    if (this.listener) {
+      await this.stop()
+    }
 
     try {
       // Dynamic import to avoid bundling ngrok when not used
@@ -25,6 +31,7 @@ export class NgrokManager {
         ...(authPassword ? { basic_auth: `openstaff:${authPassword}` } : {})
       })
 
+      this.listener = listener
       this.tunnelUrl = listener.url() || null
       this.tunnelActive = this.tunnelUrl !== null
       this.lastError = null
@@ -41,12 +48,19 @@ export class NgrokManager {
 
   async stop(): Promise<void> {
     try {
-      const ngrok = await import('@ngrok/ngrok')
-      await ngrok.disconnect()
+      if (this.listener) {
+        await this.listener.close()
+        this.listener = null
+      } else {
+        const ngrok = await import('@ngrok/ngrok')
+        await ngrok.disconnect()
+      }
       this.tunnelUrl = null
       this.tunnelActive = false
     } catch {
-      // Ignore
+      this.listener = null
+      this.tunnelUrl = null
+      this.tunnelActive = false
     }
   }
 

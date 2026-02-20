@@ -60,6 +60,8 @@ function LoopVisualization(): React.ReactElement {
         viewBox="0 0 500 180"
         className="w-full max-w-sm h-auto"
         xmlns="http://www.w3.org/2000/svg"
+        role="img"
+        aria-label="Staff loop visualization: Gather, Execute, Evaluate cycle"
       >
         <line x1="140" y1="60" x2="185" y2="60" className="stroke-border" strokeWidth="2" markerEnd="url(#wiz-arrow)" />
         <line x1="315" y1="60" x2="360" y2="60" className="stroke-border" strokeWidth="2" markerEnd="url(#wiz-arrow)" />

@@ -88,9 +88,8 @@ describe('NgrokManager', () => {
   it('stops tunnel and resets state', async () => {
     const ngrok = await import('@ngrok/ngrok')
     const mockForward = vi.mocked(ngrok.forward)
-    const mockDisconnect = vi.mocked(ngrok.disconnect)
-    mockForward.mockResolvedValue({ url: () => 'https://test.ngrok.app' } as never)
-    mockDisconnect.mockResolvedValue(undefined as never)
+    const mockClose = vi.fn().mockResolvedValue(undefined)
+    mockForward.mockResolvedValue({ url: () => 'https://test.ngrok.app', close: mockClose } as never)
 
     const store = makeStore({ ngrok_api_key: 'test-key' })
     const manager = new NgrokManager(store)
@@ -102,17 +101,37 @@ describe('NgrokManager', () => {
     await manager.stop()
     expect(manager.isActive()).toBe(false)
     expect(manager.getUrl()).toBeNull()
-    expect(mockDisconnect).toHaveBeenCalled()
+    expect(mockClose).toHaveBeenCalled()
   })
 
   it('stop handles disconnect errors gracefully', async () => {
     const ngrok = await import('@ngrok/ngrok')
     vi.mocked(ngrok.disconnect).mockRejectedValue(new Error('not connected'))
 
+    // No listener stored, falls back to ngrok.disconnect() which throws - should not propagate
     const manager = new NgrokManager(makeStore())
-    // Should not throw
     await manager.stop()
     expect(manager.isActive()).toBe(false)
+  })
+
+  it('stop calls listener.close when listener exists', async () => {
+    const ngrok = await import('@ngrok/ngrok')
+    const mockClose = vi.fn().mockRejectedValue(new Error('close failed'))
+    vi.mocked(ngrok.forward).mockResolvedValue({
+      url: () => 'https://x.ngrok.app',
+      close: mockClose
+    } as never)
+
+    const store = makeStore({ ngrok_api_key: 'test-key' })
+    const manager = new NgrokManager(store)
+    await manager.start(3000)
+    expect(manager.isActive()).toBe(true)
+
+    // close() fails but stop() should not throw
+    await manager.stop()
+    expect(mockClose).toHaveBeenCalled()
+    expect(manager.isActive()).toBe(false)
+    expect(manager.getUrl()).toBeNull()
   })
 
   it('handles null URL from listener', async () => {

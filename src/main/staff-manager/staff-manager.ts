@@ -237,6 +237,22 @@ export class StaffManager extends EventEmitter {
   }
 
   async stopStaff(staffId: string): Promise<void> {
+    // If staff is currently being started, mark it for stop after start completes
+    if (this.starting.has(staffId)) {
+      this.intentionalStops.add(staffId)
+      // Wait for start to finish, then stop
+      const waitForStart = (): Promise<void> => new Promise((resolve) => {
+        const check = setInterval(() => {
+          if (!this.starting.has(staffId)) {
+            clearInterval(check)
+            resolve()
+          }
+        }, 100)
+        // Safety timeout
+        setTimeout(() => { clearInterval(check); resolve() }, 10_000)
+      })
+      await waitForStart()
+    }
     const entry = this.running.get(staffId)
     if (!entry) return
 
@@ -454,8 +470,8 @@ export class StaffManager extends EventEmitter {
           }
         })
         entry.watchers.push(watcher)
-      } catch {
-        // File watch failed
+      } catch (err) {
+        console.warn(`Failed to watch ${path}:`, err)
       }
     }
   }
