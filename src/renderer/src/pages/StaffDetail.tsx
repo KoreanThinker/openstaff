@@ -891,8 +891,8 @@ function ErrorsTab({ staffId }: { staffId: string }): React.ReactElement {
     ? errors
     : errors.filter((e) => e.type === filter)
 
-  // Reverse chronological
-  const sortedErrors = [...filteredErrors].reverse()
+  // API already returns reverse chronological (newest first)
+  const sortedErrors = filteredErrors
 
   if (errors.length === 0) {
     return (

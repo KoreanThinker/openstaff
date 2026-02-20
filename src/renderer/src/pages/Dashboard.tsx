@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { useState, useMemo, useEffect, createElement } from 'react'
+import { useState, useMemo, useEffect, createElement, useCallback } from 'react'
 import {
   Users,
   DollarSign,
@@ -48,6 +48,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
 import { useHeaderActionStore } from '@/stores/header-action-store'
 import type { StaffSummary, DashboardStats, SystemResources, StaffStatus } from '@shared/types'
@@ -244,6 +252,7 @@ export function Dashboard(): React.ReactElement {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [sortField, setSortField] = useState<SortField>('name')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
   const setActionButton = useHeaderActionStore((s) => s.setActionButton)
 
   // Set header action button
@@ -285,7 +294,7 @@ export function Dashboard(): React.ReactElement {
     refetchInterval: 10000
   })
 
-  const handleAction = async (action: string, staffId: string): Promise<void> => {
+  const handleAction = useCallback(async (action: string, staffId: string): Promise<void> => {
     try {
       switch (action) {
         case 'start':
@@ -305,10 +314,8 @@ export function Dashboard(): React.ReactElement {
           return
         case 'delete': {
           const name = staffs.find((s) => s.id === staffId)?.name ?? 'this staff'
-          if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return
-          await api.deleteStaff(staffId)
-          toast({ title: 'Staff deleted' })
-          break
+          setDeleteTarget({ id: staffId, name })
+          return
         }
       }
       await staffsQuery.refetch()
@@ -320,7 +327,24 @@ export function Dashboard(): React.ReactElement {
         variant: 'destructive'
       })
     }
-  }
+  }, [navigate, staffs, staffsQuery, statsQuery])
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteTarget) return
+    try {
+      await api.deleteStaff(deleteTarget.id)
+      toast({ title: 'Staff deleted' })
+      setDeleteTarget(null)
+      await staffsQuery.refetch()
+      await statsQuery.refetch()
+    } catch (err) {
+      toast({
+        title: 'Failed to delete',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive'
+      })
+    }
+  }, [deleteTarget, staffsQuery, statsQuery])
 
   const stats = statsQuery.data
   const staffs = staffsQuery.data ?? []
@@ -583,6 +607,22 @@ export function Dashboard(): React.ReactElement {
           </div>
         </>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Staff</DialogTitle>
+            <DialogDescription>
+              Delete &ldquo;{deleteTarget?.name}&rdquo;? This will stop the staff and remove all data. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

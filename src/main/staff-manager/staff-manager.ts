@@ -29,6 +29,7 @@ interface RunningStaff {
   process: AgentProcess
   lastOutputAt: number
   idleTimer: ReturnType<typeof setInterval> | null
+  promptTimer: ReturnType<typeof setTimeout> | null
   logStream: (data: string) => void
   watchers: ReturnType<typeof watch>[]
 }
@@ -134,6 +135,7 @@ export class StaffManager extends EventEmitter {
       process: proc,
       lastOutputAt: now,
       idleTimer: null,
+      promptTimer: null,
       logStream: () => {},
       watchers: []
     }
@@ -195,8 +197,11 @@ export class StaffManager extends EventEmitter {
 
     // Send initial prompt if new session
     if (!state.session_id) {
-      setTimeout(() => {
-        proc.write(INITIAL_PROMPT)
+      entry.promptTimer = setTimeout(() => {
+        entry.promptTimer = null
+        if (this.running.has(staffId)) {
+          proc.write(INITIAL_PROMPT)
+        }
       }, 3000)
     }
 
@@ -213,6 +218,7 @@ export class StaffManager extends EventEmitter {
 
     this.intentionalStops.add(staffId)
     if (entry.idleTimer) clearInterval(entry.idleTimer)
+    if (entry.promptTimer) clearTimeout(entry.promptTimer)
     for (const w of entry.watchers) w.close()
 
     await entry.process.kill()
@@ -304,6 +310,7 @@ export class StaffManager extends EventEmitter {
     if (!entry) return
 
     if (entry.idleTimer) clearInterval(entry.idleTimer)
+    if (entry.promptTimer) clearTimeout(entry.promptTimer)
     for (const w of entry.watchers) w.close()
     this.running.delete(staffId)
 
