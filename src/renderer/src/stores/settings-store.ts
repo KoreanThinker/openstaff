@@ -5,7 +5,6 @@ interface SettingsStore {
   theme: 'light' | 'dark' | 'system'
   setSetupCompleted: (completed: boolean) => void
   setTheme: (theme: 'light' | 'dark' | 'system') => void
-  initFromApi: () => Promise<void>
 }
 
 export const useSettingsStore = create<SettingsStore>((set) => ({
@@ -28,20 +27,5 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       root.classList.add(theme)
     }
     set({ theme })
-  },
-
-  initFromApi: async () => {
-    try {
-      const res = await fetch('/api/settings')
-      if (res.ok) {
-        const data = await res.json()
-        set({
-          setupCompleted: data.setup_completed,
-          theme: data.theme || 'system'
-        })
-      }
-    } catch {
-      // Offline or API not ready
-    }
   }
 }))

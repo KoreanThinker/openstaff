@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { AppShell } from '@/components/AppShell'
 import { SetupWizard } from '@/pages/SetupWizard'
 import { Dashboard } from '@/pages/Dashboard'
@@ -42,31 +43,35 @@ export function App(): React.ReactElement {
 
   if (!setupCompleted) {
     return (
-      <QueryClientProvider client={queryClient}>
-        <SetupWizard />
-        <Toaster />
-      </QueryClientProvider>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <SetupWizard />
+          <Toaster />
+        </QueryClientProvider>
+      </ErrorBoundary>
     )
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <HashRouter>
-        <Routes>
-          <Route element={<AppShell />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/staffs/new" element={<StaffCreate />} />
-            <Route path="/staffs/:id" element={<StaffDetail />} />
-            <Route path="/staffs/:id/edit" element={<StaffCreate />} />
-            <Route path="/skills" element={<Skills />} />
-            <Route path="/agents" element={<Agents />} />
-            <Route path="/registry" element={<Registry />} />
-            <Route path="/settings" element={<Settings />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-        <Toaster />
-      </HashRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <HashRouter>
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/staffs/new" element={<StaffCreate />} />
+              <Route path="/staffs/:id" element={<StaffDetail />} />
+              <Route path="/staffs/:id/edit" element={<StaffCreate />} />
+              <Route path="/skills" element={<Skills />} />
+              <Route path="/agents" element={<Agents />} />
+              <Route path="/registry" element={<Registry />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+          <Toaster />
+        </HashRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   )
 }
