@@ -210,6 +210,7 @@ export function Settings(): React.ReactElement {
                     size="icon"
                     className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
                     onClick={() => setShowNgrokKey(!showNgrokKey)}
+                    aria-label={showNgrokKey ? 'Hide API key' : 'Show API key'}
                   >
                     {showNgrokKey ? (
                       <EyeOff className="h-3.5 w-3.5" />
@@ -241,6 +242,7 @@ export function Settings(): React.ReactElement {
                     size="icon"
                     className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
                     onClick={() => setShowNgrokPassword(!showNgrokPassword)}
+                    aria-label={showNgrokPassword ? 'Hide password' : 'Show password'}
                   >
                     {showNgrokPassword ? (
                       <EyeOff className="h-3.5 w-3.5" />
@@ -307,6 +309,7 @@ export function Settings(): React.ReactElement {
                   size="icon"
                   className="h-7 w-7"
                   onClick={() => handleCopyUrl(ngrokStatus.ngrok_url!)}
+                  aria-label="Copy URL"
                 >
                   {copied ? (
                     <Check className="h-3.5 w-3.5 text-success" />

@@ -581,7 +581,7 @@ function LogsTab({ staffId }: { staffId: string }): React.ReactElement {
           className="h-8 border-0 bg-transparent focus-visible:ring-0"
         />
         {searchQuery && (
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setSearchQuery('')}>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setSearchQuery('')} aria-label="Clear search">
             <X className="h-3 w-3" />
           </Button>
         )}
@@ -1083,7 +1083,7 @@ export function StaffDetail(): React.ReactElement {
       {/* Header */}
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')} aria-label="Back to dashboard">
             <ArrowLeft className="h-5 w-5" />
           </Button>
 

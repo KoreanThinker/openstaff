@@ -445,7 +445,7 @@ export function StaffCreate(): React.ReactElement {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={handleCancel}>
+          <Button variant="ghost" size="icon" onClick={handleCancel} aria-label="Go back">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-2xl font-semibold text-foreground">

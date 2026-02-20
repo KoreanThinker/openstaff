@@ -112,8 +112,9 @@ export function SetupWizard(): React.ReactElement {
       if (dashPassword) settings.ngrok_auth_password = dashPassword
       await api.updateSettings(settings)
     } catch {
-      // API may not be ready yet; store locally
+      // API may not be ready yet; proceed with local-only setup
     }
+    // Always mark complete - the wizard is a one-time flow
     setSetupCompleted(true)
   }
 

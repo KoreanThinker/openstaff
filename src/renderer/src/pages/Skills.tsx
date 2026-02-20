@@ -314,6 +314,7 @@ export function Skills(): React.ReactElement {
                           size="icon"
                           className="h-8 w-8"
                           onClick={(e) => e.stopPropagation()}
+                          aria-label="Skill options"
                         >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
@@ -375,6 +376,7 @@ export function Skills(): React.ReactElement {
                   size="icon"
                   className="text-muted-foreground hover:text-destructive"
                   onClick={() => handleDeleteClick(selectedSkill)}
+                  aria-label="Delete skill"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -450,6 +452,7 @@ export function Skills(): React.ReactElement {
                             <Button
                               variant="ghost"
                               size="icon"
+                              aria-label="Toggle visibility"
                               onClick={() =>
                                 setShowAuthValues((prev) => ({
                                   ...prev,

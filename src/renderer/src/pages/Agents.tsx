@@ -266,6 +266,7 @@ function GuidedSetup({
                       size="icon"
                       className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
                       onClick={() => setShowKey(!showKey)}
+                      aria-label={showKey ? 'Hide API key' : 'Show API key'}
                     >
                       {showKey ? (
                         <EyeOff className="h-3.5 w-3.5" />
@@ -462,6 +463,7 @@ function ClaudeCodeCard({
                       size="icon"
                       className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
                       onClick={() => setShowKey(!showKey)}
+                      aria-label={showKey ? 'Hide API key' : 'Show API key'}
                     >
                       {showKey ? (
                         <EyeOff className="h-3.5 w-3.5" />
