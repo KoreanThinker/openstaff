@@ -49,6 +49,8 @@ OpenStaff is an Electron desktop app that manages multiple AI coding agents (Sta
 | `pnpm test:watch`    | Run tests in watch mode            |
 | `pnpm test:coverage` | Run tests with coverage report     |
 | `pnpm audit:prod`    | Audit production dependencies only |
+| `pnpm skills:generate` | Regenerate registry skill catalog and `SKILL.md` files |
+| `pnpm skills:seed`   | Seed local `~/.openstaff/skills` from registry catalog |
 | `pnpm test:e2e`      | Run end-to-end tests (Playwright, headless + hidden window) |
 | `pnpm test:e2e:quick` | Run headless E2E without rebuild (fast local iteration) |
 | `pnpm test:e2e:headed` | Run end-to-end tests in headed mode (requires `OPENSTAFF_ALLOW_HEADED=1`) |

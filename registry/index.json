@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "updated_at": "2026-02-20T00:00:00Z",
+  "version": "1.1.0",
+  "updated_at": "2026-02-20T13:54:57.553Z",
   "templates": [
     {
       "id": "meta-ads-creative",
@@ -11,7 +11,10 @@
       "execute": "Create 3 ad creatives (image + copy) per day tailored to our product. Include A/B test variants.",
       "evaluate": "Check each creative's CPI, CPM, CTR from Meta Ads dashboard API. Analyze which patterns perform best and apply learnings to next batch.",
       "kpi": "CPI < $2.00, CTR > 3%, daily creatives >= 3",
-      "required_skills": ["instagram", "meta-ads-api"],
+      "required_skills": [
+        "instagram",
+        "meta-ads-api"
+      ],
       "recommended_agent": "claude-code",
       "recommended_model": "claude-sonnet-4-5"
     },
@@ -24,7 +27,9 @@
       "execute": "Create SEO-optimized content based on discovered keywords and publish to blog.",
       "evaluate": "Track impressions, clicks, and average ranking for published content in Google Search Console. Learn which keywords and content patterns are effective.",
       "kpi": "Monthly organic impressions > 50K, average position < 10, new content pieces >= 5/week",
-      "required_skills": ["google-search-console"],
+      "required_skills": [
+        "google-search-console"
+      ],
       "recommended_agent": "claude-code",
       "recommended_model": "claude-sonnet-4-5"
     },
@@ -37,7 +42,9 @@
       "execute": "Write natural, community-appropriate posts that subtly mention our product. Match the community's tone and culture.",
       "evaluate": "Collect comments, view counts, and reactions on posts. Analyze which tone and topics are most effective.",
       "kpi": "Average views > 500, positive reaction rate > 70%, posts/week >= 5",
-      "required_skills": ["web-scraping"],
+      "required_skills": [
+        "web-scraping"
+      ],
       "recommended_agent": "claude-code",
       "recommended_model": "claude-sonnet-4-5"
     },
@@ -96,6 +103,822 @@
   ],
   "skills": [
     {
+      "name": "discord-campaign-optimizer",
+      "description": "Discord campaign optimizer skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "DISCORD_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/discord-campaign-optimizer"
+    },
+    {
+      "name": "discord-customer-feedback",
+      "description": "Discord customer feedback skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "DISCORD_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/discord-customer-feedback"
+    },
+    {
+      "name": "discord-issue-triage",
+      "description": "Discord issue triage skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "DISCORD_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/discord-issue-triage"
+    },
+    {
+      "name": "discord-knowledge-sync",
+      "description": "Discord knowledge sync skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "DISCORD_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/discord-knowledge-sync"
+    },
+    {
+      "name": "discord-ops-monitor",
+      "description": "Discord ops monitor skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "DISCORD_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/discord-ops-monitor"
+    },
+    {
+      "name": "discord-quality-audit",
+      "description": "Discord quality audit skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "DISCORD_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/discord-quality-audit"
+    },
+    {
+      "name": "discord-weekly-report",
+      "description": "Discord weekly report skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "DISCORD_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/discord-weekly-report"
+    },
+    {
+      "name": "discord-workflow-automation",
+      "description": "Discord workflow automation skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "DISCORD_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/discord-workflow-automation"
+    },
+    {
+      "name": "github-api",
+      "description": "GitHub API integration for repository management and code operations.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITHUB_TOKEN"
+      ],
+      "github_path": "registry/skills/github-api"
+    },
+    {
+      "name": "github-campaign-optimizer",
+      "description": "GitHub campaign optimizer skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITHUB_TOKEN"
+      ],
+      "github_path": "registry/skills/github-campaign-optimizer"
+    },
+    {
+      "name": "github-customer-feedback",
+      "description": "GitHub customer feedback skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITHUB_TOKEN"
+      ],
+      "github_path": "registry/skills/github-customer-feedback"
+    },
+    {
+      "name": "github-issue-triage",
+      "description": "GitHub issue triage skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITHUB_TOKEN"
+      ],
+      "github_path": "registry/skills/github-issue-triage"
+    },
+    {
+      "name": "github-knowledge-sync",
+      "description": "GitHub knowledge sync skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITHUB_TOKEN"
+      ],
+      "github_path": "registry/skills/github-knowledge-sync"
+    },
+    {
+      "name": "github-ops-monitor",
+      "description": "GitHub ops monitor skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITHUB_TOKEN"
+      ],
+      "github_path": "registry/skills/github-ops-monitor"
+    },
+    {
+      "name": "github-quality-audit",
+      "description": "GitHub quality audit skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITHUB_TOKEN"
+      ],
+      "github_path": "registry/skills/github-quality-audit"
+    },
+    {
+      "name": "github-weekly-report",
+      "description": "GitHub weekly report skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITHUB_TOKEN"
+      ],
+      "github_path": "registry/skills/github-weekly-report"
+    },
+    {
+      "name": "github-workflow-automation",
+      "description": "GitHub workflow automation skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITHUB_TOKEN"
+      ],
+      "github_path": "registry/skills/github-workflow-automation"
+    },
+    {
+      "name": "gitlab-campaign-optimizer",
+      "description": "GitLab campaign optimizer skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITLAB_TOKEN"
+      ],
+      "github_path": "registry/skills/gitlab-campaign-optimizer"
+    },
+    {
+      "name": "gitlab-customer-feedback",
+      "description": "GitLab customer feedback skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITLAB_TOKEN"
+      ],
+      "github_path": "registry/skills/gitlab-customer-feedback"
+    },
+    {
+      "name": "gitlab-issue-triage",
+      "description": "GitLab issue triage skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITLAB_TOKEN"
+      ],
+      "github_path": "registry/skills/gitlab-issue-triage"
+    },
+    {
+      "name": "gitlab-knowledge-sync",
+      "description": "GitLab knowledge sync skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITLAB_TOKEN"
+      ],
+      "github_path": "registry/skills/gitlab-knowledge-sync"
+    },
+    {
+      "name": "gitlab-ops-monitor",
+      "description": "GitLab ops monitor skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITLAB_TOKEN"
+      ],
+      "github_path": "registry/skills/gitlab-ops-monitor"
+    },
+    {
+      "name": "gitlab-quality-audit",
+      "description": "GitLab quality audit skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITLAB_TOKEN"
+      ],
+      "github_path": "registry/skills/gitlab-quality-audit"
+    },
+    {
+      "name": "gitlab-weekly-report",
+      "description": "GitLab weekly report skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITLAB_TOKEN"
+      ],
+      "github_path": "registry/skills/gitlab-weekly-report"
+    },
+    {
+      "name": "gitlab-workflow-automation",
+      "description": "GitLab workflow automation skill for autonomous execution cycles.",
+      "category": "Dev",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GITLAB_TOKEN"
+      ],
+      "github_path": "registry/skills/gitlab-workflow-automation"
+    },
+    {
+      "name": "google-search-console",
+      "description": "Google Search Console integration for SEO monitoring and keyword reporting.",
+      "category": "SEO",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "GOOGLE_SEARCH_CONSOLE_API_KEY"
+      ],
+      "github_path": "registry/skills/google-search-console"
+    },
+    {
+      "name": "hubspot-campaign-optimizer",
+      "description": "HubSpot campaign optimizer skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "HUBSPOT_API_KEY"
+      ],
+      "github_path": "registry/skills/hubspot-campaign-optimizer"
+    },
+    {
+      "name": "hubspot-customer-feedback",
+      "description": "HubSpot customer feedback skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "HUBSPOT_API_KEY"
+      ],
+      "github_path": "registry/skills/hubspot-customer-feedback"
+    },
+    {
+      "name": "hubspot-issue-triage",
+      "description": "HubSpot issue triage skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "HUBSPOT_API_KEY"
+      ],
+      "github_path": "registry/skills/hubspot-issue-triage"
+    },
+    {
+      "name": "hubspot-knowledge-sync",
+      "description": "HubSpot knowledge sync skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "HUBSPOT_API_KEY"
+      ],
+      "github_path": "registry/skills/hubspot-knowledge-sync"
+    },
+    {
+      "name": "hubspot-ops-monitor",
+      "description": "HubSpot ops monitor skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "HUBSPOT_API_KEY"
+      ],
+      "github_path": "registry/skills/hubspot-ops-monitor"
+    },
+    {
+      "name": "hubspot-quality-audit",
+      "description": "HubSpot quality audit skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "HUBSPOT_API_KEY"
+      ],
+      "github_path": "registry/skills/hubspot-quality-audit"
+    },
+    {
+      "name": "hubspot-weekly-report",
+      "description": "HubSpot weekly report skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "HUBSPOT_API_KEY"
+      ],
+      "github_path": "registry/skills/hubspot-weekly-report"
+    },
+    {
+      "name": "hubspot-workflow-automation",
+      "description": "HubSpot workflow automation skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "HUBSPOT_API_KEY"
+      ],
+      "github_path": "registry/skills/hubspot-workflow-automation"
+    },
+    {
+      "name": "instagram",
+      "description": "Instagram integration for feed analysis, trend discovery, and posting workflows.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "INSTAGRAM_ACCESS_TOKEN"
+      ],
+      "github_path": "registry/skills/instagram"
+    },
+    {
+      "name": "jira-campaign-optimizer",
+      "description": "Jira campaign optimizer skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "JIRA_API_TOKEN"
+      ],
+      "github_path": "registry/skills/jira-campaign-optimizer"
+    },
+    {
+      "name": "jira-customer-feedback",
+      "description": "Jira customer feedback skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "JIRA_API_TOKEN"
+      ],
+      "github_path": "registry/skills/jira-customer-feedback"
+    },
+    {
+      "name": "jira-issue-triage",
+      "description": "Jira issue triage skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "JIRA_API_TOKEN"
+      ],
+      "github_path": "registry/skills/jira-issue-triage"
+    },
+    {
+      "name": "jira-knowledge-sync",
+      "description": "Jira knowledge sync skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "JIRA_API_TOKEN"
+      ],
+      "github_path": "registry/skills/jira-knowledge-sync"
+    },
+    {
+      "name": "jira-ops-monitor",
+      "description": "Jira ops monitor skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "JIRA_API_TOKEN"
+      ],
+      "github_path": "registry/skills/jira-ops-monitor"
+    },
+    {
+      "name": "jira-quality-audit",
+      "description": "Jira quality audit skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "JIRA_API_TOKEN"
+      ],
+      "github_path": "registry/skills/jira-quality-audit"
+    },
+    {
+      "name": "jira-weekly-report",
+      "description": "Jira weekly report skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "JIRA_API_TOKEN"
+      ],
+      "github_path": "registry/skills/jira-weekly-report"
+    },
+    {
+      "name": "jira-workflow-automation",
+      "description": "Jira workflow automation skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "JIRA_API_TOKEN"
+      ],
+      "github_path": "registry/skills/jira-workflow-automation"
+    },
+    {
+      "name": "linear-campaign-optimizer",
+      "description": "Linear campaign optimizer skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINEAR_API_KEY"
+      ],
+      "github_path": "registry/skills/linear-campaign-optimizer"
+    },
+    {
+      "name": "linear-customer-feedback",
+      "description": "Linear customer feedback skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINEAR_API_KEY"
+      ],
+      "github_path": "registry/skills/linear-customer-feedback"
+    },
+    {
+      "name": "linear-issue-triage",
+      "description": "Linear issue triage skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINEAR_API_KEY"
+      ],
+      "github_path": "registry/skills/linear-issue-triage"
+    },
+    {
+      "name": "linear-knowledge-sync",
+      "description": "Linear knowledge sync skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINEAR_API_KEY"
+      ],
+      "github_path": "registry/skills/linear-knowledge-sync"
+    },
+    {
+      "name": "linear-ops-monitor",
+      "description": "Linear ops monitor skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINEAR_API_KEY"
+      ],
+      "github_path": "registry/skills/linear-ops-monitor"
+    },
+    {
+      "name": "linear-quality-audit",
+      "description": "Linear quality audit skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINEAR_API_KEY"
+      ],
+      "github_path": "registry/skills/linear-quality-audit"
+    },
+    {
+      "name": "linear-weekly-report",
+      "description": "Linear weekly report skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINEAR_API_KEY"
+      ],
+      "github_path": "registry/skills/linear-weekly-report"
+    },
+    {
+      "name": "linear-workflow-automation",
+      "description": "Linear workflow automation skill for autonomous execution cycles.",
+      "category": "PM",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINEAR_API_KEY"
+      ],
+      "github_path": "registry/skills/linear-workflow-automation"
+    },
+    {
+      "name": "linkedin-campaign-optimizer",
+      "description": "LinkedIn campaign optimizer skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINKEDIN_API_KEY"
+      ],
+      "github_path": "registry/skills/linkedin-campaign-optimizer"
+    },
+    {
+      "name": "linkedin-customer-feedback",
+      "description": "LinkedIn customer feedback skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINKEDIN_API_KEY"
+      ],
+      "github_path": "registry/skills/linkedin-customer-feedback"
+    },
+    {
+      "name": "linkedin-issue-triage",
+      "description": "LinkedIn issue triage skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINKEDIN_API_KEY"
+      ],
+      "github_path": "registry/skills/linkedin-issue-triage"
+    },
+    {
+      "name": "linkedin-knowledge-sync",
+      "description": "LinkedIn knowledge sync skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINKEDIN_API_KEY"
+      ],
+      "github_path": "registry/skills/linkedin-knowledge-sync"
+    },
+    {
+      "name": "linkedin-ops-monitor",
+      "description": "LinkedIn ops monitor skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINKEDIN_API_KEY"
+      ],
+      "github_path": "registry/skills/linkedin-ops-monitor"
+    },
+    {
+      "name": "linkedin-quality-audit",
+      "description": "LinkedIn quality audit skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINKEDIN_API_KEY"
+      ],
+      "github_path": "registry/skills/linkedin-quality-audit"
+    },
+    {
+      "name": "linkedin-weekly-report",
+      "description": "LinkedIn weekly report skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINKEDIN_API_KEY"
+      ],
+      "github_path": "registry/skills/linkedin-weekly-report"
+    },
+    {
+      "name": "linkedin-workflow-automation",
+      "description": "LinkedIn workflow automation skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "LINKEDIN_API_KEY"
+      ],
+      "github_path": "registry/skills/linkedin-workflow-automation"
+    },
+    {
+      "name": "meta-ads-api",
+      "description": "Meta Ads API integration for campaign data ingestion and optimization loops.",
+      "category": "Marketing",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "META_ADS_API_KEY"
+      ],
+      "github_path": "registry/skills/meta-ads-api"
+    },
+    {
+      "name": "notion-campaign-optimizer",
+      "description": "Notion campaign optimizer skill for autonomous execution cycles.",
+      "category": "Productivity",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "NOTION_API_KEY"
+      ],
+      "github_path": "registry/skills/notion-campaign-optimizer"
+    },
+    {
+      "name": "notion-customer-feedback",
+      "description": "Notion customer feedback skill for autonomous execution cycles.",
+      "category": "Productivity",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "NOTION_API_KEY"
+      ],
+      "github_path": "registry/skills/notion-customer-feedback"
+    },
+    {
+      "name": "notion-issue-triage",
+      "description": "Notion issue triage skill for autonomous execution cycles.",
+      "category": "Productivity",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "NOTION_API_KEY"
+      ],
+      "github_path": "registry/skills/notion-issue-triage"
+    },
+    {
+      "name": "notion-knowledge-sync",
+      "description": "Notion knowledge sync skill for autonomous execution cycles.",
+      "category": "Productivity",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "NOTION_API_KEY"
+      ],
+      "github_path": "registry/skills/notion-knowledge-sync"
+    },
+    {
+      "name": "notion-ops-monitor",
+      "description": "Notion ops monitor skill for autonomous execution cycles.",
+      "category": "Productivity",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "NOTION_API_KEY"
+      ],
+      "github_path": "registry/skills/notion-ops-monitor"
+    },
+    {
+      "name": "notion-quality-audit",
+      "description": "Notion quality audit skill for autonomous execution cycles.",
+      "category": "Productivity",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "NOTION_API_KEY"
+      ],
+      "github_path": "registry/skills/notion-quality-audit"
+    },
+    {
+      "name": "notion-weekly-report",
+      "description": "Notion weekly report skill for autonomous execution cycles.",
+      "category": "Productivity",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "NOTION_API_KEY"
+      ],
+      "github_path": "registry/skills/notion-weekly-report"
+    },
+    {
+      "name": "notion-workflow-automation",
+      "description": "Notion workflow automation skill for autonomous execution cycles.",
+      "category": "Productivity",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "NOTION_API_KEY"
+      ],
+      "github_path": "registry/skills/notion-workflow-automation"
+    },
+    {
       "name": "openstaff",
       "description": "OpenStaff platform integration for cycle tracking, KPI recording, and help signals.",
       "category": "Platform",
@@ -104,6 +927,582 @@
       "auth_required": false,
       "required_env_vars": [],
       "github_path": "registry/skills/openstaff"
+    },
+    {
+      "name": "reddit-campaign-optimizer",
+      "description": "Reddit campaign optimizer skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "REDDIT_API_KEY"
+      ],
+      "github_path": "registry/skills/reddit-campaign-optimizer"
+    },
+    {
+      "name": "reddit-customer-feedback",
+      "description": "Reddit customer feedback skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "REDDIT_API_KEY"
+      ],
+      "github_path": "registry/skills/reddit-customer-feedback"
+    },
+    {
+      "name": "reddit-issue-triage",
+      "description": "Reddit issue triage skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "REDDIT_API_KEY"
+      ],
+      "github_path": "registry/skills/reddit-issue-triage"
+    },
+    {
+      "name": "reddit-knowledge-sync",
+      "description": "Reddit knowledge sync skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "REDDIT_API_KEY"
+      ],
+      "github_path": "registry/skills/reddit-knowledge-sync"
+    },
+    {
+      "name": "reddit-ops-monitor",
+      "description": "Reddit ops monitor skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "REDDIT_API_KEY"
+      ],
+      "github_path": "registry/skills/reddit-ops-monitor"
+    },
+    {
+      "name": "reddit-quality-audit",
+      "description": "Reddit quality audit skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "REDDIT_API_KEY"
+      ],
+      "github_path": "registry/skills/reddit-quality-audit"
+    },
+    {
+      "name": "reddit-weekly-report",
+      "description": "Reddit weekly report skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "REDDIT_API_KEY"
+      ],
+      "github_path": "registry/skills/reddit-weekly-report"
+    },
+    {
+      "name": "reddit-workflow-automation",
+      "description": "Reddit workflow automation skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "REDDIT_API_KEY"
+      ],
+      "github_path": "registry/skills/reddit-workflow-automation"
+    },
+    {
+      "name": "salesforce-campaign-optimizer",
+      "description": "Salesforce campaign optimizer skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SALESFORCE_API_KEY"
+      ],
+      "github_path": "registry/skills/salesforce-campaign-optimizer"
+    },
+    {
+      "name": "salesforce-customer-feedback",
+      "description": "Salesforce customer feedback skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SALESFORCE_API_KEY"
+      ],
+      "github_path": "registry/skills/salesforce-customer-feedback"
+    },
+    {
+      "name": "salesforce-issue-triage",
+      "description": "Salesforce issue triage skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SALESFORCE_API_KEY"
+      ],
+      "github_path": "registry/skills/salesforce-issue-triage"
+    },
+    {
+      "name": "salesforce-knowledge-sync",
+      "description": "Salesforce knowledge sync skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SALESFORCE_API_KEY"
+      ],
+      "github_path": "registry/skills/salesforce-knowledge-sync"
+    },
+    {
+      "name": "salesforce-ops-monitor",
+      "description": "Salesforce ops monitor skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SALESFORCE_API_KEY"
+      ],
+      "github_path": "registry/skills/salesforce-ops-monitor"
+    },
+    {
+      "name": "salesforce-quality-audit",
+      "description": "Salesforce quality audit skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SALESFORCE_API_KEY"
+      ],
+      "github_path": "registry/skills/salesforce-quality-audit"
+    },
+    {
+      "name": "salesforce-weekly-report",
+      "description": "Salesforce weekly report skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SALESFORCE_API_KEY"
+      ],
+      "github_path": "registry/skills/salesforce-weekly-report"
+    },
+    {
+      "name": "salesforce-workflow-automation",
+      "description": "Salesforce workflow automation skill for autonomous execution cycles.",
+      "category": "Sales",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SALESFORCE_API_KEY"
+      ],
+      "github_path": "registry/skills/salesforce-workflow-automation"
+    },
+    {
+      "name": "shopify-campaign-optimizer",
+      "description": "Shopify campaign optimizer skill for autonomous execution cycles.",
+      "category": "Ecommerce",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SHOPIFY_API_KEY"
+      ],
+      "github_path": "registry/skills/shopify-campaign-optimizer"
+    },
+    {
+      "name": "shopify-customer-feedback",
+      "description": "Shopify customer feedback skill for autonomous execution cycles.",
+      "category": "Ecommerce",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SHOPIFY_API_KEY"
+      ],
+      "github_path": "registry/skills/shopify-customer-feedback"
+    },
+    {
+      "name": "shopify-issue-triage",
+      "description": "Shopify issue triage skill for autonomous execution cycles.",
+      "category": "Ecommerce",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SHOPIFY_API_KEY"
+      ],
+      "github_path": "registry/skills/shopify-issue-triage"
+    },
+    {
+      "name": "shopify-knowledge-sync",
+      "description": "Shopify knowledge sync skill for autonomous execution cycles.",
+      "category": "Ecommerce",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SHOPIFY_API_KEY"
+      ],
+      "github_path": "registry/skills/shopify-knowledge-sync"
+    },
+    {
+      "name": "shopify-ops-monitor",
+      "description": "Shopify ops monitor skill for autonomous execution cycles.",
+      "category": "Ecommerce",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SHOPIFY_API_KEY"
+      ],
+      "github_path": "registry/skills/shopify-ops-monitor"
+    },
+    {
+      "name": "shopify-quality-audit",
+      "description": "Shopify quality audit skill for autonomous execution cycles.",
+      "category": "Ecommerce",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SHOPIFY_API_KEY"
+      ],
+      "github_path": "registry/skills/shopify-quality-audit"
+    },
+    {
+      "name": "shopify-weekly-report",
+      "description": "Shopify weekly report skill for autonomous execution cycles.",
+      "category": "Ecommerce",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SHOPIFY_API_KEY"
+      ],
+      "github_path": "registry/skills/shopify-weekly-report"
+    },
+    {
+      "name": "shopify-workflow-automation",
+      "description": "Shopify workflow automation skill for autonomous execution cycles.",
+      "category": "Ecommerce",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SHOPIFY_API_KEY"
+      ],
+      "github_path": "registry/skills/shopify-workflow-automation"
+    },
+    {
+      "name": "slack-campaign-optimizer",
+      "description": "Slack campaign optimizer skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SLACK_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/slack-campaign-optimizer"
+    },
+    {
+      "name": "slack-customer-feedback",
+      "description": "Slack customer feedback skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SLACK_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/slack-customer-feedback"
+    },
+    {
+      "name": "slack-issue-triage",
+      "description": "Slack issue triage skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SLACK_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/slack-issue-triage"
+    },
+    {
+      "name": "slack-knowledge-sync",
+      "description": "Slack knowledge sync skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SLACK_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/slack-knowledge-sync"
+    },
+    {
+      "name": "slack-ops-monitor",
+      "description": "Slack ops monitor skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SLACK_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/slack-ops-monitor"
+    },
+    {
+      "name": "slack-quality-audit",
+      "description": "Slack quality audit skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SLACK_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/slack-quality-audit"
+    },
+    {
+      "name": "slack-weekly-report",
+      "description": "Slack weekly report skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SLACK_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/slack-weekly-report"
+    },
+    {
+      "name": "slack-workflow-automation",
+      "description": "Slack workflow automation skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "SLACK_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/slack-workflow-automation"
+    },
+    {
+      "name": "stripe-campaign-optimizer",
+      "description": "Stripe campaign optimizer skill for autonomous execution cycles.",
+      "category": "Finance",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "STRIPE_API_KEY"
+      ],
+      "github_path": "registry/skills/stripe-campaign-optimizer"
+    },
+    {
+      "name": "stripe-customer-feedback",
+      "description": "Stripe customer feedback skill for autonomous execution cycles.",
+      "category": "Finance",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "STRIPE_API_KEY"
+      ],
+      "github_path": "registry/skills/stripe-customer-feedback"
+    },
+    {
+      "name": "stripe-issue-triage",
+      "description": "Stripe issue triage skill for autonomous execution cycles.",
+      "category": "Finance",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "STRIPE_API_KEY"
+      ],
+      "github_path": "registry/skills/stripe-issue-triage"
+    },
+    {
+      "name": "stripe-knowledge-sync",
+      "description": "Stripe knowledge sync skill for autonomous execution cycles.",
+      "category": "Finance",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "STRIPE_API_KEY"
+      ],
+      "github_path": "registry/skills/stripe-knowledge-sync"
+    },
+    {
+      "name": "stripe-ops-monitor",
+      "description": "Stripe ops monitor skill for autonomous execution cycles.",
+      "category": "Finance",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "STRIPE_API_KEY"
+      ],
+      "github_path": "registry/skills/stripe-ops-monitor"
+    },
+    {
+      "name": "stripe-quality-audit",
+      "description": "Stripe quality audit skill for autonomous execution cycles.",
+      "category": "Finance",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "STRIPE_API_KEY"
+      ],
+      "github_path": "registry/skills/stripe-quality-audit"
+    },
+    {
+      "name": "stripe-weekly-report",
+      "description": "Stripe weekly report skill for autonomous execution cycles.",
+      "category": "Finance",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "STRIPE_API_KEY"
+      ],
+      "github_path": "registry/skills/stripe-weekly-report"
+    },
+    {
+      "name": "stripe-workflow-automation",
+      "description": "Stripe workflow automation skill for autonomous execution cycles.",
+      "category": "Finance",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "STRIPE_API_KEY"
+      ],
+      "github_path": "registry/skills/stripe-workflow-automation"
+    },
+    {
+      "name": "telegram-campaign-optimizer",
+      "description": "Telegram campaign optimizer skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "TELEGRAM_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/telegram-campaign-optimizer"
+    },
+    {
+      "name": "telegram-customer-feedback",
+      "description": "Telegram customer feedback skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "TELEGRAM_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/telegram-customer-feedback"
+    },
+    {
+      "name": "telegram-issue-triage",
+      "description": "Telegram issue triage skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "TELEGRAM_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/telegram-issue-triage"
+    },
+    {
+      "name": "telegram-knowledge-sync",
+      "description": "Telegram knowledge sync skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "TELEGRAM_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/telegram-knowledge-sync"
+    },
+    {
+      "name": "telegram-ops-monitor",
+      "description": "Telegram ops monitor skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "TELEGRAM_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/telegram-ops-monitor"
+    },
+    {
+      "name": "telegram-quality-audit",
+      "description": "Telegram quality audit skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "TELEGRAM_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/telegram-quality-audit"
+    },
+    {
+      "name": "telegram-weekly-report",
+      "description": "Telegram weekly report skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "TELEGRAM_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/telegram-weekly-report"
+    },
+    {
+      "name": "telegram-workflow-automation",
+      "description": "Telegram workflow automation skill for autonomous execution cycles.",
+      "category": "Communication",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "TELEGRAM_BOT_TOKEN"
+      ],
+      "github_path": "registry/skills/telegram-workflow-automation"
     },
     {
       "name": "web-scraping",
@@ -116,14 +1515,196 @@
       "github_path": "registry/skills/web-scraping"
     },
     {
-      "name": "github-api",
-      "description": "GitHub API integration for repository management and code operations.",
-      "category": "Dev",
+      "name": "x-campaign-optimizer",
+      "description": "X campaign optimizer skill for autonomous execution cycles.",
+      "category": "Social",
       "author": "openstaff",
       "version": "1.0.0",
       "auth_required": true,
-      "required_env_vars": ["GITHUB_TOKEN"],
-      "github_path": "registry/skills/github-api"
+      "required_env_vars": [
+        "X_API_KEY"
+      ],
+      "github_path": "registry/skills/x-campaign-optimizer"
+    },
+    {
+      "name": "x-customer-feedback",
+      "description": "X customer feedback skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "X_API_KEY"
+      ],
+      "github_path": "registry/skills/x-customer-feedback"
+    },
+    {
+      "name": "x-issue-triage",
+      "description": "X issue triage skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "X_API_KEY"
+      ],
+      "github_path": "registry/skills/x-issue-triage"
+    },
+    {
+      "name": "x-knowledge-sync",
+      "description": "X knowledge sync skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "X_API_KEY"
+      ],
+      "github_path": "registry/skills/x-knowledge-sync"
+    },
+    {
+      "name": "x-ops-monitor",
+      "description": "X ops monitor skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "X_API_KEY"
+      ],
+      "github_path": "registry/skills/x-ops-monitor"
+    },
+    {
+      "name": "x-quality-audit",
+      "description": "X quality audit skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "X_API_KEY"
+      ],
+      "github_path": "registry/skills/x-quality-audit"
+    },
+    {
+      "name": "x-weekly-report",
+      "description": "X weekly report skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "X_API_KEY"
+      ],
+      "github_path": "registry/skills/x-weekly-report"
+    },
+    {
+      "name": "x-workflow-automation",
+      "description": "X workflow automation skill for autonomous execution cycles.",
+      "category": "Social",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "X_API_KEY"
+      ],
+      "github_path": "registry/skills/x-workflow-automation"
+    },
+    {
+      "name": "zendesk-campaign-optimizer",
+      "description": "Zendesk campaign optimizer skill for autonomous execution cycles.",
+      "category": "Support",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "ZENDESK_API_KEY"
+      ],
+      "github_path": "registry/skills/zendesk-campaign-optimizer"
+    },
+    {
+      "name": "zendesk-customer-feedback",
+      "description": "Zendesk customer feedback skill for autonomous execution cycles.",
+      "category": "Support",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "ZENDESK_API_KEY"
+      ],
+      "github_path": "registry/skills/zendesk-customer-feedback"
+    },
+    {
+      "name": "zendesk-issue-triage",
+      "description": "Zendesk issue triage skill for autonomous execution cycles.",
+      "category": "Support",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "ZENDESK_API_KEY"
+      ],
+      "github_path": "registry/skills/zendesk-issue-triage"
+    },
+    {
+      "name": "zendesk-knowledge-sync",
+      "description": "Zendesk knowledge sync skill for autonomous execution cycles.",
+      "category": "Support",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "ZENDESK_API_KEY"
+      ],
+      "github_path": "registry/skills/zendesk-knowledge-sync"
+    },
+    {
+      "name": "zendesk-ops-monitor",
+      "description": "Zendesk ops monitor skill for autonomous execution cycles.",
+      "category": "Support",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "ZENDESK_API_KEY"
+      ],
+      "github_path": "registry/skills/zendesk-ops-monitor"
+    },
+    {
+      "name": "zendesk-quality-audit",
+      "description": "Zendesk quality audit skill for autonomous execution cycles.",
+      "category": "Support",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "ZENDESK_API_KEY"
+      ],
+      "github_path": "registry/skills/zendesk-quality-audit"
+    },
+    {
+      "name": "zendesk-weekly-report",
+      "description": "Zendesk weekly report skill for autonomous execution cycles.",
+      "category": "Support",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "ZENDESK_API_KEY"
+      ],
+      "github_path": "registry/skills/zendesk-weekly-report"
+    },
+    {
+      "name": "zendesk-workflow-automation",
+      "description": "Zendesk workflow automation skill for autonomous execution cycles.",
+      "category": "Support",
+      "author": "openstaff",
+      "version": "1.0.0",
+      "auth_required": true,
+      "required_env_vars": [
+        "ZENDESK_API_KEY"
+      ],
+      "github_path": "registry/skills/zendesk-workflow-automation"
     }
   ]
 }
