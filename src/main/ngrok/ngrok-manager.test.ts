@@ -186,4 +186,57 @@ describe('NgrokManager', () => {
     expect(manager2.isActive()).toBe(false)
     expect(manager2.getUrl()).toBeNull()
   })
+
+  it('restartFromConfig reuses the last known port', async () => {
+    const ngrok = await import('@ngrok/ngrok')
+    const mockForward = vi.mocked(ngrok.forward)
+    mockForward
+      .mockResolvedValueOnce({ url: () => 'https://first.ngrok.app', close: vi.fn().mockResolvedValue(undefined) } as never)
+      .mockResolvedValueOnce({ url: () => 'https://second.ngrok.app', close: vi.fn().mockResolvedValue(undefined) } as never)
+
+    const store = makeStore({
+      ngrok_api_key: 'test-key',
+      ngrok_auth_password: 'secret123'
+    })
+    const manager = new NgrokManager(store)
+
+    await manager.start(3456)
+    const result = await manager.restartFromConfig()
+
+    expect(result).toBe('https://second.ngrok.app')
+    expect(mockForward).toHaveBeenLastCalledWith({
+      addr: 3456,
+      authtoken: 'test-key',
+      proto: 'http',
+      basic_auth: 'openstaff:secret123'
+    })
+  })
+
+  it('restartFromConfig tears down an active tunnel when auth password is removed', async () => {
+    const data: Record<string, string> = {
+      ngrok_api_key: 'test-key',
+      ngrok_auth_password: 'secret123'
+    }
+    const store = {
+      get: vi.fn((key: string) => data[key] || ''),
+      set: vi.fn(),
+      getAll: vi.fn(() => data)
+    } as unknown as ConfigStore
+
+    const ngrok = await import('@ngrok/ngrok')
+    const mockClose = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(ngrok.forward).mockResolvedValue({ url: () => 'https://active.ngrok.app', close: mockClose } as never)
+
+    const manager = new NgrokManager(store)
+    await manager.start(3000)
+    expect(manager.isActive()).toBe(true)
+
+    data.ngrok_auth_password = ''
+    const result = await manager.restartFromConfig()
+
+    expect(result).toBeNull()
+    expect(mockClose).toHaveBeenCalled()
+    expect(manager.isActive()).toBe(false)
+    expect(manager.getError()).toContain('auth password is required')
+  })
 })

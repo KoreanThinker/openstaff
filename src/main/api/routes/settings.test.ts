@@ -29,6 +29,9 @@ function createMockConfigStore() {
 
 describe('settings API routes', () => {
   const mockConfigStore = createMockConfigStore()
+  const mockNgrokManager = {
+    restartFromConfig: vi.fn().mockResolvedValue(null)
+  }
 
   beforeAll(async () => {
     const app = express()
@@ -37,7 +40,8 @@ describe('settings API routes', () => {
       staffManager: {} as never,
       configStore: mockConfigStore as never,
       monitoringEngine: {} as never,
-      io: { emit: vi.fn() } as never
+      io: { emit: vi.fn() } as never,
+      ngrokManager: mockNgrokManager as never
     }))
 
     server = createServer(app)
@@ -76,6 +80,21 @@ describe('settings API routes', () => {
     // Verify changes persisted
     expect(mockConfigStore.get('setup_completed')).toBe(true)
     expect(mockConfigStore.get('theme')).toBe('dark')
+  })
+
+  it('PATCH /api/settings refreshes ngrok tunnel when remote settings change', async () => {
+    mockNgrokManager.restartFromConfig.mockClear()
+
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ngrok_api_key: 'test-key',
+        ngrok_auth_password: 'secret-pass'
+      })
+    })
+    expect(res.status).toBe(200)
+    expect(mockNgrokManager.restartFromConfig).toHaveBeenCalledTimes(1)
   })
 
   it('GET /api/settings masks empty sensitive values', async () => {

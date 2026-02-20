@@ -76,7 +76,7 @@ export function settingsRoutes(ctx: ApiContext): Router {
   })
 
   // Update settings
-  router.patch('/', (req, res) => {
+  router.patch('/', async (req, res) => {
     try {
       const updates = req.body
       if (!updates || typeof updates !== 'object' || Array.isArray(updates)) {
@@ -98,6 +98,12 @@ export function settingsRoutes(ctx: ApiContext): Router {
 
       for (const [key, value] of entries) {
         ctx.configStore.set(key as SettingsKey, value as never)
+      }
+
+      const shouldRefreshNgrok =
+        entries.some(([key]) => key === 'ngrok_api_key' || key === 'ngrok_auth_password')
+      if (shouldRefreshNgrok && ctx.ngrokManager) {
+        await ctx.ngrokManager.restartFromConfig()
       }
       res.json({ status: 'saved' })
     } catch (err) {

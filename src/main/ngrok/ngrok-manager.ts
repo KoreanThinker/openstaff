@@ -6,12 +6,20 @@ export class NgrokManager {
   private tunnelActive = false
   private lastError: string | null = null
   private listener: { close: () => Promise<void>; url: () => string | null } | null = null
+  private currentPort: number | null = null
 
   constructor(configStore: ConfigStore) {
     this.configStore = configStore
   }
 
   async start(port: number): Promise<string | null> {
+    this.currentPort = port
+
+    // Reset existing tunnel before re-evaluating config to avoid stale exposure.
+    if (this.listener) {
+      await this.stop()
+    }
+
     const apiKey = this.configStore.get('ngrok_api_key')
     if (!apiKey) {
       this.tunnelUrl = null
@@ -26,11 +34,6 @@ export class NgrokManager {
       this.tunnelActive = false
       this.lastError = 'Ngrok auth password is required before starting remote access.'
       return null
-    }
-
-    // Stop existing tunnel before starting new one
-    if (this.listener) {
-      await this.stop()
     }
 
     try {
@@ -74,6 +77,11 @@ export class NgrokManager {
       this.tunnelUrl = null
       this.tunnelActive = false
     }
+  }
+
+  async restartFromConfig(): Promise<string | null> {
+    if (this.currentPort === null) return null
+    return this.start(this.currentPort)
   }
 
   getUrl(): string | null {
