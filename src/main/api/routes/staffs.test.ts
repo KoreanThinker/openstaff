@@ -245,12 +245,12 @@ describe('staffs API routes', () => {
     expect(data).toEqual([])
   })
 
-  it('GET /api/staffs/:id/errors returns empty array', async () => {
+  it('GET /api/staffs/:id/errors returns paginated empty result', async () => {
     const { data: list } = await apiGet('/api/staffs')
     const id = list[0].id
     const { status, data } = await apiGet(`/api/staffs/${id}/errors`)
     expect(status).toBe(200)
-    expect(data).toEqual([])
+    expect(data).toEqual({ items: [], total: 0 })
   })
 
   it('GET /api/staffs/:id/cycles returns empty array', async () => {

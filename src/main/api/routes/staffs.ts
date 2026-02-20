@@ -296,12 +296,16 @@ export function staffRoutes(ctx: ApiContext): Router {
     }
   })
 
-  // Get errors
+  // Get errors (returns last 50 by default, configurable via ?limit=N&offset=M)
   router.get('/:id/errors', (req, res) => {
     try {
       const dir = getStaffDir(req.params.id!)
       const errors = readJsonl<ErrorEntry>(join(dir, 'errors.jsonl'))
-      res.json(errors.reverse())
+      const reversed = errors.reverse()
+      const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 10000)
+      const offset = Math.max(Number(req.query.offset) || 0, 0)
+      const page = reversed.slice(offset, offset + limit)
+      res.json({ items: page, total: reversed.length })
     } catch (err) {
       res.status(500).json({ error: String(err) })
     }

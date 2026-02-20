@@ -12,12 +12,13 @@ const ALLOWED_SETTINGS: string[] = [
   'setup_completed',
   'start_on_login',
   'show_window_on_startup',
+  'auto_update_agents',
   'theme',
   'monthly_budget_usd',
   'budget_warning_percent'
 ]
 
-const BOOLEAN_SETTINGS = new Set(['setup_completed', 'start_on_login', 'show_window_on_startup'])
+const BOOLEAN_SETTINGS = new Set(['setup_completed', 'start_on_login', 'show_window_on_startup', 'auto_update_agents'])
 const NUMBER_SETTINGS = new Set(['monthly_budget_usd', 'budget_warning_percent'])
 const STRING_SETTINGS = new Set([
   'anthropic_api_key', 'openai_api_key', 'ngrok_api_key', 'ngrok_auth_password',

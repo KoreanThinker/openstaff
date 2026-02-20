@@ -191,6 +191,16 @@ describe('settings API routes', () => {
     expect(mockConfigStore.get('monthly_budget_usd')).toBe(100)
   })
 
+  it('PATCH /api/settings accepts auto_update_agents boolean', async () => {
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ auto_update_agents: true })
+    })
+    expect(res.status).toBe(200)
+    expect(mockConfigStore.get('auto_update_agents')).toBe(true)
+  })
+
   it('PATCH /api/settings updates multiple keys at once', async () => {
     const res = await fetch(`http://localhost:${port}/api/settings`, {
       method: 'PATCH',

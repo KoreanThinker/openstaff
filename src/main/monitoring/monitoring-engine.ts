@@ -13,6 +13,7 @@ export class MonitoringEngine {
   private configStore: ConfigStore | null = null
   private logHandler: ((staffId: string, data: string) => void) | null = null
   private budgetWarningEmitted = false
+  private budgetWarningMonth: string | null = null
 
   constructor(staffManager: StaffManager, configStore?: ConfigStore) {
     this.staffManager = staffManager
@@ -130,7 +131,13 @@ export class MonitoringEngine {
       }
     }
 
-    // Emit warning only once per threshold crossing (reset monthly)
+    // Reset warning flag at the start of each new month
+    if (this.budgetWarningMonth !== thisMonth) {
+      this.budgetWarningEmitted = false
+      this.budgetWarningMonth = thisMonth
+    }
+
+    // Emit warning only once per threshold crossing per month
     if (monthCost >= warningThreshold && !this.budgetWarningEmitted) {
       this.budgetWarningEmitted = true
       this.staffManager.emit('budget:warning', {
@@ -138,11 +145,6 @@ export class MonitoringEngine {
         budget_limit: budgetLimit,
         warning_percent: warningPercent
       })
-    }
-
-    // Reset warning flag if cost drops below threshold (new month)
-    if (monthCost < warningThreshold) {
-      this.budgetWarningEmitted = false
     }
   }
 

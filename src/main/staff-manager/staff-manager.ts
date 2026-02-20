@@ -18,7 +18,7 @@ import {
   createClaudeSettings,
   createStaffMcpConfig
 } from '../data/staff-data'
-import { readJsonl, appendJsonl } from '../data/jsonl-reader'
+import { readJsonl, appendJsonl, writeJsonl } from '../data/jsonl-reader'
 import { ensureBuiltinSkill, parseSkillMd, extractRequiredEnvVars } from '../data/skill-data'
 import { IDLE_TIMEOUT_MS, KEEP_GOING_PROMPT, INITIAL_PROMPT, MAX_CONSECUTIVE_FAILURES, FAILURE_WINDOW_MS, BACKOFF_DELAYS_MS } from '@shared/constants'
 import type { ConfigStore } from '../store/config-store'
@@ -28,6 +28,7 @@ interface RunningStaff {
   config: StaffConfig
   process: AgentProcess
   processPid: number
+  generation: number
   lastOutputAt: number
   idleTimer: ReturnType<typeof setInterval> | null
   promptTimer: ReturnType<typeof setTimeout> | null
@@ -41,6 +42,7 @@ export class StaffManager extends EventEmitter {
   private intentionalStops: Set<string> = new Set()
   private paused: Set<string> = new Set()
   private failureHistory: Map<string, number[]> = new Map()
+  private generationCounter: Map<string, number> = new Map()
   private configStore: ConfigStore
 
   constructor(configStore: ConfigStore) {
@@ -71,10 +73,16 @@ export class StaffManager extends EventEmitter {
     // Clear paused state when explicitly starting
     this.paused.delete(staffId)
 
+    // Increment generation counter for this staff to invalidate old exit callbacks
+    const prevGen = this.generationCounter.get(staffId) || 0
+    const generation = prevGen + 1
+    this.generationCounter.set(staffId, generation)
+
     const entry: RunningStaff = {
       config: null!,
       process: null!,
       processPid: 0,
+      generation,
       lastOutputAt: 0,
       idleTimer: null,
       promptTimer: null,
@@ -183,10 +191,10 @@ export class StaffManager extends EventEmitter {
     }
     proc.onData(entry.logStream)
 
-    // Handle exit - capture processPid to guard against stale callbacks
-    const expectedPid = proc.pid
+    // Handle exit - capture generation to guard against stale callbacks from old processes
+    const expectedGeneration = generation
     proc.onExit((code) => {
-      this.handleExit(staffId, code, expectedPid)
+      this.handleExit(staffId, code, entry.processPid, expectedGeneration)
     })
 
     // Idle detection
@@ -279,9 +287,9 @@ export class StaffManager extends EventEmitter {
     const state = readStaffState(staffId)
     writeStaffState(staffId, { ...state, paused: false })
 
-    // Clear giveup signal so file watcher doesn't re-trigger pause
+    // Truncate signals.jsonl so old giveup signals don't trigger immediate re-pause
     const signalsPath = join(getStaffDir(staffId), 'signals.jsonl')
-    appendJsonl(signalsPath, { type: 'resumed', timestamp: new Date().toISOString() })
+    writeJsonl(signalsPath, [{ type: 'resumed', timestamp: new Date().toISOString() }])
 
     await this.startStaff(staffId)
   }
@@ -362,7 +370,7 @@ export class StaffManager extends EventEmitter {
     }
   }
 
-  private handleExit(staffId: string, code: number, exitedPid: number): void {
+  private handleExit(staffId: string, code: number, exitedPid: number, exitedGeneration: number): void {
     // Don't auto-restart if this was an intentional stop
     if (this.intentionalStops.has(staffId)) {
       this.intentionalStops.delete(staffId)
@@ -373,7 +381,8 @@ export class StaffManager extends EventEmitter {
     if (!entry) return
 
     // Guard: ignore stale exit callbacks from old processes after restart
-    if (entry.processPid !== exitedPid) return
+    // Use generation counter (not just PID) to handle PID reuse edge cases
+    if (entry.generation !== exitedGeneration || entry.processPid !== exitedPid) return
 
     if (entry.idleTimer) clearInterval(entry.idleTimer)
     if (entry.promptTimer) clearTimeout(entry.promptTimer)

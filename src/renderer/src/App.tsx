@@ -25,8 +25,19 @@ const queryClient = new QueryClient({
 
 export function App(): React.ReactElement {
   const setupCompleted = useSettingsStore((s) => s.setupCompleted)
+  const setSetupCompleted = useSettingsStore((s) => s.setSetupCompleted)
   const theme = useSettingsStore((s) => s.theme)
   const setTheme = useSettingsStore((s) => s.setTheme)
+
+  // Sync setup_completed from API on mount (source of truth is config.json)
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.setup_completed === true) setSetupCompleted(true)
+      })
+      .catch(() => { /* API not ready yet */ })
+  }, [setSetupCompleted])
 
   // Apply theme on mount and when it changes
   useEffect(() => {
