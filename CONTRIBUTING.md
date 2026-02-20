@@ -8,7 +8,7 @@ OpenStaff is an Electron desktop app that manages multiple AI coding agents (Sta
 
 ### Prerequisites
 
-- **Node.js** >= 20
+- **Node.js** >= 22
 - **pnpm** (package manager) -- install with `npm install -g pnpm`
 - **macOS** or **Linux** (Ubuntu). Windows is not currently supported.
 
@@ -48,7 +48,9 @@ OpenStaff is an Electron desktop app that manages multiple AI coding agents (Sta
 | `pnpm test`          | Run unit/integration tests (Vitest)|
 | `pnpm test:watch`    | Run tests in watch mode            |
 | `pnpm test:coverage` | Run tests with coverage report     |
-| `pnpm test:e2e`      | Run end-to-end tests (Playwright)  |
+| `pnpm test:e2e`      | Run end-to-end tests (Playwright, headless + hidden window) |
+| `pnpm test:e2e:headed` | Run end-to-end tests in headed mode (shows Electron window) |
+| `pnpm test:e2e:ui`   | Run Playwright UI mode (shows Electron window) |
 
 ## Development Workflow
 
@@ -148,6 +150,9 @@ pnpm test:coverage
 
 # Run end-to-end tests (requires the app to be buildable)
 pnpm test:e2e
+
+# Visual debugging mode (shows Electron window)
+pnpm test:e2e:headed
 ```
 
 ### Test File Location

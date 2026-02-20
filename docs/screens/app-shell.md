@@ -82,7 +82,8 @@ The sidebar sits on the left edge of the window. It uses `bg-card` with a right 
 
 **Structure (top to bottom):**
 
-1. **Logo area** (h-14, vertically centered with header): App icon + "OpenStaff" wordmark. `text-foreground font-semibold text-lg`.
+1. **Logo area**: App icon + "OpenStaff" wordmark. `text-foreground font-semibold text-lg`.
+   On macOS, apply a traffic-light safe inset (`pl-[5.5rem]`) and top offset (`pt-2`, `h-16`) so window controls never overlap the logo.
 2. **Navigation items** (flex-col gap-1, px-3):
    - Dashboard (LayoutDashboard icon)
    - Skills (Puzzle icon)

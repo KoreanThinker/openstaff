@@ -79,7 +79,11 @@ export function AppShell(): React.ReactElement {
   const searchRef = React.useRef<HTMLInputElement>(null)
   const [searchOpen, setSearchOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
-  const [isMacDesktop, setIsMacDesktop] = React.useState(false)
+  const [isMacDesktop, setIsMacDesktop] = React.useState(() => {
+    if (typeof navigator === 'undefined') return false
+    const platform = navigator.userAgentData?.platform || navigator.platform || navigator.userAgent
+    return /mac/i.test(platform)
+  })
 
   React.useEffect(() => {
     let active = true
@@ -222,10 +226,11 @@ export function AppShell(): React.ReactElement {
         {/* Logo */}
         <div
           className={cn(
-            'flex h-14 items-center border-b border-border',
+            'flex items-center border-b border-border',
+            isMacDesktop ? 'h-16 pt-2' : 'h-14',
             expanded
               ? isMacDesktop
-                ? 'justify-start pl-20 pr-3'
+                ? 'justify-start pl-[5.5rem] pr-3'
                 : 'justify-start px-3'
               : isMacDesktop
                 ? 'justify-end pr-2'

@@ -43,8 +43,8 @@
     --chart-4: 280 80% 65%; /* 퍼플 */
     --chart-5: 0 84% 60%; /* 레드 */
 
-    /* 핵심: 모서리 곡률. 이미지는 카드가 매우 둥급니다. */
-    --radius: 1.5rem;
+    /* Core corner radius scale */
+    --radius: 0.5rem;
   }
 
   .dark {
@@ -61,7 +61,7 @@
     --secondary: 0 0% 15%;
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 15%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted-foreground: 240 5% 71%;
     --accent: 0 0% 15%;
     --accent-foreground: 0 0% 98%;
     
@@ -70,8 +70,8 @@
     --success: 142 71% 45%;
     --success-foreground: 0 0% 98%;
 
-    --warning: 48 96% 89%;
-    --warning-foreground: 38 92% 50%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 48 96% 89%;
 
     /* Chart 색상 팔레트 */
     --chart-1: 142 71% 45%;

@@ -14,6 +14,7 @@ export async function launchApp(): Promise<{
 }> {
   const testHome = mkdtempSync(join(tmpdir(), 'openstaff-e2e-'))
   const userDataDir = mkdtempSync(join(tmpdir(), 'openstaff-e2e-userdata-'))
+  const showWindow = process.env.OPENSTAFF_E2E_SHOW_WINDOW === '1' ? '1' : '0'
 
   const app = await electron.launch({
     args: [join(__dirname, '../../out/main/index.js')],
@@ -21,6 +22,7 @@ export async function launchApp(): Promise<{
       ...process.env,
       OPENSTAFF_HOME: testHome,
       ELECTRON_USER_DATA_DIR: userDataDir,
+      OPENSTAFF_E2E_SHOW_WINDOW: showWindow,
       NODE_ENV: 'test'
     }
   })
