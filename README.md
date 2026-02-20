@@ -152,6 +152,12 @@ pnpm test:coverage
 
 # E2E tests (requires built app)
 pnpm test:e2e
+
+# E2E tests in headed mode (visual debugging)
+pnpm test:e2e:headed
+
+# Playwright UI mode
+pnpm test:e2e:ui
 ```
 
 **Lint and type check**
