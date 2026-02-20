@@ -43,8 +43,8 @@ export function staffRoutes(ctx: ApiContext): Router {
         const errors = readJsonl<ErrorEntry>(join(dir, 'errors.jsonl'))
         const restarts = errors.filter((e) => e.type === 'process_crash').length
         const kpiEntries = readJsonl<KpiEntry>(join(dir, 'kpi.jsonl'))
-        const lastKpi = kpiEntries[kpiEntries.length - 1]
-        const prevKpi = kpiEntries[kpiEntries.length - 2]
+        const lastKpi = kpiEntries.at(-1)
+        const prevKpi = kpiEntries.at(-2)
 
         const kpiSummary = lastKpi
           ? Object.entries(lastKpi.metrics).map(([name, value]) => ({
@@ -106,8 +106,8 @@ export function staffRoutes(ctx: ApiContext): Router {
       const cycleEntries = readJsonl<CycleEntry>(join(dir, 'cycles.jsonl'))
       const errors = readJsonl<ErrorEntry>(join(dir, 'errors.jsonl'))
       const kpiEntries = readJsonl<KpiEntry>(join(dir, 'kpi.jsonl'))
-      const lastKpi = kpiEntries[kpiEntries.length - 1]
-      const prevKpi = kpiEntries[kpiEntries.length - 2]
+      const lastKpi = kpiEntries.at(-1)
+      const prevKpi = kpiEntries.at(-2)
 
       const detail: StaffDetail = {
         ...config,
@@ -118,7 +118,7 @@ export function staffRoutes(ctx: ApiContext): Router {
           : null,
         restarts: errors.filter((e) => e.type === 'process_crash').length,
         cycles: cycleEntries.length,
-        latest_cycle: cycleEntries[cycleEntries.length - 1] || null,
+        latest_cycle: cycleEntries.at(-1) ?? null,
         kpi_summary: lastKpi
           ? Object.entries(lastKpi.metrics).map(([name, value]) => ({
             name,

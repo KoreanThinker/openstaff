@@ -397,6 +397,29 @@ export function Dashboard(): React.ReactElement {
     return <DashboardSkeleton />
   }
 
+  if (statsQuery.isError || staffsQuery.isError) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <p className="mb-4 text-sm text-destructive">
+            Failed to load dashboard data. The API server may be unavailable.
+          </p>
+          <Button
+            variant="outline"
+            className="rounded-full"
+            onClick={() => {
+              statsQuery.refetch()
+              staffsQuery.refetch()
+            }}
+          >
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
@@ -544,7 +567,7 @@ export function Dashboard(): React.ReactElement {
                     <TableCell>
                       <StatusDot status={staff.status} />
                     </TableCell>
-                    <TableCell className="font-medium">{staff.name}</TableCell>
+                    <TableCell className="max-w-[200px] truncate font-medium">{staff.name}</TableCell>
                     <TableCell className="text-muted-foreground">{staff.role}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-xs">

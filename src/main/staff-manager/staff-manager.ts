@@ -479,7 +479,7 @@ export class StaffManager extends EventEmitter {
   private checkGiveupSignal(staffId: string): void {
     const signalsPath = join(getStaffDir(staffId), 'signals.jsonl')
     const signals = readJsonl<{ type: string }>(signalsPath)
-    const lastSignal = signals[signals.length - 1]
+    const lastSignal = signals.at(-1)
     if (lastSignal?.type === 'giveup') {
       // PRD: Giveup pauses the staff and alerts the user
       this.pauseStaff(staffId).catch((err) => {

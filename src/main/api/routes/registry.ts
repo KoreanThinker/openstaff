@@ -25,7 +25,7 @@ async function fetchRegistryIndex(): Promise<RegistryIndex> {
   }
 
   const url = `https://raw.githubusercontent.com/${REGISTRY_GITHUB_OWNER}/${REGISTRY_GITHUB_REPO}/main/registry/index.json`
-  const response = await fetch(url)
+  const response = await fetch(url, { signal: AbortSignal.timeout(10_000) })
   if (!response.ok) {
     // Return cached data if available, otherwise empty
     if (existsSync(CACHE_FILE)) {

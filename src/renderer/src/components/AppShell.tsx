@@ -269,8 +269,16 @@ export function AppShell(): React.ReactElement {
               onFocus={() => setSearchOpen(true)}
               onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && searchResults.staffs.length > 0) {
-                  navigate(`/staffs/${searchResults.staffs[0].id}`)
+                if (e.key === 'Enter' && hasResults) {
+                  const firstStaff = searchResults.staffs.at(0)
+                  const firstPage = searchResults.pages.at(0)
+                  if (firstStaff) {
+                    navigate(`/staffs/${firstStaff.id}`)
+                  } else if (firstPage) {
+                    navigate(firstPage.to)
+                  } else {
+                    navigate('/skills')
+                  }
                   setSearchOpen(false)
                   setSearchQuery('')
                 }

@@ -167,7 +167,7 @@ function OverviewTab({ staffId }: { staffId: string }): React.ReactElement {
     )
   }
 
-  const latestCycle = staff.latest_cycle ?? (cycles?.length ? cycles[cycles.length - 1] : null)
+  const latestCycle = staff.latest_cycle ?? cycles?.at(-1) ?? null
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -745,10 +745,10 @@ function KpiTab({ staffId }: { staffId: string }): React.ReactElement {
             value: entry.metrics[metric] ?? null
           })).filter((d) => d.value !== null)
 
-          const latestValue = chartData.length > 0 ? chartData[chartData.length - 1].value : null
-          const prevValue = chartData.length > 1 ? chartData[chartData.length - 2].value : null
+          const latestValue = chartData.at(-1)?.value ?? null
+          const prevValue = chartData.at(-2)?.value ?? null
           const trend = latestValue !== null && prevValue !== null && prevValue !== 0
-            ? ((latestValue! - prevValue) / Math.abs(prevValue)) * 100
+            ? ((latestValue - prevValue) / Math.abs(prevValue)) * 100
             : null
 
           const goalValue = goalValues[metric.toLowerCase()]
@@ -987,7 +987,12 @@ export function StaffDetail(): React.ReactElement {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const staffId = id!
+
+  if (!id) {
+    navigate('/')
+    return <div />
+  }
+  const staffId = id
 
   const activeTab = searchParams.get('tab') ?? 'overview'
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)

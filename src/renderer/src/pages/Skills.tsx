@@ -340,7 +340,7 @@ export function Skills(): React.ReactElement {
                         <DropdownMenuItem
                           className="text-destructive"
                           onClick={(e) =>
-                            handleDeleteClick(skill, e as unknown as React.MouseEvent)
+                            handleDeleteClick(skill, e)
                           }
                         >
                           Delete
