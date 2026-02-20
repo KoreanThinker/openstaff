@@ -55,7 +55,7 @@ function TemplateCard({
       e.stopPropagation()
       setDownloading(true)
       onDownload()
-      // Simulate download completion
+      // Reset state after navigation (component may unmount before this fires)
       setTimeout(() => setDownloading(false), 1500)
     },
     [onDownload]
@@ -129,19 +129,22 @@ function SkillRegistryCard({
   skill: RegistrySkill
   isInstalled: boolean
   onClick: () => void
-  onInstall: () => void
+  onInstall: () => Promise<void> | void
 }): React.ReactElement {
   const [installing, setInstalling] = useState(false)
 
   const handleInstall = useCallback(
-    (e: React.MouseEvent) => {
+    async (e: React.MouseEvent) => {
       e.stopPropagation()
-      if (isInstalled) return
+      if (isInstalled || installing) return
       setInstalling(true)
-      onInstall()
-      setTimeout(() => setInstalling(false), 2000)
+      try {
+        await onInstall()
+      } finally {
+        setInstalling(false)
+      }
     },
-    [isInstalled, onInstall]
+    [isInstalled, installing, onInstall]
   )
 
   return (

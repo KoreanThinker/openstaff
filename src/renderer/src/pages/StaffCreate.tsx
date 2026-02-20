@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Search, Zap, BarChart3, X, Plus, Loader2, Check } from 'lucide-react'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import { toast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -478,8 +479,15 @@ export function StaffCreate(): React.ReactElement {
                   const text = await file.text()
                   try {
                     const data = JSON.parse(text)
-                    if (data.role) applyTemplate(data)
-                  } catch { /* ignore parse errors */ }
+                    if (data.role) {
+                      applyTemplate(data)
+                      toast({ title: 'Template imported successfully' })
+                    } else {
+                      toast({ title: 'Invalid template', description: 'File does not contain a valid staff template', variant: 'destructive' })
+                    }
+                  } catch {
+                    toast({ title: 'Import failed', description: 'Could not parse JSON file', variant: 'destructive' })
+                  }
                 }
                 input.click()
               }}>Import File</DropdownMenuItem>

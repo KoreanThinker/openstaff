@@ -11,18 +11,21 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const base = getBaseUrl()
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 30_000)
-  const res = await fetch(`${base}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    signal: controller.signal,
-    ...options
-  })
-  clearTimeout(timeout)
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: res.statusText }))
-    throw new Error((body as { error: string }).error || res.statusText)
+  try {
+    const res = await fetch(`${base}${path}`, {
+      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      signal: controller.signal,
+      ...options
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }))
+      throw new Error((body as { error: string }).error || res.statusText)
+    }
+    if (res.status === 204) return undefined as T
+    return res.json() as Promise<T>
+  } finally {
+    clearTimeout(timeout)
   }
-  if (res.status === 204) return undefined as T
-  return res.json() as Promise<T>
 }
 
 export const api = {
