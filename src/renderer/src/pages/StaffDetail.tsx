@@ -508,10 +508,10 @@ function LogsTab({ staffId }: { staffId: string }): React.ReactElement {
   // Subscribe to live log stream
   useEffect(() => {
     const socket = getSocket()
-    const handler = (data: { staffId: string; line: string }) => {
-      if (data.staffId === staffId) {
+    const handler = (msg: { staffId: string; data: string }) => {
+      if (msg.staffId === staffId) {
         setLines((prev) => {
-          const next = [...prev, data.line]
+          const next = [...prev, msg.data]
           // Keep buffer limited
           if (next.length > 10_000) return next.slice(-10_000)
           return next
