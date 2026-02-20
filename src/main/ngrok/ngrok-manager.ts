@@ -1,10 +1,9 @@
 import type { ConfigStore } from '../store/config-store'
 
-let tunnelUrl: string | null = null
-let tunnelActive = false
-
 export class NgrokManager {
   private configStore: ConfigStore
+  private tunnelUrl: string | null = null
+  private tunnelActive = false
 
   constructor(configStore: ConfigStore) {
     this.configStore = configStore
@@ -25,14 +24,14 @@ export class NgrokManager {
         ...(authPassword ? { basic_auth: `openstaff:${authPassword}` } : {})
       })
 
-      tunnelUrl = listener.url() || null
-      tunnelActive = true
+      this.tunnelUrl = listener.url() || null
+      this.tunnelActive = true
 
-      console.log(`Ngrok tunnel active: ${tunnelUrl}`)
-      return tunnelUrl
+      console.log(`Ngrok tunnel active: ${this.tunnelUrl}`)
+      return this.tunnelUrl
     } catch (err) {
       console.error('Failed to start ngrok tunnel:', err)
-      tunnelActive = false
+      this.tunnelActive = false
       return null
     }
   }
@@ -41,18 +40,18 @@ export class NgrokManager {
     try {
       const ngrok = await import('@ngrok/ngrok')
       await ngrok.disconnect()
-      tunnelUrl = null
-      tunnelActive = false
+      this.tunnelUrl = null
+      this.tunnelActive = false
     } catch {
       // Ignore
     }
   }
 
   getUrl(): string | null {
-    return tunnelUrl
+    return this.tunnelUrl
   }
 
   isActive(): boolean {
-    return tunnelActive
+    return this.tunnelActive
   }
 }
