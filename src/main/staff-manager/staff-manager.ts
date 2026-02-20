@@ -171,7 +171,7 @@ export class StaffManager extends EventEmitter {
           unlinkSync(logPath)
         }
       }
-    } catch (err) { console.warn('Log rotation failed:', err) }
+    } catch { /* Log rotation is best-effort */ }
 
     // Capture output + persist session ID once extracted
     let sessionIdPersisted = !!proc.sessionId
@@ -199,9 +199,7 @@ export class StaffManager extends EventEmitter {
 
     // Idle detection
     entry.idleTimer = setInterval(() => {
-      this.checkIdle(staffId).catch((err) => {
-        console.warn(`Idle check failed for ${staffId}:`, err)
-      })
+      this.checkIdle(staffId).catch(() => {})
     }, 30_000)
 
     // Watch JSONL files
@@ -473,8 +471,8 @@ export class StaffManager extends EventEmitter {
           }
         })
         entry.watchers.push(watcher)
-      } catch (err) {
-        console.warn(`Failed to watch ${path}:`, err)
+      } catch {
+        // File watching is best-effort
       }
     }
   }

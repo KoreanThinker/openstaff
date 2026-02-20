@@ -536,12 +536,11 @@ description: Skill for delete error test
     rmSync(tempDirDel, { recursive: true, force: true })
   })
 
-  it('DELETE /api/skills/:name returns 500 when readStaffConfig throws on corrupt JSON', async () => {
+  it('DELETE /api/skills/:name succeeds even when staff.json is corrupt', async () => {
+    // readStaffConfig returns null for corrupt JSON, so the skill delete skips that staff
     const res = await fetch(`http://localhost:${portDel}/api/skills/del-err-skill`, {
       method: 'DELETE'
     })
-    expect(res.status).toBe(500)
-    const data = await res.json()
-    expect(data.error).toBeTruthy()
+    expect(res.status).toBe(204)
   })
 })

@@ -1,6 +1,7 @@
 import { spawn as ptySpawn } from 'node-pty'
-import { existsSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
+import treeKill from 'tree-kill'
 import { TOOLS_DIR, CLAUDE_CODE_MODELS } from '@shared/constants'
 import type { AgentDriver, AgentProcess, AgentModel, SpawnOptions } from '@shared/types'
 
@@ -50,8 +51,12 @@ export class ClaudeCodeDriver implements AgentDriver {
   async getVersion(): Promise<string | null> {
     const pkgPath = join(TOOLS_DIR, 'node_modules', '@anthropic-ai', 'claude-code', 'package.json')
     if (!existsSync(pkgPath)) return null
-    const pkg = JSON.parse(require('fs').readFileSync(pkgPath, 'utf-8'))
-    return pkg.version || null
+    try {
+      const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+      return pkg.version || null
+    } catch {
+      return null
+    }
   }
 
   getBinaryPath(): string {
@@ -177,8 +182,6 @@ export class ClaudeCodeDriver implements AgentDriver {
         disposables.push(pty.onExit(({ exitCode }) => cb(exitCode)))
       },
       async kill(): Promise<void> {
-        const treeKill = require('tree-kill')
-
         // PRD: SIGTERM → 5s wait → SIGKILL
         await new Promise<void>((resolve) => {
           treeKill(pty.pid, 'SIGTERM', (err: Error | null) => {

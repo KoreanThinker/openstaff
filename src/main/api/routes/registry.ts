@@ -29,8 +29,10 @@ async function fetchRegistryIndex(): Promise<RegistryIndex> {
   if (!response.ok) {
     // Return cached data if available, otherwise empty
     if (existsSync(CACHE_FILE)) {
-      const cached = JSON.parse(readFileSync(CACHE_FILE, 'utf-8')) as CachedRegistry
-      return cached.data
+      try {
+        const cached = JSON.parse(readFileSync(CACHE_FILE, 'utf-8')) as CachedRegistry
+        return cached.data
+      } catch { /* ignore corrupt cache */ }
     }
     return { version: '1.0.0', updated_at: new Date().toISOString(), templates: [], skills: [] }
   }

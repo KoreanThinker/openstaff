@@ -23,8 +23,8 @@ export function appendJsonl<T>(filePath: string, entry: T): void {
     const dir = dirname(filePath)
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
     appendFileSync(filePath, JSON.stringify(entry) + '\n')
-  } catch (err) {
-    console.warn('appendJsonl failed:', filePath, err)
+  } catch {
+    // Silently ignore append failures - caller data (cycles, kpi, usage) is best-effort
   }
 }
 

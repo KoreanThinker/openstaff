@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync, readdirSync } from 'fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync, readdirSync, symlinkSync } from 'fs'
 import { join } from 'path'
 import { STAFFS_DIR, SKILLS_DIR } from '@shared/constants'
 import type { StaffConfig, StaffState } from '@shared/types'
@@ -32,7 +32,11 @@ export function listStaffIds(): string[] {
 export function readStaffConfig(staffId: string): StaffConfig | null {
   const path = join(getStaffDir(staffId), 'staff.json')
   if (!existsSync(path)) return null
-  return JSON.parse(readFileSync(path, 'utf-8')) as StaffConfig
+  try {
+    return JSON.parse(readFileSync(path, 'utf-8')) as StaffConfig
+  } catch {
+    return null
+  }
 }
 
 export function writeStaffConfig(config: StaffConfig): void {
@@ -45,7 +49,11 @@ export function writeStaffConfig(config: StaffConfig): void {
 export function readStaffState(staffId: string): StaffState {
   const path = join(getStaffDir(staffId), 'state.json')
   if (!existsSync(path)) return { session_id: null, last_started_at: null }
-  return JSON.parse(readFileSync(path, 'utf-8')) as StaffState
+  try {
+    return JSON.parse(readFileSync(path, 'utf-8')) as StaffState
+  } catch {
+    return { session_id: null, last_started_at: null }
+  }
 }
 
 export function writeStaffState(staffId: string, state: StaffState): void {
@@ -87,12 +95,15 @@ export function symlinkSkills(staffId: string, skillNames: string[]): void {
   }
 
   // Create new symlinks
-  const { symlinkSync } = require('fs')
   for (const name of skillNames) {
     const src = join(SKILLS_DIR, name)
     const dest = join(skillsDir, name)
     if (existsSync(src)) {
-      symlinkSync(src, dest, 'dir')
+      try {
+        symlinkSync(src, dest, 'dir')
+      } catch {
+        // Symlink may already exist or fail on some filesystems
+      }
     }
   }
 }

@@ -920,7 +920,7 @@ describe('staffs API routes', () => {
     await apiDelete(`/api/staffs/${created.id}`)
   })
 
-  it('GET /api/staffs/:id/export returns 500 when readStaffConfig throws', async () => {
+  it('GET /api/staffs/:id/export returns 404 when staff.json is corrupt', async () => {
     const { data: created } = await apiPost('/api/staffs', {
       name: 'Export Error Staff',
       role: 'Role',
@@ -929,7 +929,7 @@ describe('staffs API routes', () => {
       evaluate: 'EV'
     })
 
-    // Corrupt the staff.json to trigger a parse error
+    // Corrupt the staff.json - readStaffConfig returns null for invalid JSON
     const { getStaffDir } = await import('../../data/staff-data')
     const { writeFileSync } = await import('fs')
     const { join } = await import('path')
@@ -937,13 +937,13 @@ describe('staffs API routes', () => {
     writeFileSync(join(staffDir, 'staff.json'), 'not valid json')
 
     const { status, data } = await apiGet(`/api/staffs/${created.id}/export`)
-    expect(status).toBe(500)
-    expect(data.error).toBeTruthy()
+    expect(status).toBe(404)
+    expect(data.error).toBe('Staff not found')
 
     await apiDelete(`/api/staffs/${created.id}`)
   })
 
-  it('GET /api/staffs/:id returns 500 when staff.json is corrupt', async () => {
+  it('GET /api/staffs/:id returns 404 when staff.json is corrupt', async () => {
     const { data: created } = await apiPost('/api/staffs', {
       name: 'Detail Error Staff',
       role: 'Role',
@@ -952,7 +952,7 @@ describe('staffs API routes', () => {
       evaluate: 'EV'
     })
 
-    // Corrupt staff.json to trigger parse error in detail route
+    // Corrupt staff.json - readStaffConfig returns null for invalid JSON
     const { getStaffDir } = await import('../../data/staff-data')
     const { writeFileSync } = await import('fs')
     const { join } = await import('path')
@@ -960,8 +960,8 @@ describe('staffs API routes', () => {
     writeFileSync(join(staffDir, 'staff.json'), '{bad json}')
 
     const { status, data } = await apiGet(`/api/staffs/${created.id}`)
-    expect(status).toBe(500)
-    expect(data.error).toBeTruthy()
+    expect(status).toBe(404)
+    expect(data.error).toBe('Staff not found')
 
     await apiDelete(`/api/staffs/${created.id}`)
   })
