@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="resources/icon.png" width="128" alt="OpenStaff icon" />
+  <img src="build/logo-wordmark.svg" width="360" alt="OpenStaff logo" />
 </p>
 
 <h1 align="center">OpenStaff</h1>
@@ -104,6 +104,12 @@ OpenStaff is an **API-first** Electron app. The main process runs an Express RES
 - **No database.** All data lives on the filesystem under `~/.openstaff/`.
 - **node-pty** spawns Claude Code CLI sessions as real PTY processes.
 - **Electron IPC** is used only for native features (tray, notifications, file dialogs).
+
+## Brand Assets
+
+- Logo system docs: [`docs/brand-logo.md`](docs/brand-logo.md)
+- App icon source: `build/icon.svg`
+- Tray icon source: `build/trayTemplate.svg`
 
 ## Project Structure
 

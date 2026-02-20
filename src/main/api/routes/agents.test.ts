@@ -94,6 +94,15 @@ describe('agents API routes', () => {
     expect(data.connected).toBe(true)
   })
 
+  it('GET /api/agents/codex returns placeholder instead of 404', async () => {
+    const res = await fetch(`http://localhost:${port}/api/agents/codex`)
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.id).toBe('codex')
+    expect(data.status).toBe('not_installed')
+    expect(data.installed).toBe(false)
+  })
+
   it('GET /api/agents/:id returns 404 for unknown agent', async () => {
     const res = await fetch(`http://localhost:${port}/api/agents/unknown`)
     expect(res.status).toBe(404)
@@ -687,6 +696,7 @@ describe('agents API routes: non-claude-code driver branches', () => {
     const res = await fetch(`http://localhost:${nccPort}/api/agents`)
     const data = await res.json()
     expect(res.status).toBe(200)
+    expect(data.filter((a: { id: string }) => a.id === 'codex')).toHaveLength(1)
     const codex = data.find((a: { id: string }) => a.id === 'codex')
     expect(codex.status).toBe('connected')
     expect(codex.api_key_configured).toBe(true)
@@ -710,4 +720,3 @@ describe('agents API routes: non-claude-code driver branches', () => {
     expect(data.connected).toBe(true)
   })
 })
-

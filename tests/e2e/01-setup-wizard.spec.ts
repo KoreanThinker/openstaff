@@ -8,6 +8,7 @@ test.describe('Setup Wizard', () => {
     try {
       // Step 1: Welcome screen
       await waitForText(page, 'Welcome to OpenStaff')
+      await expect(page.locator('[data-wordmark-variant="gradient"]')).toBeVisible()
       await page.click('text=Get Started')
 
       // Step 2: Remote Access (skip)

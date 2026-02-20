@@ -127,6 +127,17 @@ describe('settings API routes', () => {
     expect(data.error).toContain('Unknown setting')
   })
 
+  it('PATCH /api/settings does not partially save when one key is invalid', async () => {
+    const originalTheme = mockConfigStore.get('theme')
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ theme: 'light', invalid_key: 'value' })
+    })
+    expect(res.status).toBe(400)
+    expect(mockConfigStore.get('theme')).toBe(originalTheme)
+  })
+
   it('PATCH /api/settings accepts skill_env_ prefixed keys', async () => {
     const res = await fetch(`http://localhost:${port}/api/settings`, {
       method: 'PATCH',
@@ -181,6 +192,39 @@ describe('settings API routes', () => {
     expect(data.error).toContain('must be a string')
   })
 
+  it('PATCH /api/settings rejects invalid theme values', async () => {
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ theme: 'neon' })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('must be one of light, dark, system')
+  })
+
+  it('PATCH /api/settings rejects invalid default agent values', async () => {
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ default_agent: 'gemini' })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('must be one of claude-code, codex')
+  })
+
+  it('PATCH /api/settings rejects empty default model', async () => {
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ default_model: '   ' })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('default_model cannot be empty')
+  })
+
   it('PATCH /api/settings accepts valid budget number', async () => {
     const res = await fetch(`http://localhost:${port}/api/settings`, {
       method: 'PATCH',
@@ -199,6 +243,27 @@ describe('settings API routes', () => {
     })
     expect(res.status).toBe(200)
     expect(mockConfigStore.get('auto_update_agents')).toBe(true)
+  })
+
+  it('PATCH /api/settings rejects budget warning percent above 100', async () => {
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ budget_warning_percent: 120 })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('budget_warning_percent must be 100 or less')
+  })
+
+  it('PATCH /api/settings accepts budget warning percent at boundary', async () => {
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ budget_warning_percent: 100 })
+    })
+    expect(res.status).toBe(200)
+    expect(mockConfigStore.get('budget_warning_percent')).toBe(100)
   })
 
   it('PATCH /api/settings updates multiple keys at once', async () => {

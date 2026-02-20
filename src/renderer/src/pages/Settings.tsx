@@ -27,6 +27,48 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
+import type { AgentInfo, AgentModel } from '@shared/types'
+
+const FALLBACK_CLAUDE_MODELS: AgentModel[] = [
+  {
+    id: 'claude-sonnet-4-5',
+    name: 'Claude Sonnet 4.5',
+    description: 'Balanced'
+  },
+  {
+    id: 'claude-opus-4-6',
+    name: 'Claude Opus 4.6',
+    description: 'Most capable'
+  },
+  {
+    id: 'claude-haiku-4-5',
+    name: 'Claude Haiku 4.5',
+    description: 'Fastest'
+  }
+]
+
+const FALLBACK_AGENTS: AgentInfo[] = [
+  {
+    id: 'claude-code',
+    name: 'Claude Code',
+    installed: false,
+    version: null,
+    connected: false,
+    api_key_configured: false,
+    models: FALLBACK_CLAUDE_MODELS,
+    status: 'not_installed'
+  },
+  {
+    id: 'codex',
+    name: 'OpenAI Codex',
+    installed: false,
+    version: null,
+    connected: false,
+    api_key_configured: false,
+    models: [],
+    status: 'not_installed'
+  }
+]
 
 function useDebounce<T>(
   callback: (value: T) => void,
@@ -81,18 +123,38 @@ export function Settings(): React.ReactElement {
   const [defaultModel, setDefaultModel] = useState('claude-sonnet-4-5')
   const [startOnLogin, setStartOnLogin] = useState(false)
   const [showOnStartup, setShowOnStartup] = useState(true)
+  const agentOptions = agents && agents.length > 0 ? agents : FALLBACK_AGENTS
 
   // Sync from API
   useEffect(() => {
     if (settings) {
       setNgrokKey(settings.ngrok_api_key || '')
       setNgrokPassword(settings.ngrok_auth_password || '')
-      setDefaultAgent(settings.default_agent || 'claude-code')
-      setDefaultModel(settings.default_model || 'claude-sonnet-4-5')
       setStartOnLogin(settings.start_on_login ?? false)
       setShowOnStartup(settings.show_window_on_startup ?? true)
+
+      const fallbackAgentId =
+        agentOptions.find((agent) => agent.models.length > 0)?.id ||
+        agentOptions[0]?.id ||
+        'claude-code'
+      const configuredAgent = settings.default_agent || fallbackAgentId
+      const nextAgent = agentOptions.some((agent) => agent.id === configuredAgent && agent.models.length > 0)
+        ? configuredAgent
+        : fallbackAgentId
+
+      const modelsForAgent =
+        agentOptions.find((agent) => agent.id === nextAgent)?.models ?? []
+      const modelFallback =
+        modelsForAgent[0]?.id ||
+        (nextAgent === 'claude-code'
+          ? FALLBACK_CLAUDE_MODELS[0].id
+          : 'claude-sonnet-4-5')
+      const requestedModel = settings.default_model || modelFallback
+      const hasRequestedModel = modelsForAgent.some((model) => model.id === requestedModel)
+      setDefaultAgent(nextAgent)
+      setDefaultModel(hasRequestedModel ? requestedModel : modelFallback)
     }
-  }, [settings])
+  }, [settings, agentOptions])
 
   const debouncedSave = useDebounce(
     useCallback(
@@ -133,7 +195,13 @@ export function Settings(): React.ReactElement {
   }, [])
 
   // Get available models for the selected agent
-  const availableModels = agents?.find((a) => a.id === defaultAgent)?.models || []
+  const selectedAgent = agentOptions.find((agent) => agent.id === defaultAgent) || null
+  const availableModels =
+    selectedAgent?.models.length
+      ? selectedAgent.models
+      : selectedAgent?.id === 'claude-code'
+        ? FALLBACK_CLAUDE_MODELS
+        : []
 
   // Query ngrok status from system API
   const { data: ngrokStatus } = useQuery({
@@ -342,8 +410,9 @@ export function Settings(): React.ReactElement {
                   onValueChange={(value) => {
                     setDefaultAgent(value)
                     const firstModel =
-                      agents?.find((a) => a.id === value)?.models[0]?.id ||
-                      ''
+                      agentOptions.find((agent) => agent.id === value)?.models[0]?.id ||
+                      (value === 'claude-code' ? FALLBACK_CLAUDE_MODELS[0].id : '')
+                    if (!firstModel) return
                     setDefaultModel(firstModel)
                     handleImmediateSave({
                       default_agent: value,
@@ -355,10 +424,15 @@ export function Settings(): React.ReactElement {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="claude-code">Claude Code</SelectItem>
-                    <SelectItem value="codex" disabled>
-                      Codex (Coming soon)
-                    </SelectItem>
+                    {agentOptions.map((agent) => {
+                      const isUnavailable = agent.models.length === 0
+                      const isCodexComingSoon = agent.id === 'codex' && !agent.installed
+                      return (
+                        <SelectItem key={agent.id} value={agent.id} disabled={isUnavailable}>
+                          {isCodexComingSoon ? 'OpenAI Codex (Coming soon)' : agent.name}
+                        </SelectItem>
+                      )
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -383,19 +457,6 @@ export function Settings(): React.ReactElement {
                         {model.name}
                       </SelectItem>
                     ))}
-                    {availableModels.length === 0 && (
-                      <>
-                        <SelectItem value="claude-sonnet-4-5">
-                          Claude Sonnet 4.5
-                        </SelectItem>
-                        <SelectItem value="claude-opus-4-6">
-                          Claude Opus 4.6
-                        </SelectItem>
-                        <SelectItem value="claude-haiku-4-5">
-                          Claude Haiku 4.5
-                        </SelectItem>
-                      </>
-                    )}
                   </SelectContent>
                 </Select>
               </div>

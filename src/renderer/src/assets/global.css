@@ -43,8 +43,8 @@
     --chart-4: 280 80% 65%; /* 퍼플 */
     --chart-5: 0 84% 60%; /* 레드 */
 
-    /* 핵심: 모서리 곡률. 이미지는 카드가 매우 둥급니다. */
-    --radius: 1.5rem;
+    /* Core corner radius scale */
+    --radius: 0.5rem;
   }
 
   .dark {

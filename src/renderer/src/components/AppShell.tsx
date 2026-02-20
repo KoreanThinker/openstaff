@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { OpenStaffLogo } from '@/components/brand/OpenStaffLogo'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -78,6 +79,11 @@ export function AppShell(): React.ReactElement {
   const searchRef = React.useRef<HTMLInputElement>(null)
   const [searchOpen, setSearchOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('')
+  const isMacDesktop = React.useMemo(() => {
+    if (typeof window === 'undefined' || !window.api) return false
+    const platform = navigator.userAgentData?.platform || navigator.platform || navigator.userAgent
+    return /mac/i.test(platform)
+  }, [])
 
   // IPC navigate listener (tray Settings click)
   React.useEffect(() => {
@@ -197,11 +203,27 @@ export function AppShell(): React.ReactElement {
         )}
       >
         {/* Logo */}
-        <div className="flex h-14 items-center justify-center border-b border-border px-3">
+        <div
+          className={cn(
+            'flex h-14 items-center border-b border-border',
+            expanded
+              ? isMacDesktop
+                ? 'justify-start pl-20 pr-3'
+                : 'justify-start px-3'
+              : isMacDesktop
+                ? 'justify-end pr-2'
+                : 'justify-center'
+          )}
+        >
           {expanded ? (
-            <span className="text-lg font-bold text-foreground">OpenStaff</span>
+            <OpenStaffLogo
+              showWordmark
+              size={22}
+              wordmarkVariant="split"
+              wordmarkClassName="text-[1.02rem]"
+            />
           ) : (
-            <span className="text-lg font-bold text-foreground">OS</span>
+            <OpenStaffLogo size={22} />
           )}
         </div>
 

@@ -1078,19 +1078,10 @@ describe('staffs API routes', () => {
     deleteStaffDir('orphan-staff-no-config')
   })
 
-  it('POST /api/staffs fills defaults for missing fields', async () => {
+  it('POST /api/staffs rejects empty body (required loop fields)', async () => {
     const { status, data } = await apiPost('/api/staffs', {})
-    expect(status).toBe(201)
-    expect(data.name).toBe('')
-    expect(data.role).toBe('')
-    expect(data.gather).toBe('')
-    expect(data.execute).toBe('')
-    expect(data.evaluate).toBe('')
-    expect(data.kpi).toBe('')
-    expect(data.skills).toEqual([])
-    expect(data.id).toBeTruthy()
-
-    await apiDelete(`/api/staffs/${data.id}`)
+    expect(status).toBe(400)
+    expect(data.error).toBe('name is required')
   })
 
   it('POST /api/staffs/import rejects empty body (name required)', async () => {
@@ -1099,18 +1090,10 @@ describe('staffs API routes', () => {
     expect(data.error).toBe('name is required')
   })
 
-  it('POST /api/staffs/import fills defaults when only name is provided', async () => {
+  it('POST /api/staffs/import rejects payload with missing loop fields', async () => {
     const { status, data } = await apiPost('/api/staffs/import', { name: 'Imported Staff' })
-    expect(status).toBe(201)
-    expect(data.name).toBe('Imported Staff')
-    expect(data.role).toBe('')
-    expect(data.gather).toBe('')
-    expect(data.execute).toBe('')
-    expect(data.evaluate).toBe('')
-    expect(data.kpi).toBe('')
-    expect(data.skills).toEqual([])
-
-    await apiDelete(`/api/staffs/${data.id}`)
+    expect(status).toBe(400)
+    expect(data.error).toBe('role is required')
   })
 
   it('GET /api/staffs list shows uptime for running staffs', async () => {
@@ -1149,6 +1132,16 @@ describe('staffs API routes', () => {
     })
     expect(status).toBe(400)
     expect(data.error).toContain('name is required')
+  })
+
+  it('POST /api/staffs rejects when core loop fields are missing', async () => {
+    const { status, data } = await apiPost('/api/staffs', {
+      name: 'Missing Core Fields',
+      role: 'Role',
+      gather: 'G'
+    })
+    expect(status).toBe(400)
+    expect(data.error).toBe('execute is required')
   })
 
   it('POST /api/staffs rejects name over 100 chars', async () => {
@@ -1194,6 +1187,10 @@ describe('staffs API routes', () => {
   it('POST /api/staffs/import rejects non-array required_skills', async () => {
     const { status, data } = await apiPost('/api/staffs/import', {
       name: 'Test Import',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV',
       required_skills: 'not-an-array'
     })
     expect(status).toBe(400)
@@ -1203,6 +1200,10 @@ describe('staffs API routes', () => {
   it('POST /api/staffs/import rejects required_skills with non-string elements', async () => {
     const { status, data } = await apiPost('/api/staffs/import', {
       name: 'Test Import',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV',
       required_skills: ['valid', 42]
     })
     expect(status).toBe(400)
@@ -1223,6 +1224,24 @@ describe('staffs API routes', () => {
     })
     expect(status).toBe(400)
     expect(data.error).toContain('skills must be an array')
+
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
+  it('PUT /api/staffs/:id rejects empty role update', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Update Validation Staff',
+      role: 'Role',
+      gather: 'G',
+      execute: 'E',
+      evaluate: 'EV'
+    })
+
+    const { status, data } = await apiPut(`/api/staffs/${created.id}`, {
+      role: ''
+    })
+    expect(status).toBe(400)
+    expect(data.error).toBe('role is required')
 
     await apiDelete(`/api/staffs/${created.id}`)
   })

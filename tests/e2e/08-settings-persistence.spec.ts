@@ -1,9 +1,24 @@
-import { test, expect } from '@playwright/test'
-import { launchApp, waitForText } from './helpers'
+import { test, expect, type Page } from '@playwright/test'
+import { launchApp, waitForText, getApiBase } from './helpers'
+
+async function getSettings(page: Page): Promise<{
+  start_on_login: boolean
+  show_window_on_startup: boolean
+  theme: 'light' | 'dark' | 'system'
+}> {
+  const apiBase = await getApiBase(page)
+  return page.evaluate(async (base) => {
+    const res = await fetch(`${base}/api/settings`)
+    if (!res.ok) {
+      throw new Error(`Failed to fetch settings: ${res.status}`)
+    }
+    return res.json()
+  }, apiBase)
+}
 
 test.describe('Settings Persistence', () => {
-  test('settings page shows all sections and allows interaction', async () => {
-    const { app, page, cleanup } = await launchApp()
+  test('settings are saved and preserved across navigation', async () => {
+    const { page, cleanup } = await launchApp()
 
     page.on('pageerror', (err) => console.log('[PAGE_ERROR]', err.message))
 
@@ -14,51 +29,63 @@ test.describe('Settings Persistence', () => {
       await page.click('text=Skip')
       await page.click('text=Go to Dashboard')
 
-      // Wait for Dashboard to fully load
-      await waitForText(page, 'Staff', 15000)
-      await page.waitForTimeout(1000)
+      await waitForText(page, 'Dashboard', 15000)
 
       // Navigate to Settings
-      await page.locator('a:has-text("Settings"), button:has-text("Settings")').first().click()
+      await page.getByRole('link', { name: /^Settings$/ }).click()
       await waitForText(page, 'Settings', 15000)
 
-      // Verify all sections are visible
+      // Verify sections are visible
       await expect(page.locator('text=Remote Access')).toBeVisible()
       await expect(page.locator('text=Defaults')).toBeVisible()
       await expect(page.locator('text=App Behavior')).toBeVisible()
       await expect(page.locator('text=About')).toBeVisible()
 
-      // Remote Access section: Ngrok fields
-      await expect(page.locator('text=Ngrok API Key')).toBeVisible()
-      await expect(page.locator('text=Auth Password')).toBeVisible()
+      const switches = page.getByRole('switch')
+      const startOnLoginSwitch = switches.nth(0)
+      const showOnStartupSwitch = switches.nth(1)
 
-      // Defaults section: Agent and Model selects
-      await expect(page.locator('text=Default Agent')).toBeVisible()
-      await expect(page.locator('text=Default Model')).toBeVisible()
+      const initialStartOnLogin = (await startOnLoginSwitch.getAttribute('aria-checked')) === 'true'
+      const initialShowOnStartup = (await showOnStartupSwitch.getAttribute('aria-checked')) === 'true'
 
-      // App Behavior section: Switches and theme
-      await expect(page.locator('text=Start on Login')).toBeVisible()
-      await expect(page.locator('text=Show Window on Startup')).toBeVisible()
-      await expect(page.locator('text=Theme')).toBeVisible()
+      await startOnLoginSwitch.click()
+      await showOnStartupSwitch.click()
 
-      // Theme buttons should exist
-      await expect(page.locator('button:has-text("Light")')).toBeVisible()
-      await expect(page.locator('button:has-text("Dark")')).toBeVisible()
-      await expect(page.locator('button:has-text("System")')).toBeVisible()
+      await expect(startOnLoginSwitch).toHaveAttribute('aria-checked', String(!initialStartOnLogin))
+      await expect(showOnStartupSwitch).toHaveAttribute('aria-checked', String(!initialShowOnStartup))
 
-      // Toggle theme to Dark
-      await page.locator('button:has-text("Dark")').click()
-      await page.waitForTimeout(500)
+      await expect.poll(async () => {
+        const settings = await getSettings(page)
+        return settings.start_on_login
+      }).toBe(!initialStartOnLogin)
 
-      // Toggle theme back to Light
-      await page.locator('button:has-text("Light")').click()
-      await page.waitForTimeout(500)
+      await expect.poll(async () => {
+        const settings = await getSettings(page)
+        return settings.show_window_on_startup
+      }).toBe(!initialShowOnStartup)
 
-      // About section: version and links
+      const darkThemeButton = page.getByRole('button', { name: 'Dark' })
+      await darkThemeButton.click()
+      await expect(darkThemeButton).toHaveAttribute('aria-pressed', 'true')
+
+      await expect.poll(async () => {
+        const settings = await getSettings(page)
+        return settings.theme
+      }).toBe('dark')
+
+      // Navigate away and come back to confirm persistence
+      await page.getByRole('link', { name: /^Dashboard$/ }).click()
+      await waitForText(page, 'Dashboard', 10000)
+      await page.getByRole('link', { name: /^Settings$/ }).click()
+      await waitForText(page, 'Settings', 10000)
+
+      await expect(page.getByRole('button', { name: 'Dark' })).toHaveAttribute('aria-pressed', 'true')
+      await expect(page.getByRole('switch').nth(0)).toHaveAttribute('aria-checked', String(!initialStartOnLogin))
+      await expect(page.getByRole('switch').nth(1)).toHaveAttribute('aria-checked', String(!initialShowOnStartup))
+
+      // About section remains functional
       await expect(page.locator('text=OpenStaff v')).toBeVisible()
-      await expect(page.locator('button:has-text("Check for Updates")')).toBeVisible()
-      await expect(page.locator('text=GitHub')).toBeVisible()
-      await expect(page.locator('text=Documentation')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Check for Updates' })).toBeVisible()
     } finally {
       await cleanup()
     }

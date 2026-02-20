@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { launchApp, waitForText } from './helpers'
+import { hasConnectedClaudeAgent, launchApp, waitForText } from './helpers'
 
 test.describe('Staff Start + Monitoring', () => {
   test.skip(!!process.env.CI, 'Requires real Claude Code + API key')
@@ -19,6 +19,8 @@ test.describe('Staff Start + Monitoring', () => {
       // Wait for Dashboard to fully load
       await waitForText(page, 'Staff', 15000)
       await page.waitForTimeout(1000)
+
+      test.skip(!(await hasConnectedClaudeAgent(page)), 'Requires installed Claude Code and valid Anthropic API key')
 
       // Create a test staff
       await page.locator('button:has-text("Create Staff")').first().click()

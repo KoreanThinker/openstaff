@@ -3,6 +3,25 @@ import type { ApiContext } from '../server'
 import type { AgentInfo } from '@shared/types'
 import { getDriver, getAllDrivers } from '../../agent-driver/agent-registry'
 
+function getApiKeyStoreKey(agentId: string): 'anthropic_api_key' | 'openai_api_key' | null {
+  if (agentId === 'claude-code') return 'anthropic_api_key'
+  if (agentId === 'codex') return 'openai_api_key'
+  return null
+}
+
+function buildPlaceholderCodex(): AgentInfo {
+  return {
+    id: 'codex',
+    name: 'OpenAI Codex',
+    installed: false,
+    version: null,
+    connected: false,
+    api_key_configured: false,
+    models: [],
+    status: 'not_installed'
+  }
+}
+
 export function agentRoutes(ctx: ApiContext): Router {
   const router = Router()
 
@@ -14,9 +33,8 @@ export function agentRoutes(ctx: ApiContext): Router {
         drivers.map(async (driver) => {
           const installed = await driver.isInstalled()
           const version = installed ? await driver.getVersion() : null
-          const apiKey = driver.id === 'claude-code'
-            ? ctx.configStore.get('anthropic_api_key')
-            : ctx.configStore.get('openai_api_key')
+          const apiKeyStoreKey = getApiKeyStoreKey(driver.id)
+          const apiKey = apiKeyStoreKey ? ctx.configStore.get(apiKeyStoreKey) : ''
           const apiKeyConfigured = !!apiKey && apiKey !== ''
 
           let status: AgentInfo['status'] = 'not_installed'
@@ -36,17 +54,10 @@ export function agentRoutes(ctx: ApiContext): Router {
         })
       )
 
-      // Add Codex placeholder
-      agents.push({
-        id: 'codex',
-        name: 'OpenAI Codex',
-        installed: false,
-        version: null,
-        connected: false,
-        api_key_configured: false,
-        models: [],
-        status: 'not_installed'
-      })
+      // Add Codex placeholder only when no concrete driver exists yet.
+      if (!agents.some((agent) => agent.id === 'codex')) {
+        agents.push(buildPlaceholderCodex())
+      }
 
       res.json(agents)
     } catch (err) {
@@ -58,11 +69,17 @@ export function agentRoutes(ctx: ApiContext): Router {
   router.get('/:id', async (req, res) => {
     try {
       const driver = getDriver(req.params.id!)
-      if (!driver) return res.status(404).json({ error: 'Agent not found' })
+      if (!driver) {
+        if (req.params.id === 'codex') {
+          return res.json(buildPlaceholderCodex())
+        }
+        return res.status(404).json({ error: 'Agent not found' })
+      }
 
       const installed = await driver.isInstalled()
       const version = installed ? await driver.getVersion() : null
-      const apiKey = ctx.configStore.get('anthropic_api_key')
+      const apiKeyStoreKey = getApiKeyStoreKey(driver.id)
+      const apiKey = apiKeyStoreKey ? ctx.configStore.get(apiKeyStoreKey) : ''
       const apiKeyConfigured = !!apiKey && apiKey !== ''
 
       res.json({
@@ -109,9 +126,7 @@ export function agentRoutes(ctx: ApiContext): Router {
       if (api_key.length > 500) {
         return res.status(400).json({ error: 'api_key is too long' })
       }
-      const storeKey = req.params.id === 'claude-code' ? 'anthropic_api_key'
-        : req.params.id === 'codex' ? 'openai_api_key'
-        : null
+      const storeKey = getApiKeyStoreKey(req.params.id!)
       if (!storeKey) {
         return res.status(400).json({ error: 'Unknown agent' })
       }
@@ -132,9 +147,8 @@ export function agentRoutes(ctx: ApiContext): Router {
       const driver = getDriver(req.params.id!)
       if (!driver) return res.status(404).json({ error: 'Agent not found' })
 
-      const apiKey = req.params.id === 'claude-code'
-        ? ctx.configStore.get('anthropic_api_key')
-        : ctx.configStore.get('openai_api_key')
+      const apiKeyStoreKey = getApiKeyStoreKey(req.params.id!)
+      const apiKey = apiKeyStoreKey ? ctx.configStore.get(apiKeyStoreKey) : ''
 
       if (!apiKey) return res.json({ connected: false, error: 'No API key configured' })
 

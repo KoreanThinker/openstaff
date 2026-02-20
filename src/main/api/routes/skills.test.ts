@@ -166,6 +166,17 @@ compatibility: Requires TEST_API_KEY
     expect(data.error).toContain('must be a string')
   })
 
+  it('PUT /api/skills/:name/auth rejects overly long value', async () => {
+    const res = await fetch(`http://localhost:${port}/api/skills/test-skill/auth`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ VALID_KEY: 'x'.repeat(1001) })
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('too long')
+  })
+
   it('GET /api/skills/:name returns 404 for nonexistent', async () => {
     const res = await fetch(`http://localhost:${port}/api/skills/nonexistent-skill`)
     expect(res.status).toBe(404)

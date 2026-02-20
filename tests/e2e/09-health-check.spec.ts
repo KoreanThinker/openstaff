@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { launchApp, waitForText } from './helpers'
+import { getApiBase, hasConnectedClaudeAgent, launchApp, waitForText } from './helpers'
 
 test.describe('Health Check + Recovery', () => {
   test.skip(!!process.env.CI, 'Requires real process kill/restart')
@@ -19,6 +19,8 @@ test.describe('Health Check + Recovery', () => {
       // Wait for Dashboard to fully load
       await waitForText(page, 'Staff', 15000)
       await page.waitForTimeout(1000)
+
+      test.skip(!(await hasConnectedClaudeAgent(page)), 'Requires installed Claude Code and valid Anthropic API key')
 
       // Create and start a staff for the health check test
       await page.locator('button:has-text("Create Staff")').first().click()
@@ -44,9 +46,7 @@ test.describe('Health Check + Recovery', () => {
       expect(isRunning || hasStopButton).toBeTruthy()
 
       // Get the API port and query the staff status via API
-      const apiBase = await page.evaluate(() => {
-        return (window as Record<string, unknown>).__API_BASE__ || 'http://localhost:17734'
-      })
+      const apiBase = await getApiBase(page)
 
       // Kill the agent process externally to trigger health check recovery
       // The health checker should detect the dead process and restart it

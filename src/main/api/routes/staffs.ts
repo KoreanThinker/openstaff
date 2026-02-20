@@ -13,12 +13,41 @@ function sanitizeString(str: string, maxLength = 500): string {
   return str.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '').slice(0, maxLength)
 }
 
-function validateStaffInput(body: Partial<StaffConfig>): string | null {
-  if (body.name !== undefined) {
-    if (typeof body.name !== 'string') return 'name must be a string'
-    if (body.name.trim().length === 0) return 'name is required'
-    if (body.name.length > 100) return 'name must be 100 characters or less'
+function validateStringField(
+  value: unknown,
+  fieldName: string,
+  maxLength: number,
+  required: boolean,
+  disallowEmptyWhenProvided = false
+): string | null {
+  if (value === undefined) {
+    if (required) return `${fieldName} is required`
+    return null
   }
+  if (typeof value !== 'string') return `${fieldName} must be a string`
+  if (value.trim().length === 0 && (required || disallowEmptyWhenProvided)) return `${fieldName} is required`
+  if (value.length > maxLength) return `${fieldName} must be ${maxLength} characters or less`
+  return null
+}
+
+function validateStaffInput(body: Partial<StaffConfig>, opts: { requireName: boolean; requireCoreFields: boolean }): string | null {
+  const required = opts.requireCoreFields
+  const checks: Array<[keyof StaffConfig, number, boolean, boolean]> = [
+    ['name', 100, opts.requireName, true],
+    ['role', 200, required, true],
+    ['gather', 2000, required, true],
+    ['execute', 2000, required, true],
+    ['evaluate', 2000, required, true],
+    ['kpi', 1000, false, false],
+    ['agent', 100, false, false],
+    ['model', 150, false, false]
+  ]
+
+  for (const [field, maxLength, isRequired, disallowEmptyWhenProvided] of checks) {
+    const error = validateStringField(body[field], field, maxLength, isRequired, disallowEmptyWhenProvided)
+    if (error) return error
+  }
+
   if (body.skills !== undefined) {
     if (!Array.isArray(body.skills)) return 'skills must be an array'
     if (body.skills.some((s) => typeof s !== 'string')) return 'skills must contain only strings'
@@ -140,7 +169,7 @@ export function staffRoutes(ctx: ApiContext): Router {
   router.post('/', (req, res) => {
     try {
       const body = req.body as Partial<StaffConfig>
-      const validationError = validateStaffInput(body)
+      const validationError = validateStaffInput(body, { requireName: true, requireCoreFields: true })
       if (validationError) return res.status(400).json({ error: validationError })
 
       const config: StaffConfig = {
@@ -171,7 +200,7 @@ export function staffRoutes(ctx: ApiContext): Router {
       if (!existing) return res.status(404).json({ error: 'Staff not found' })
 
       const body = req.body as Partial<StaffConfig>
-      const validationError = validateStaffInput(body)
+      const validationError = validateStaffInput(body, { requireName: false, requireCoreFields: false })
       if (validationError) return res.status(400).json({ error: validationError })
 
       const updated: StaffConfig = {
@@ -363,10 +392,18 @@ export function staffRoutes(ctx: ApiContext): Router {
         recommended_model?: string
       }
 
-      // Validate imported data
-      if (!body.name || typeof body.name !== 'string' || body.name.trim().length === 0) {
-        return res.status(400).json({ error: 'name is required' })
-      }
+      const validationError = validateStaffInput({
+        name: body.name,
+        role: body.role,
+        gather: body.gather,
+        execute: body.execute,
+        evaluate: body.evaluate,
+        kpi: body.kpi,
+        agent: body.recommended_agent,
+        model: body.recommended_model
+      }, { requireName: true, requireCoreFields: true })
+      if (validationError) return res.status(400).json({ error: validationError })
+
       if (body.required_skills !== undefined && !Array.isArray(body.required_skills)) {
         return res.status(400).json({ error: 'required_skills must be an array' })
       }

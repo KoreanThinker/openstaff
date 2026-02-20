@@ -340,6 +340,7 @@ export function StaffCreate(): React.ReactElement {
   // ─── Validation ───────────────────────────────────────────────────
 
   const validate = useCallback((): boolean => {
+    firstErrorRef.current = null
     const errs: FormErrors = {}
     if (!form.name.trim()) errs.name = 'Staff name is required'
     else if (form.name.length > 80) errs.name = 'Staff name must be 80 characters or less'

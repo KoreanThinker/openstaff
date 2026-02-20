@@ -1,20 +1,40 @@
 import { Tray, Menu, nativeImage, app, BrowserWindow } from 'electron'
 import { join } from 'path'
+import { existsSync } from 'fs'
 import type { StaffManager } from '../staff-manager/staff-manager'
 import { listStaffIds, readStaffConfig } from '../data/staff-data'
 import { countJsonlLines } from '../data/jsonl-reader'
 import { getStaffDir } from '../data/staff-data'
 
+function resolveTrayIconPath(): string | null {
+  const candidatePaths = [
+    join(process.resourcesPath, 'trayTemplate.png'),
+    join(app.getAppPath(), 'resources', 'trayTemplate.png'),
+    join(app.getAppPath(), 'build', 'trayTemplate.png'),
+    join(__dirname, '../../resources', 'trayTemplate.png'),
+    join(__dirname, '../../build', 'trayTemplate.png'),
+    join(process.cwd(), 'resources', 'trayTemplate.png'),
+    join(process.cwd(), 'build', 'trayTemplate.png')
+  ]
+
+  return candidatePaths.find((candidate) => existsSync(candidate)) ?? null
+}
+
 export function createTray(
   staffManager: StaffManager
 ): Tray {
-  // Use template tray icon (macOS renders as monochrome menu bar icon)
-  const iconPath = join(process.resourcesPath || join(__dirname, '../../resources'), 'trayTemplate.png')
+  // Use template tray icon (macOS renders as monochrome menu bar icon).
+  const iconPath = resolveTrayIconPath()
   let icon: Electron.NativeImage
-  try {
-    icon = nativeImage.createFromPath(iconPath)
-    icon.setTemplateImage(true)
-  } catch {
+  if (iconPath) {
+    const resolved = nativeImage.createFromPath(iconPath)
+    if (!resolved.isEmpty()) {
+      icon = resolved
+      icon.setTemplateImage(true)
+    } else {
+      icon = nativeImage.createEmpty()
+    }
+  } else {
     icon = nativeImage.createEmpty()
   }
   const tray = new Tray(icon)

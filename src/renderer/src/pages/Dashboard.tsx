@@ -211,6 +211,22 @@ function EmptyState(): React.ReactElement {
   )
 }
 
+function FilterEmptyState({ onReset }: { onReset: () => void }): React.ReactElement {
+  return (
+    <Card>
+      <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+        <h3 className="mb-1 text-lg font-semibold">No matching Staff</h3>
+        <p className="mb-5 text-sm text-muted-foreground">
+          No Staff match the current search or filter settings.
+        </p>
+        <Button variant="outline" className="rounded-full" onClick={onReset}>
+          Clear Filters
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
 function DashboardSkeleton(): React.ReactElement {
   return (
     <div className="space-y-6">
@@ -519,6 +535,13 @@ export function Dashboard(): React.ReactElement {
 
       {staffs.length === 0 ? (
         <EmptyState />
+      ) : filteredStaffs.length === 0 ? (
+        <FilterEmptyState
+          onReset={() => {
+            setSearch('')
+            setStatusFilter('all')
+          }}
+        />
       ) : (
         <>
           {/* Desktop Table */}

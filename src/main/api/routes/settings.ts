@@ -24,6 +24,8 @@ const STRING_SETTINGS = new Set([
   'anthropic_api_key', 'openai_api_key', 'ngrok_api_key', 'ngrok_auth_password',
   'default_agent', 'default_model', 'theme'
 ])
+const THEME_SETTINGS = new Set(['light', 'dark', 'system'])
+const DEFAULT_AGENT_SETTINGS = new Set(['claude-code', 'codex'])
 
 function isValidSettingsKey(key: string): boolean {
   return ALLOWED_SETTINGS.includes(key) || key.startsWith('skill_env_')
@@ -35,9 +37,19 @@ function validateSettingValue(key: string, value: unknown): string | null {
   } else if (NUMBER_SETTINGS.has(key)) {
     if (typeof value !== 'number' || !isFinite(value)) return `${key} must be a finite number`
     if (value < 0) return `${key} must be non-negative`
+    if (key === 'budget_warning_percent' && value > 100) return `${key} must be 100 or less`
   } else if (STRING_SETTINGS.has(key) || key.startsWith('skill_env_')) {
     if (typeof value !== 'string') return `${key} must be a string`
     if (value.length > 1000) return `${key} is too long`
+    if ((key === 'default_agent' || key === 'default_model' || key === 'theme') && value.trim().length === 0) {
+      return `${key} cannot be empty`
+    }
+    if (key === 'theme' && !THEME_SETTINGS.has(value)) {
+      return `${key} must be one of light, dark, system`
+    }
+    if (key === 'default_agent' && !DEFAULT_AGENT_SETTINGS.has(value)) {
+      return `${key} must be one of claude-code, codex`
+    }
   }
   return null
 }
@@ -66,8 +78,15 @@ export function settingsRoutes(ctx: ApiContext): Router {
   // Update settings
   router.patch('/', (req, res) => {
     try {
-      const updates = req.body as Record<string, unknown>
-      for (const [key, value] of Object.entries(updates)) {
+      const updates = req.body
+      if (!updates || typeof updates !== 'object' || Array.isArray(updates)) {
+        return res.status(400).json({ error: 'Body must be an object' })
+      }
+
+      const entries = Object.entries(updates as Record<string, unknown>)
+
+      // Validate all fields first to avoid partial writes on failure.
+      for (const [key, value] of entries) {
         if (!isValidSettingsKey(key)) {
           return res.status(400).json({ error: `Unknown setting: ${key}` })
         }
@@ -75,6 +94,9 @@ export function settingsRoutes(ctx: ApiContext): Router {
         if (valError) {
           return res.status(400).json({ error: valError })
         }
+      }
+
+      for (const [key, value] of entries) {
         ctx.configStore.set(key as SettingsKey, value as never)
       }
       res.json({ status: 'saved' })

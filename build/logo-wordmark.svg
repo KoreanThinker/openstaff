@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="220" viewBox="0 0 980 220" fill="none">
+  <defs>
+    <linearGradient id="logo-bg" x1="12" y1="12" x2="208" y2="208" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="52%" stop-color="#22C55E"/>
+      <stop offset="100%" stop-color="#F97316"/>
+    </linearGradient>
+    <linearGradient id="wordmark-grad" x1="260" y1="30" x2="860" y2="190" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="45%" stop-color="#111827"/>
+      <stop offset="55%" stop-color="#22C55E"/>
+      <stop offset="100%" stop-color="#16A34A"/>
+    </linearGradient>
+    <linearGradient id="loop-grad" x1="44" y1="110" x2="176" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="12" y="12" width="196" height="196" rx="62" fill="url(#logo-bg)"/>
+  <rect x="14" y="14" width="192" height="192" rx="60" fill="none" stroke="#111827" stroke-opacity="0.12" stroke-width="4"/>
+
+  <path
+    d="M 44 110 C 44 90, 59 75, 78 75 C 108 75, 118 145, 145 145 C 162 145, 176 131, 176 110 C 176 90, 161 75, 142 75 C 112 75, 102 145, 75 145 C 58 145, 44 131, 44 110 Z"
+    fill="none"
+    stroke="url(#loop-grad)"
+    stroke-linecap="round"
+    stroke-width="22"
+  />
+
+  <circle cx="66" cy="110" r="10" fill="#F8FAFC"/>
+  <circle cx="110" cy="75" r="10" fill="#F8FAFC"/>
+  <circle cx="154" cy="110" r="10" fill="#F8FAFC"/>
+
+  <text
+    x="250"
+    y="145"
+    font-family="Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+    font-size="88"
+    font-weight="700"
+    letter-spacing="-2"
+    fill="url(#wordmark-grad)"
+  >OpenStaff</text>
+</svg>

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { OpenStaffLogo } from '@/components/brand/OpenStaffLogo'
 import { useSettingsStore } from '@/stores/settings-store'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
@@ -134,8 +135,15 @@ export function SetupWizard(): React.ReactElement {
         {step === 0 && (
           <Card>
             <CardHeader className="text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary">
-                <span className="text-2xl font-bold text-primary-foreground">OS</span>
+              <div className="mx-auto mb-4 rounded-2xl shadow-[0_10px_30px_hsl(var(--foreground)/0.08)]">
+                <OpenStaffLogo
+                  size={64}
+                  animated
+                  showWordmark
+                  wordmarkVariant="gradient"
+                  className="flex-col gap-3"
+                  wordmarkClassName="text-[1.15rem]"
+                />
               </div>
               <CardTitle className="text-2xl">Welcome to OpenStaff</CardTitle>
               <CardDescription>
