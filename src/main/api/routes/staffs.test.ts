@@ -949,6 +949,39 @@ describe('staffs API routes', () => {
     await apiDelete(`/api/staffs/${created.id}`)
   })
 
+  it('KPI trend is null when previous value is zero (division by zero guard)', async () => {
+    const { data: created } = await apiPost('/api/staffs', {
+      name: 'Zero KPI Staff',
+      role: 'Tester',
+      gather: 'g',
+      execute: 'e',
+      evaluate: 'ev',
+      agent: 'claude-code',
+      model: 'claude-sonnet-4-5',
+      skills: []
+    })
+
+    const { appendJsonl } = await import('../../data/jsonl-reader')
+    const { getStaffDir } = await import('../../data/staff-data')
+    const { join } = await import('path')
+    const dir = getStaffDir(created.id)
+    // Previous KPI value of 0 should not cause division by zero
+    appendJsonl(join(dir, 'kpi.jsonl'), { date: '2026-01-01', cycle: 1, metrics: { score: 0 } })
+    appendJsonl(join(dir, 'kpi.jsonl'), { date: '2026-01-02', cycle: 2, metrics: { score: 5 } })
+
+    const { data: list } = await apiGet('/api/staffs')
+    const staff = list.find((s: { id: string }) => s.id === created.id)
+    expect(staff.kpi_summary[0].name).toBe('score')
+    expect(staff.kpi_summary[0].value).toBe(5)
+    expect(staff.kpi_summary[0].trend).toBeNull() // Previous was 0, no division
+
+    // Also check detail endpoint
+    const { data: detail } = await apiGet(`/api/staffs/${created.id}`)
+    expect(detail.kpi_summary[0].trend).toBeNull()
+
+    await apiDelete(`/api/staffs/${created.id}`)
+  })
+
   it('GET /api/staffs list returns 500 when listStaffIds throws', async () => {
     // Corrupt the staffs directory to trigger the list catch block
     const { mkdirSync, rmSync, writeFileSync } = await import('fs')

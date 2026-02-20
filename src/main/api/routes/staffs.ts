@@ -31,7 +31,7 @@ export function staffRoutes(ctx: ApiContext): Router {
           ? Object.entries(lastKpi.metrics).map(([name, value]) => ({
             name,
             value,
-            trend: prevKpi?.metrics[name] != null
+            trend: prevKpi?.metrics[name] != null && prevKpi.metrics[name] !== 0
               ? ((value - prevKpi.metrics[name]!) / Math.abs(prevKpi.metrics[name]!) * 100)
               : null
           }))
@@ -104,7 +104,7 @@ export function staffRoutes(ctx: ApiContext): Router {
           ? Object.entries(lastKpi.metrics).map(([name, value]) => ({
             name,
             value,
-            trend: prevKpi?.metrics[name] != null
+            trend: prevKpi?.metrics[name] != null && prevKpi.metrics[name] !== 0
               ? ((value - prevKpi.metrics[name]!) / Math.abs(prevKpi.metrics[name]!) * 100)
               : null
           }))

@@ -31,12 +31,13 @@ interface RunningStaff {
   idleTimer: ReturnType<typeof setInterval> | null
   logStream: (data: string) => void
   watchers: ReturnType<typeof watch>[]
-  failures: number[]
 }
 
 export class StaffManager extends EventEmitter {
   private running: Map<string, RunningStaff> = new Map()
   private starting: Set<string> = new Set()
+  private intentionalStops: Set<string> = new Set()
+  private failureHistory: Map<string, number[]> = new Map()
   private configStore: ConfigStore
 
   constructor(configStore: ConfigStore) {
@@ -134,8 +135,7 @@ export class StaffManager extends EventEmitter {
       lastOutputAt: now,
       idleTimer: null,
       logStream: () => {},
-      watchers: [],
-      failures: []
+      watchers: []
     }
 
     // Rotate output.log if older than 30 days
@@ -201,11 +201,13 @@ export class StaffManager extends EventEmitter {
     const entry = this.running.get(staffId)
     if (!entry) return
 
+    this.intentionalStops.add(staffId)
     if (entry.idleTimer) clearInterval(entry.idleTimer)
     for (const w of entry.watchers) w.close()
 
     await entry.process.kill()
     this.running.delete(staffId)
+    this.failureHistory.delete(staffId)
     this.emit('staff:status', staffId, 'stopped')
   }
 
@@ -277,6 +279,12 @@ export class StaffManager extends EventEmitter {
   }
 
   private handleExit(staffId: string, code: number): void {
+    // Don't auto-restart if this was an intentional stop
+    if (this.intentionalStops.has(staffId)) {
+      this.intentionalStops.delete(staffId)
+      return
+    }
+
     const entry = this.running.get(staffId)
     if (!entry) return
 
@@ -295,9 +303,11 @@ export class StaffManager extends EventEmitter {
 
     this.emit('staff:error', staffId, errorEntry)
 
-    // Auto-recovery with backoff
-    entry.failures.push(Date.now())
-    const recentFailures = entry.failures.filter(
+    // Auto-recovery with backoff (tracked at class level so it persists across restarts)
+    const failures = this.failureHistory.get(staffId) || []
+    failures.push(Date.now())
+    this.failureHistory.set(staffId, failures)
+    const recentFailures = failures.filter(
       (t) => Date.now() - t < FAILURE_WINDOW_MS
     )
 

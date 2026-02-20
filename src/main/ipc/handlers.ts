@@ -7,8 +7,7 @@ const { autoUpdater } = pkg
 
 export function setupIpcHandlers(
   ipcMain: IpcMain,
-  configStore: ConfigStore,
-  mainWindow: BrowserWindow | null
+  configStore: ConfigStore
 ): void {
   ipcMain.handle('get-api-port', () => {
     return getApiPort()
@@ -64,6 +63,7 @@ export function setupIpcHandlers(
   autoUpdater.autoInstallOnAppQuit = true
 
   autoUpdater.on('update-downloaded', () => {
-    mainWindow?.webContents.send('update-downloaded')
+    const win = BrowserWindow.getAllWindows()[0]
+    win?.webContents.send('update-downloaded')
   })
 }

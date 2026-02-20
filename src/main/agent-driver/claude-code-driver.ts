@@ -176,7 +176,11 @@ export class ClaudeCodeDriver implements AgentDriver {
 
         // PRD: SIGTERM → 5s wait → SIGKILL
         await new Promise<void>((resolve) => {
-          treeKill(pty.pid, 'SIGTERM', () => {
+          treeKill(pty.pid, 'SIGTERM', (err: Error | null) => {
+            if (err) {
+              resolve() // Process already dead or error
+              return
+            }
             // Wait 5s for graceful shutdown
             setTimeout(() => {
               try {
