@@ -16,6 +16,7 @@ function createMockConfigStore() {
     theme: 'system',
     anthropic_api_key: 'test-key',
     openai_api_key: '',
+    slack_webhook_url: '',
     ngrok_api_key: '',
     ngrok_auth_password: ''
   }
@@ -82,6 +83,19 @@ describe('settings API routes', () => {
     expect(mockConfigStore.get('theme')).toBe('dark')
   })
 
+  it('PATCH /api/settings saves slack webhook URL', async () => {
+    const webhook = 'https://hooks.slack.com/services/T123/B123/example'
+    const res = await fetch(`http://localhost:${port}/api/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slack_webhook_url: webhook })
+    })
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.status).toBe('saved')
+    expect(mockConfigStore.get('slack_webhook_url')).toBe(webhook)
+  })
+
   it('PATCH /api/settings refreshes ngrok tunnel when remote settings change', async () => {
     mockNgrokManager.restartFromConfig.mockClear()
 
@@ -118,6 +132,7 @@ describe('settings API routes', () => {
   it('GET /api/settings masks all sensitive keys when truthy', async () => {
     // Set all sensitive keys to truthy values
     mockConfigStore.set('openai_api_key', 'oai-key')
+    mockConfigStore.set('slack_webhook_url', 'https://hooks.slack.com/services/T123/B123/abc')
     mockConfigStore.set('ngrok_api_key', 'ngrok-key-123')
     mockConfigStore.set('ngrok_auth_password', 'secret-pass')
 
@@ -126,11 +141,13 @@ describe('settings API routes', () => {
     expect(res.status).toBe(200)
     expect(data.anthropic_api_key).toBe('***')
     expect(data.openai_api_key).toBe('***')
+    expect(data.slack_webhook_url).toBe('***')
     expect(data.ngrok_api_key).toBe('***')
     expect(data.ngrok_auth_password).toBe('***')
 
     // Restore
     mockConfigStore.set('openai_api_key', '')
+    mockConfigStore.set('slack_webhook_url', '')
     mockConfigStore.set('ngrok_api_key', '')
     mockConfigStore.set('ngrok_auth_password', '')
   })

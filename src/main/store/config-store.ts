@@ -5,6 +5,7 @@ import type { AppSettings, SettingsKey } from '@shared/types'
 const ENCRYPTED_KEYS: SettingsKey[] = [
   'anthropic_api_key',
   'openai_api_key',
+  'slack_webhook_url',
   'ngrok_api_key',
   'ngrok_auth_password'
 ]
@@ -12,6 +13,7 @@ const ENCRYPTED_KEYS: SettingsKey[] = [
 const DEFAULTS: AppSettings = {
   anthropic_api_key: '',
   openai_api_key: '',
+  slack_webhook_url: '',
   ngrok_api_key: '',
   ngrok_auth_password: '',
   default_agent: 'claude-code',

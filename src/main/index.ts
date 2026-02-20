@@ -14,6 +14,7 @@ import { ConfigStore } from './store/config-store'
 import { HealthChecker } from './health-check/health-checker'
 import { MonitoringEngine } from './monitoring/monitoring-engine'
 import { NgrokManager } from './ngrok/ngrok-manager'
+import { SlackNotifier } from './integrations/slack-notifier'
 
 let mainWindow: BrowserWindow | null = null
 let _tray: Tray | null = null
@@ -24,6 +25,7 @@ const staffManager = new StaffManager(configStore)
 const healthChecker = new HealthChecker(staffManager)
 const monitoringEngine = new MonitoringEngine(staffManager, configStore)
 const ngrokManager = new NgrokManager(configStore)
+const slackNotifier = new SlackNotifier(configStore)
 const hideWindowForE2E =
   process.env.NODE_ENV === 'test' && process.env.OPENSTAFF_E2E_SHOW_WINDOW !== '1'
 
@@ -104,34 +106,42 @@ app.whenReady().then(async () => {
   // Native notifications for staff events
   staffManager.on('staff:error', (staffId: string) => {
     const config = staffManager.getStaffConfig(staffId)
+    const name = config?.name || staffId
     new Notification({
       title: 'Staff Error',
-      body: `${config?.name || staffId} crashed and is restarting.`
+      body: `${name} crashed and is restarting.`
     }).show()
+    slackNotifier.notify('Staff Error', `${name} crashed and is restarting.`).catch(() => {})
   })
 
   staffManager.on('staff:giveup', (staffId: string) => {
     const config = staffManager.getStaffConfig(staffId)
+    const name = config?.name || staffId
     new Notification({
       title: 'Staff Paused',
-      body: `${config?.name || staffId} gave up and is paused. Resume it after investigating.`
+      body: `${name} gave up and is paused. Resume it after investigating.`
     }).show()
+    slackNotifier.notify('Staff Paused', `${name} gave up and is paused. Resume it after investigating.`).catch(() => {})
   })
 
   staffManager.on('staff:stopped_backoff', (staffId: string) => {
     const config = staffManager.getStaffConfig(staffId)
+    const name = config?.name || staffId
     new Notification({
       title: 'Staff Stopped',
-      body: `${config?.name || staffId} stopped after repeated failures.`
+      body: `${name} stopped after repeated failures.`
     }).show()
+    slackNotifier.notify('Staff Stopped', `${name} stopped after repeated failures.`).catch(() => {})
   })
 
   staffManager.on('staff:health_check_fail', (staffId: string) => {
     const config = staffManager.getStaffConfig(staffId)
+    const name = config?.name || staffId
     new Notification({
       title: 'Health Check Failed',
-      body: `${config?.name || staffId} is unresponsive. Attempting restart...`
+      body: `${name} is unresponsive. Attempting restart...`
     }).show()
+    slackNotifier.notify('Health Check Failed', `${name} is unresponsive. Attempting restart...`).catch(() => {})
     // Trigger restart via error handler path
     staffManager.restartStaff(staffId).catch((err: Error) => {
       console.error(`Failed to restart unresponsive staff ${staffId}:`, err)
@@ -139,10 +149,12 @@ app.whenReady().then(async () => {
   })
 
   staffManager.on('budget:warning', (data: { monthly_cost: number; budget_limit: number; warning_percent: number }) => {
+    const body = `Monthly cost ($${data.monthly_cost}) has reached ${data.warning_percent}% of your $${data.budget_limit} budget.`
     new Notification({
       title: 'Budget Warning',
-      body: `Monthly cost ($${data.monthly_cost}) has reached ${data.warning_percent}% of your $${data.budget_limit} budget.`
+      body
     }).show()
+    slackNotifier.notify('Budget Warning', body).catch(() => {})
   })
 
   app.on('activate', () => {

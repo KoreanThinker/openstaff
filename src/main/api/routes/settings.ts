@@ -5,6 +5,7 @@ import type { SettingsKey } from '@shared/types'
 const ALLOWED_SETTINGS: string[] = [
   'anthropic_api_key',
   'openai_api_key',
+  'slack_webhook_url',
   'ngrok_api_key',
   'ngrok_auth_password',
   'default_agent',
@@ -22,6 +23,7 @@ const BOOLEAN_SETTINGS = new Set(['setup_completed', 'start_on_login', 'show_win
 const NUMBER_SETTINGS = new Set(['monthly_budget_usd', 'budget_warning_percent'])
 const STRING_SETTINGS = new Set([
   'anthropic_api_key', 'openai_api_key', 'ngrok_api_key', 'ngrok_auth_password',
+  'slack_webhook_url',
   'default_agent', 'default_model', 'theme'
 ])
 const THEME_SETTINGS = new Set(['light', 'dark', 'system'])
@@ -66,6 +68,7 @@ export function settingsRoutes(ctx: ApiContext): Router {
         ...settings,
         anthropic_api_key: settings.anthropic_api_key ? '***' : '',
         openai_api_key: settings.openai_api_key ? '***' : '',
+        slack_webhook_url: settings.slack_webhook_url ? '***' : '',
         ngrok_api_key: settings.ngrok_api_key ? '***' : '',
         ngrok_auth_password: settings.ngrok_auth_password ? '***' : ''
       }

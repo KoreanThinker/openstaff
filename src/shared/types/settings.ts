@@ -1,6 +1,7 @@
 export interface AppSettings {
   anthropic_api_key: string
   openai_api_key: string
+  slack_webhook_url: string
   ngrok_api_key: string
   ngrok_auth_password: string
   default_agent: string

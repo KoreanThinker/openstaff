@@ -580,6 +580,7 @@ Supported agents:
 | ------------------------ | -------------------------------------- |
 | Ngrok API Key            | For web UI remote access               |
 | Ngrok Auth Password      | Basic auth for Ngrok URL               |
+| Slack Webhook URL        | Optional alerts for staff/budget events |
 | Default Agent            | Default agent for new Staff            |
 | Default Model            | Default model for new Staff            |
 | Start on Login           | Auto-start OpenStaff at OS login       |

@@ -167,8 +167,10 @@ export function Settings(): React.ReactElement {
   // Local state
   const [ngrokKey, setNgrokKey] = useState('')
   const [ngrokPassword, setNgrokPassword] = useState('')
+  const [slackWebhookUrl, setSlackWebhookUrl] = useState('')
   const [showNgrokKey, setShowNgrokKey] = useState(false)
   const [showNgrokPassword, setShowNgrokPassword] = useState(false)
+  const [showSlackWebhookUrl, setShowSlackWebhookUrl] = useState(false)
   const [copied, setCopied] = useState(false)
   const [checkingUpdates, setCheckingUpdates] = useState(false)
   const [updateResult, setUpdateResult] = useState<{ available: boolean; version?: string } | null>(null)
@@ -183,6 +185,7 @@ export function Settings(): React.ReactElement {
     if (settings) {
       setNgrokKey(settings.ngrok_api_key || '')
       setNgrokPassword(settings.ngrok_auth_password || '')
+      setSlackWebhookUrl(settings.slack_webhook_url || '')
       setStartOnLogin(settings.start_on_login ?? false)
       setShowOnStartup(settings.show_window_on_startup ?? true)
 
@@ -381,6 +384,41 @@ export function Settings(): React.ReactElement {
                   and rotate both Ngrok/API credentials regularly.
                 </p>
               )}
+            </div>
+
+            <div>
+              <Label className="text-sm text-muted-foreground">
+                Slack Webhook URL
+              </Label>
+              <div className="mt-1 flex gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    type={showSlackWebhookUrl ? 'text' : 'password'}
+                    placeholder="https://hooks.slack.com/services/..."
+                    value={slackWebhookUrl}
+                    onChange={(e) => {
+                      setSlackWebhookUrl(e.target.value)
+                      debouncedSave({ slack_webhook_url: e.target.value })
+                    }}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                    onClick={() => setShowSlackWebhookUrl(!showSlackWebhookUrl)}
+                    aria-label={showSlackWebhookUrl ? 'Hide webhook URL' : 'Show webhook URL'}
+                  >
+                    {showSlackWebhookUrl ? (
+                      <EyeOff className="h-3.5 w-3.5" />
+                    ) : (
+                      <Eye className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Optional. Sends staff errors, giveup, and budget warnings to Slack.
+              </p>
             </div>
 
             {/* Status */}

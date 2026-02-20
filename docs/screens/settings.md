@@ -19,6 +19,7 @@ Accessed from the sidebar "Settings" icon (gear). This is a top-level page along
 |  [icon]     |  | Remote Access                                  |   |
 |  --------   |  | Ngrok API Key    [*************************]   |   |
 |  [gear] <-- |  | Auth Password    [*************************]   |   |
+|             |  | Slack Webhook    [*************************]   |   |
 |             |  | Status           ● Connected                   |   |
 |             |  | Tunnel URL       https://abc123.ngrok.io [copy]|   |
 |             |  +-----------------------------------------------+   |
@@ -50,6 +51,7 @@ This card manages the Ngrok tunnel for accessing the dashboard remotely from a p
 |---------|-----------|---------|
 | Ngrok API Key | Password input | Masked by default. Small eye icon to toggle visibility. Placeholder: "ngrok_xxxxxxxxxxxxxxxx" |
 | Auth Password | Password input | Masked by default. Eye toggle. Placeholder: "Set a password for remote access" |
+| Slack Webhook URL | Password input | Optional. Used for Slack alerts (staff errors, giveup, budget warning). Placeholder: "https://hooks.slack.com/services/..." |
 | Connection Status | Status indicator + text | Dot indicator (bg-success + animate-status-pulse when connected, bg-muted-foreground when disconnected) followed by "Connected" or "Disconnected" |
 | Tunnel URL | Read-only text + copy button | Displayed only when connected. Monospace font (font-mono text-sm). Copy icon button on the right. Shows full ngrok URL. |
 
@@ -57,7 +59,7 @@ This card manages the Ngrok tunnel for accessing the dashboard remotely from a p
 - When API key is entered/changed, auto-save after debounce (500ms) and attempt connection.
 - If connection fails, show inline error text in text-destructive below the status line.
 - Auth Password is required before enabling the tunnel. If missing, show helper text: "Set an auth password to enable remote access."
-- Both fields stored encrypted via safeStorage.
+- Ngrok fields and Slack webhook URL are stored encrypted via safeStorage.
 
 ## Defaults Section
 
@@ -114,6 +116,7 @@ Default agent and model for newly created Staff. Does not affect existing Staff.
 interface AppSettings {
   ngrok_api_key: string       // masked, only last 4 chars visible
   ngrok_auth_password: string // masked, only presence indicated (boolean)
+  slack_webhook_url: string   // masked when configured
   ngrok_status: 'connected' | 'disconnected' | 'connecting' | 'error'
   ngrok_url: string | null
   ngrok_error: string | null
