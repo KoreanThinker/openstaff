@@ -662,6 +662,7 @@ function AddSkillModal({
         {/* Tabs */}
         <div className="flex gap-1 rounded-full bg-muted p-1">
           <button
+            aria-pressed={tab === 'local'}
             className={cn(
               'flex-1 rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
               tab === 'local'
@@ -673,6 +674,7 @@ function AddSkillModal({
             Local Import
           </button>
           <button
+            aria-pressed={tab === 'registry'}
             className={cn(
               'flex-1 rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
               tab === 'registry'

@@ -463,6 +463,7 @@ export function Settings(): React.ReactElement {
                   ).map(({ value, icon: Icon, label }) => (
                     <button
                       key={value}
+                      aria-pressed={currentTheme === value}
                       className={cn(
                         'flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
                         currentTheme === value

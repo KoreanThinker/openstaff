@@ -347,6 +347,7 @@ export function Registry(): React.ReactElement {
         </div>
         <div className="flex gap-1 rounded-full bg-muted p-1">
           <button
+            aria-pressed={tab === 'templates'}
             className={cn(
               'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
               tab === 'templates'
@@ -361,6 +362,7 @@ export function Registry(): React.ReactElement {
             Templates
           </button>
           <button
+            aria-pressed={tab === 'skills'}
             className={cn(
               'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
               tab === 'skills'
@@ -382,6 +384,7 @@ export function Registry(): React.ReactElement {
         {categories.map((cat) => (
           <button
             key={cat}
+            aria-pressed={selectedCategory === cat}
             className={cn(
               'whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
               selectedCategory === cat
