@@ -62,11 +62,8 @@ export async function startApiServer(
   }
 
   // WebSocket
-  io.on('connection', (socket) => {
-    console.log('WebSocket client connected')
-    socket.on('disconnect', () => {
-      console.log('WebSocket client disconnected')
-    })
+  io.on('connection', () => {
+    // WebSocket connections managed by socket.io
   })
 
   // Forward StaffManager events to WebSocket (store refs for cleanup)

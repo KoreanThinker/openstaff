@@ -645,6 +645,7 @@ function LogsTab({ staffId }: { staffId: string }): React.ReactElement {
           <button
             onClick={jumpToBottom}
             className="sticky bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-soft-float"
+            aria-label="Jump to bottom of logs"
           >
             <ArrowDown className="h-3 w-3" />
             Jump to bottom

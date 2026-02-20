@@ -119,6 +119,9 @@ function GuidedSetup({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agents'] })
       onInstallComplete()
+    },
+    onError: () => {
+      toast({ title: 'Installation failed', description: 'Please try again.', variant: 'destructive' })
     }
   })
 

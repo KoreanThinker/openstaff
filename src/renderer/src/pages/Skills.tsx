@@ -378,6 +378,7 @@ export function Skills(): React.ReactElement {
                 <button
                   className="text-muted-foreground hover:text-foreground"
                   onClick={() => setDetailOpen(false)}
+                  aria-label="Close skill details"
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
@@ -618,6 +619,9 @@ function AddSkillModal({
       queryClient.invalidateQueries({ queryKey: ['skills'] })
       onOpenChange(false)
       setLocalPath('')
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Import failed', description: err.message, variant: 'destructive' })
     }
   })
 
@@ -625,6 +629,9 @@ function AddSkillModal({
     mutationFn: (name: string) => api.installRegistrySkill(name),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['skills'] })
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Install failed', description: err.message, variant: 'destructive' })
     }
   })
 
