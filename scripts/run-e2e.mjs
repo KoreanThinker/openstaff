@@ -3,7 +3,7 @@
 import { spawn } from 'node:child_process'
 
 const mode = process.argv[2] ?? 'headless'
-const extraArgs = process.argv.slice(3)
+const extraArgs = process.argv[3] === '--' ? process.argv.slice(4) : process.argv.slice(3)
 
 if (!['headless', 'headed', 'ui'].includes(mode)) {
   console.error(`Unknown mode "${mode}". Use one of: headless, headed, ui`)
@@ -19,6 +19,7 @@ if (mode !== 'headless' && process.env.OPENSTAFF_ALLOW_HEADED !== '1') {
 
 const pnpmCmd = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
 const showWindow = mode === 'headless' ? '0' : '1'
+const skipBuild = process.env.OPENSTAFF_E2E_SKIP_BUILD === '1'
 
 const sharedEnv = {
   ...process.env,
@@ -48,7 +49,11 @@ const playwrightArgs =
       : ['exec', 'playwright', 'test', ...extraArgs]
 
 try {
-  await run(pnpmCmd, ['build'], sharedEnv)
+  if (!skipBuild) {
+    await run(pnpmCmd, ['build'], sharedEnv)
+  } else {
+    console.log('OPENSTAFF_E2E_SKIP_BUILD=1 set, skipping build step.')
+  }
   await run(pnpmCmd, playwrightArgs, sharedEnv)
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error))
