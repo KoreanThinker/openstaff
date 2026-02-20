@@ -214,6 +214,15 @@ compatibility: Requires TEST_API_KEY
     expect(data.error).toBe('Path does not exist')
   })
 
+  it('DELETE /api/skills/openstaff rejects deletion of built-in skill', async () => {
+    const res = await fetch(`http://localhost:${port}/api/skills/openstaff`, {
+      method: 'DELETE'
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toContain('built-in')
+  })
+
   it('DELETE /api/skills/:name deletes skill', async () => {
     const res = await fetch(`http://localhost:${port}/api/skills/test-skill`, {
       method: 'DELETE'

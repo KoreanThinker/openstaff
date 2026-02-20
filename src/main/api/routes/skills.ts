@@ -89,6 +89,11 @@ export function skillRoutes(ctx: ApiContext): Router {
     try {
       const skillName = req.params.name!
 
+      // Prevent deletion of built-in skill
+      if (skillName === 'openstaff') {
+        return res.status(400).json({ error: 'Cannot delete the built-in openstaff skill' })
+      }
+
       // Remove from all connected staffs
       for (const id of listStaffIds()) {
         const config = readStaffConfig(id)

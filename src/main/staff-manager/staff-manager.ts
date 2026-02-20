@@ -233,6 +233,12 @@ export class StaffManager extends EventEmitter {
     if (!entry) return
 
     this.intentionalStops.add(staffId)
+    this.paused.delete(staffId)
+
+    // Write stopped state BEFORE killing to prevent recovery race on crash
+    const state = readStaffState(staffId)
+    writeStaffState(staffId, { ...state, last_started_at: null, paused: false })
+
     if (entry.idleTimer) clearInterval(entry.idleTimer)
     if (entry.promptTimer) clearTimeout(entry.promptTimer)
     for (const w of entry.watchers) w.close()
@@ -242,11 +248,6 @@ export class StaffManager extends EventEmitter {
     this.running.delete(staffId)
     this.failureHistory.delete(staffId)
 
-    // Clear last_started_at so recoverRunningStaffs won't restart this staff on reboot
-    const state = readStaffState(staffId)
-    writeStaffState(staffId, { ...state, last_started_at: null, paused: false })
-
-    this.paused.delete(staffId)
     this.emit('staff:status', staffId, 'stopped')
   }
 
@@ -255,6 +256,12 @@ export class StaffManager extends EventEmitter {
     if (!entry) return
 
     this.intentionalStops.add(staffId)
+    this.paused.add(staffId)
+
+    // Write paused state BEFORE killing to prevent recovery race on crash
+    const state = readStaffState(staffId)
+    writeStaffState(staffId, { ...state, last_started_at: null, paused: true })
+
     if (entry.idleTimer) clearInterval(entry.idleTimer)
     if (entry.promptTimer) clearTimeout(entry.promptTimer)
     for (const w of entry.watchers) w.close()
@@ -263,11 +270,6 @@ export class StaffManager extends EventEmitter {
     entry.process.dispose()
     this.running.delete(staffId)
     this.failureHistory.delete(staffId)
-    this.paused.add(staffId)
-
-    // Keep session_id for resume, but mark as paused
-    const state = readStaffState(staffId)
-    writeStaffState(staffId, { ...state, last_started_at: null, paused: true })
 
     this.emit('staff:status', staffId, 'paused')
   }
@@ -276,6 +278,11 @@ export class StaffManager extends EventEmitter {
     this.paused.delete(staffId)
     const state = readStaffState(staffId)
     writeStaffState(staffId, { ...state, paused: false })
+
+    // Clear giveup signal so file watcher doesn't re-trigger pause
+    const signalsPath = join(getStaffDir(staffId), 'signals.jsonl')
+    appendJsonl(signalsPath, { type: 'resumed', timestamp: new Date().toISOString() })
+
     await this.startStaff(staffId)
   }
 
@@ -315,6 +322,10 @@ export class StaffManager extends EventEmitter {
 
   updateStaff(config: StaffConfig): void {
     writeStaffConfig(config)
+    // Re-symlink skills so they're ready when staff starts
+    ensureStaffDir(config.id)
+    const allSkills = [...new Set(['openstaff', ...config.skills])]
+    symlinkSkills(config.id, allSkills)
   }
 
   deleteStaffData(staffId: string): void {
