@@ -526,10 +526,10 @@ export function Dashboard(): React.ReactElement {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className={cn('w-10 cursor-pointer select-none transition-colors hover:bg-muted/60', sortField === 'status' && 'bg-muted/40 text-foreground')} onClick={() => toggleSort('status')}>
+                  <TableHead role="button" tabIndex={0} aria-sort={sortField === 'status' ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined} className={cn('w-10 cursor-pointer select-none transition-colors hover:bg-muted/60', sortField === 'status' && 'bg-muted/40 text-foreground')} onClick={() => toggleSort('status')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSort('status') } }}>
                     <span className="inline-flex items-center gap-1">Status{sortField === 'status' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-50" />}</span>
                   </TableHead>
-                  <TableHead className={cn('cursor-pointer select-none transition-colors hover:bg-muted/60', sortField === 'name' && 'bg-muted/40 text-foreground')} onClick={() => toggleSort('name')}>
+                  <TableHead role="button" tabIndex={0} aria-sort={sortField === 'name' ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined} className={cn('cursor-pointer select-none transition-colors hover:bg-muted/60', sortField === 'name' && 'bg-muted/40 text-foreground')} onClick={() => toggleSort('name')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSort('name') } }}>
                     <span className="inline-flex items-center gap-1">Name{sortField === 'name' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-50" />}</span>
                   </TableHead>
                   <TableHead>Role</TableHead>
@@ -538,10 +538,10 @@ export function Dashboard(): React.ReactElement {
                   <TableHead>Uptime</TableHead>
                   <TableHead className="text-right">Restarts</TableHead>
                   <TableHead className="text-right">Tokens</TableHead>
-                  <TableHead className={cn('cursor-pointer select-none text-right transition-colors hover:bg-muted/60', sortField === 'cost' && 'bg-muted/40 text-foreground')} onClick={() => toggleSort('cost')}>
+                  <TableHead role="button" tabIndex={0} aria-sort={sortField === 'cost' ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined} className={cn('cursor-pointer select-none text-right transition-colors hover:bg-muted/60', sortField === 'cost' && 'bg-muted/40 text-foreground')} onClick={() => toggleSort('cost')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSort('cost') } }}>
                     <span className="inline-flex items-center justify-end gap-1 w-full">Cost{sortField === 'cost' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-50" />}</span>
                   </TableHead>
-                  <TableHead className={cn('cursor-pointer select-none text-right transition-colors hover:bg-muted/60', sortField === 'cycles' && 'bg-muted/40 text-foreground')} onClick={() => toggleSort('cycles')}>
+                  <TableHead role="button" tabIndex={0} aria-sort={sortField === 'cycles' ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined} className={cn('cursor-pointer select-none text-right transition-colors hover:bg-muted/60', sortField === 'cycles' && 'bg-muted/40 text-foreground')} onClick={() => toggleSort('cycles')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSort('cycles') } }}>
                     <span className="inline-flex items-center justify-end gap-1 w-full">Cycles{sortField === 'cycles' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-50" />}</span>
                   </TableHead>
                   <TableHead>KPI</TableHead>

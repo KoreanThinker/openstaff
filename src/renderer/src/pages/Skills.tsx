@@ -262,6 +262,7 @@ export function Skills(): React.ReactElement {
             <button
               key={f}
               onClick={() => setFilter(f)}
+              aria-pressed={filter === f}
               className={cn(
                 'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
                 filter === f

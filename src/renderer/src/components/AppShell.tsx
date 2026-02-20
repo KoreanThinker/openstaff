@@ -389,7 +389,7 @@ export function AppShell(): React.ReactElement {
             {/* Notification Bell */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative rounded-xl" aria-label="Notifications">
+                <Button variant="ghost" size="icon" className="relative rounded-xl" aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}>
                   <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
                     <Badge

@@ -397,7 +397,7 @@ function ClaudeCodeCard({
       if (settings.auto_update_agents !== undefined) {
         setAutoUpdate(settings.auto_update_agents as boolean)
       }
-    }).catch((err) => console.warn('API call failed:', err))
+    }).catch(() => {})
   }, [])
 
   // Load usage from dashboard stats
@@ -420,7 +420,9 @@ function ClaudeCodeCard({
     api.patch('/api/settings', {
       monthly_budget_usd: newBudget.monthly_limit ?? 0,
       budget_warning_percent: newBudget.warning_threshold
-    }).catch((err) => console.warn('API call failed:', err))
+    }).catch(() => {
+      toast({ title: 'Failed to save budget', variant: 'destructive' })
+    })
   }, [])
 
   return (
@@ -554,7 +556,7 @@ function ClaudeCodeCard({
                   checked={autoUpdate}
                   onCheckedChange={(checked) => {
                     setAutoUpdate(checked)
-                    api.patch('/api/settings', { auto_update_agents: checked }).catch((err) => console.warn('API call failed:', err))
+                    api.patch('/api/settings', { auto_update_agents: checked }).catch(() => {})
                   }}
                 />
               </div>

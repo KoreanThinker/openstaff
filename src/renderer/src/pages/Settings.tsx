@@ -116,9 +116,7 @@ export function Settings(): React.ReactElement {
       await navigator.clipboard.writeText(url)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    } catch {
-      console.warn('Clipboard access denied')
-    }
+    } catch { /* Clipboard access may be denied in some environments */ }
   }, [])
 
   const handleCheckUpdates = useCallback(async () => {
