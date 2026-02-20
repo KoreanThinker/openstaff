@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, cpSync, rmSync } from 'fs'
-import { join } from 'path'
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, cpSync, rmSync, lstatSync } from 'fs'
+import { join, resolve } from 'path'
 import { SKILLS_DIR } from '@shared/constants'
 import type { SkillInfo, SkillMdFrontmatter, SkillAuthStatus } from '@shared/types'
 import { ConfigStore } from '../store/config-store'
@@ -113,9 +113,23 @@ export function getSkillInfo(skillName: string, configStore: ConfigStore, connec
 
 export function importSkill(sourcePath: string): string {
   ensureSkillsDir()
-  const skillMdPath = join(sourcePath, 'SKILL.md')
+  const resolvedSource = resolve(sourcePath)
+
+  // Validate source is a real directory (not a symlink)
+  const srcStat = lstatSync(resolvedSource)
+  if (!srcStat.isDirectory()) {
+    throw new Error('Source path must be a directory')
+  }
+
+  const skillMdPath = join(resolvedSource, 'SKILL.md')
   if (!existsSync(skillMdPath)) {
     throw new Error('Invalid skill directory: SKILL.md not found')
+  }
+
+  // Validate SKILL.md is a real file (not a symlink)
+  const skillMdStat = lstatSync(skillMdPath)
+  if (!skillMdStat.isFile()) {
+    throw new Error('SKILL.md must be a regular file')
   }
 
   const content = readFileSync(skillMdPath, 'utf-8')
@@ -123,8 +137,14 @@ export function importSkill(sourcePath: string): string {
   const skillName = nameMatch ? nameMatch[1]!.trim().replace(/["']/g, '') : ''
   if (!skillName) throw new Error('SKILL.md missing name field')
 
+  // Validate skill name has no path traversal
+  if (skillName.includes('/') || skillName.includes('\\') || skillName.includes('..')) {
+    throw new Error('Invalid skill name: must not contain path separators')
+  }
+
   const destPath = join(SKILLS_DIR, skillName)
-  cpSync(sourcePath, destPath, { recursive: true })
+  // Copy without following symlinks to prevent copying sensitive files
+  cpSync(resolvedSource, destPath, { recursive: true, dereference: false })
   return skillName
 }
 

@@ -229,6 +229,19 @@ Some content here`)
       writeFileSync(join(sourceDir, 'SKILL.md'), '# Just markdown with no frontmatter name')
       expect(() => importSkill(sourceDir)).toThrow('SKILL.md missing name field')
     })
+
+    it('rejects skill name with path traversal', () => {
+      const sourceDir = join(tempDir, 'traversal-skill')
+      mkdirSync(sourceDir, { recursive: true })
+      writeFileSync(join(sourceDir, 'SKILL.md'), '---\nname: ../../../etc\n---')
+      expect(() => importSkill(sourceDir)).toThrow('must not contain path separators')
+    })
+
+    it('rejects non-directory source path', () => {
+      const filePath = join(tempDir, 'not-a-dir.txt')
+      writeFileSync(filePath, 'just a file')
+      expect(() => importSkill(filePath)).toThrow('must be a directory')
+    })
   })
 
   describe('deleteSkill', () => {
