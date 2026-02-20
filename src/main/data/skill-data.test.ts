@@ -24,7 +24,8 @@ const {
   ensureBuiltinSkill,
   getSkillsDir,
   getSkillAuthStatus,
-  getSkillInfo
+  getSkillInfo,
+  readSkillMdContent
 } = await import('./skill-data')
 
 describe('skill-data', () => {
@@ -143,6 +144,44 @@ description: Info skill description
     it('returns null for nonexistent skill', () => {
       const mockStore = { get: () => '' } as never
       expect(getSkillInfo('nonexistent', mockStore)).toBeNull()
+    })
+
+    it('returns skill info with metadata author and version', () => {
+      createSkill('meta-skill', `---
+name: meta-skill
+description: Has metadata
+metadata:
+  author: testauthor
+  version: "2.0"
+---
+Body content here`)
+      const mockStore = { get: () => '' } as never
+      const info = getSkillInfo('meta-skill', mockStore)
+      expect(info!.author).toBe('testauthor')
+      expect(info!.version).toBe('2.0')
+      expect(info!.content).toBe('Body content here')
+    })
+  })
+
+  describe('readSkillMdContent', () => {
+    it('returns empty string for nonexistent skill', () => {
+      expect(readSkillMdContent('nonexistent')).toBe('')
+    })
+
+    it('extracts body after frontmatter', () => {
+      createSkill('body-skill', `---
+name: body-skill
+description: test
+---
+## Section 1
+Some content here`)
+      expect(readSkillMdContent('body-skill')).toBe('## Section 1\nSome content here')
+    })
+
+    it('returns raw content when no frontmatter', () => {
+      createSkill('no-fm', 'Just plain text')
+      // parseSkillMd returns null for this so readSkillMdContent returns raw
+      expect(readSkillMdContent('no-fm')).toBe('Just plain text')
     })
   })
 

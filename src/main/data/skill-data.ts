@@ -14,7 +14,6 @@ export function ensureSkillsDir(): void {
 
 export function listSkillNames(): string[] {
   ensureSkillsDir()
-  if (!existsSync(SKILLS_DIR)) return []
   return readdirSync(SKILLS_DIR, { withFileTypes: true })
     .filter((d) => d.isDirectory())
     .map((d) => d.name)
@@ -34,15 +33,29 @@ export function parseSkillMd(skillName: string): SkillMdFrontmatter | null {
     description: ''
   }
 
+  let inMetadata = false
   for (const line of yaml.split('\n')) {
     const colonIdx = line.indexOf(':')
     if (colonIdx === -1) continue
+
+    const isIndented = line.startsWith('  ')
+    if (isIndented && inMetadata) {
+      const key = line.slice(0, colonIdx).trim()
+      const value = line.slice(colonIdx + 1).trim().replace(/^["']|["']$/g, '')
+      if (!result.metadata) result.metadata = {}
+      if (key === 'author') result.metadata.author = value
+      else if (key === 'version') result.metadata.version = value
+      continue
+    }
+
+    inMetadata = false
     const key = line.slice(0, colonIdx).trim()
     const value = line.slice(colonIdx + 1).trim().replace(/^["']|["']$/g, '')
     if (key === 'name') result.name = value
     else if (key === 'description') result.description = value
     else if (key === 'allowed-tools') result['allowed-tools'] = value
     else if (key === 'compatibility') result.compatibility = value
+    else if (key === 'metadata') inMetadata = true
   }
 
   return result

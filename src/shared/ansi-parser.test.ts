@@ -75,6 +75,18 @@ describe('ansi-parser', () => {
       expect(result[0].style.opacity).toBe('0.7')
     })
 
+    it('parses italic text', () => {
+      const result = parseAnsi('\x1b[3mitalic\x1b[0m')
+      expect(result[0].text).toBe('italic')
+      expect(result[0].style.fontStyle).toBe('italic')
+    })
+
+    it('parses underline text', () => {
+      const result = parseAnsi('\x1b[4munderline\x1b[0m')
+      expect(result[0].text).toBe('underline')
+      expect(result[0].style.textDecoration).toBe('underline')
+    })
+
     it('handles empty string', () => {
       const result = parseAnsi('')
       expect(result).toEqual([])
