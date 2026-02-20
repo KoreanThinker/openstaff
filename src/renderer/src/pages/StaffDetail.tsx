@@ -76,6 +76,18 @@ const StaffMemoryTab = lazy(() =>
   import('@/pages/staff-detail/tabs/StaffMemoryTab').then((m) => ({ default: m.StaffMemoryTab }))
 )
 
+function prefetchDetailTab(tab: 'metrics' | 'kpi' | 'memory'): void {
+  if (tab === 'metrics') {
+    void import('@/pages/staff-detail/tabs/StaffMetricsTab')
+    return
+  }
+  if (tab === 'kpi') {
+    void import('@/pages/staff-detail/tabs/StaffKpiTab')
+    return
+  }
+  void import('@/pages/staff-detail/tabs/StaffMemoryTab')
+}
+
 // ─── Loop Visualization (Overview) ──────────────────────────────────
 
 function OverviewLoopVisualization({ isRunning }: { isRunning: boolean }): React.ReactElement {
@@ -647,6 +659,10 @@ export function StaffDetail(): React.ReactElement {
     setSearchParams({ tab })
   }, [setSearchParams])
 
+  const handleTabPrefetch = useCallback((tab: 'metrics' | 'kpi' | 'memory') => {
+    prefetchDetailTab(tab)
+  }, [])
+
   // ─── Error / Not Found ────────────────────────────────────────
 
   useEffect(() => {
@@ -789,10 +805,16 @@ export function StaffDetail(): React.ReactElement {
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="metrics">Metrics</TabsTrigger>
+          <TabsTrigger value="metrics" onMouseEnter={() => handleTabPrefetch('metrics')}>
+            Metrics
+          </TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
-          <TabsTrigger value="kpi">KPI</TabsTrigger>
-          <TabsTrigger value="memory">Memory</TabsTrigger>
+          <TabsTrigger value="kpi" onMouseEnter={() => handleTabPrefetch('kpi')}>
+            KPI
+          </TabsTrigger>
+          <TabsTrigger value="memory" onMouseEnter={() => handleTabPrefetch('memory')}>
+            Memory
+          </TabsTrigger>
           <TabsTrigger value="errors">
             Errors
             {errorCount > 0 && (
